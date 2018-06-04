@@ -1,0 +1,33 @@
+
+n2lib_loc lib/libn2merg.so
+
+
+fof_loc /media/luna1/dkorytov/data/AlphaQ/fof/m000-${step}.fofproperties
+sod_loc /media/luna1/dkorytov/data/AlphaQ/sod/m000-${step}.sodproperties
+core_loc /media/luna1/dkorytov/data/AlphaQ/core_catalog2/01_12_17.AlphaQ.${step}.coreproperties
+zmr_loc     /home/dkorytov/phys/Ngal_sdss/data/normal_mask2/result/type1_weight1_mag1_clr1_result.npz    
+
+processed_core_loc output/${param}/processed_cores.hdf5
+step 421
+steps   421 
+old_steps 499 453 401 
+
+#temp ones
+zs 1.0
+ms 1.0
+rs 1.0
+
+
+
+
+
+
+disruption_lim 0.006 .1 5
+merger_lim     0.006 .1 5
+
+
+z_in 200
+z_out 0
+num_steps 500
+
+

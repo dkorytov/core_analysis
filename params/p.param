@@ -1,0 +1,26 @@
+
+
+fof_catalog_file        /media/luna1/dkorytov/data/Planck/fof6/08_10_16.Plank.${step}.fofproperties
+sod_catalog_file        not-on-datastar/alcf-fs
+core_catalog_file       /media/luna1/dkorytov/data/Planck/core_catalog6/08_10_16.Plank.${step}.coreproperties
+core_catalog_steps_load 442 453 464 475 487 499
+
+
+#temp ones
+zs 1.0
+ms 1.0
+rs 1.0
+
+
+
+zmr_file     /home/dkorytov/phys/Ngal_sdss/data/normal/result/type1_weight1_result.npz
+
+disruption_lim 0.006 .1 5
+merger_lim     0.006 .1 5
+
+
+z_in 200
+z_out 0
+num_steps 500
+
+

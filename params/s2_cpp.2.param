@@ -1,0 +1,68 @@
+cm_num 10000
+n2lib_loc lib/libn2merg.so
+
+
+fof_loc /media/luna1/dkorytov/data/AlphaQ/fof/m000-${step}.fofproperties
+sod_loc /media/luna1/dkorytov/data/AlphaQ/sod/m000-${step}.sodproperties
+core_loc /media/luna1/dkorytov/data/AlphaQ/core_catalog4_20f/01_12_17.AlphaQ.${step}.coreproperties
+#zmr_loc /home/dkorytov/phys/Ngal_sdss/data/normal_mask4/result/type1_weight1_mag1_clr1_result.npz
+zmrh5_loc    /home/dkorytov/phys/Ngal_sdss/data/normal_mask2/result/type1_weight1_mag1_clr1_result.hdf5
+zmr_loc     /home/dkorytov/phys/Ngal_sdss/data/normal_mask2/result/type1_weight1_mag1_clr1_result.hdf5
+
+core_prtcl_loc /home/dkorytov/data/AlphaQ/cores/m000-${step}.coreparticles   
+accum_prtcl_loc /home/dkorytov/data/AlphaQ/accum/m000-${step}.accumulatedcores
+
+
+step 421
+steps  421 453 401
+old_steps 499 453 401 
+
+rL 256.0
+cluster_radial_volume 5.0
+
+
+m_infall 11
+r_disrupt 0.1
+r_fof  0.01
+r_merger 0.1
+
+fit_r_fof    false
+fit_r_merger true
+
+min_disrupt_fof 20
+
+diff_projection_num 100
+
+cost_gal_density true
+cost_dgal_dr     false
+cost_accum_gal   false
+cost_min_cluster_num 0
+cost_missed_centrals  0
+
+
+m_infall_constraints 10 13
+r_disrupt_constraints 0  .5
+r_merger_constraints  0  1
+r_fof_constraints     0  1
+
+
+#For the likelihood grid 
+calc_likelihood false
+mi_bins_info 10    13    50
+rd_bins_info 0.001 0.1   50
+rm_bins_info 0.001 0.3   2 
+rf_bins_info 0.001 0.3   2 
+
+#for the simplex walker 
+simplex_step_size  .1
+simplex_cnvrg_size 1e-4
+max_iterations 100
+
+#intial param guess
+init_m_infall
+init_r_disrupt
+init_r_fof
+
+z_in 200
+z_out 0
+num_steps 500
