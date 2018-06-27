@@ -567,7 +567,7 @@ size_t chaining_mesh_grid_size;
 float cluster_radial_volume;
 bool scaled_cluster_radial_volume;
 float scaled_cluster_radial_factor;
-int chain_length;
+
 int min_disrupt_fof;
 float m_infall;
 float r_disrupt;
@@ -590,7 +590,8 @@ int  cost_min_cluster_num;
 float cost_missed_centrals;
 
 bool run_mcmc;
-
+int omp_num_threads;
+int chain_length;
 std::vector<float> m_infall_constraints;
 std::vector<float> r_disrupt_constraints;
 std::vector<float> r_merger_constraints;
@@ -859,7 +860,7 @@ void run_MCMC(CoreParam cp,int steps,int seed,bool verbose,
   gsl_rng_set(r,seed);
   dtk::Timer t;
   for(int i=0;i<steps;++i){
-    if(rank==0 and omp_get_thread_num() ==0 and i%(steps/1000)==0){
+    if(rank==0 and omp_get_thread_num() ==0 and steps/1000 > 0  and i%(steps/1000)==0){
       std::cout<<"\t\t"<<float(i)/float(steps)<<"\r";
     }
     t.start();
@@ -1241,32 +1242,24 @@ void write_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
   std::cout<<"Writing clusters to file quickly..."<<std::endl;
   dtk::AutoTimer t;
   size_t cluster_num = clusters.size();
-  // int64_t* htag = new int64_t[cluster_num]; 
-  // float* sod_mass = new float[cluster_num];
-  // float* sod_radius = new float[cluster_num];
-  // float* x,*y,*z;
-  // x = new float[cluster_num];
-  // y = new float[cluster_num];
-  // z = new float[cluster_num];
-  // float* redshift = new float[cluster_num];
-  // int* step = new int[cluster_num];;
-  // size_t* core_offset =  new size_t[cluster_num];
-  // size_t* core_size = new size_t[cluster_num];
   std::vector<int64_t> htag(cluster_num);
   std::vector<float>   sod_mass(cluster_num), sod_radius(cluster_num),
     x(cluster_num), y(cluster_num), z(cluster_num), redshift(cluster_num);
-  std::vector<int> step(cluster_num);
+  std::vector<int> step(cluster_num), z_i(cluster_num), m_i(cluster_num);
   std::vector<size_t> core_offset(cluster_num), core_size(cluster_num);
   
   size_t current_core_offset = 0;
+  std::cout<<"going over clusters"<<std::endl;
   for(size_t i=0;i<cluster_num;++i){
-    std::cout<<"i"<<std::endl;
     htag.at(i) = clusters.at(i).htag;
     sod_mass.at(i) = clusters.at(i).sod_mass;
     sod_radius.at(i) = clusters.at(i).sod_radius;
     x.at(i)=clusters.at(i).x;
     y.at(i)=clusters.at(i).y;
     z.at(i)=clusters.at(i).z;
+    redshift.at(i) = clusters.at(i).redshift;
+    z_i.at(i) = clusters.at(i).z_i;
+    m_i.at(i) = clusters.at(i).m_i;
     core_offset.at(i)=current_core_offset;
     core_size.at(i)=clusters.at(i).core_size;
     current_core_offset+=clusters.at(i).core_size;
@@ -1279,18 +1272,19 @@ void write_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     core_r(total_core_size), core_m(total_core_size);
   std::vector<int> core_is_central(total_core_size), core_step(total_core_size);
   for(size_t i=0;i<cluster_num;++i){
-    std::cout<<"cores for "<<i<<std::endl;
+    std::cout<<"cores for "<<i<<"/"<<cluster_num<<std::endl;    
     size_t offset = core_offset.at(i);
     size_t core_num = core_size.at(i);
-    dtk::copy_n(clusters.at(i).core_id+offset, core_num, &core_id[offset]);
-    dtk::copy_n(clusters.at(i).core_htag+offset, core_num, &core_htag[offset]);
-    dtk::copy_n(clusters.at(i).core_x+offset, core_num, &core_x[offset]);
-    dtk::copy_n(clusters.at(i).core_y+offset, core_num, &core_y[offset]);
-    dtk::copy_n(clusters.at(i).core_z+offset, core_num, &core_z[offset]);
-    dtk::copy_n(clusters.at(i).core_r+offset, core_num, &core_r[offset]);
-    dtk::copy_n(clusters.at(i).core_m+offset, core_num, &core_m[offset]);
-    dtk::copy_n(clusters.at(i).core_is_central+offset, core_num, &core_is_central[offset]);
-    dtk::copy_n(clusters.at(i).core_step+offset, core_num, &core_step[offset]);
+    std::cout<<"\toffset: "<<offset<<"/"<<total_core_size<<" number of cores: "<<core_num<<std::endl;
+    dtk::copy_n(clusters.at(i).core_id, core_num, &core_id[offset]); 
+    dtk::copy_n(clusters.at(i).core_htag, core_num, &core_htag[offset]);
+    dtk::copy_n(clusters.at(i).core_x, core_num, &core_x[offset]); 
+    dtk::copy_n(clusters.at(i).core_y, core_num, &core_y[offset]); 
+    dtk::copy_n(clusters.at(i).core_z, core_num, &core_z[offset]); 
+    dtk::copy_n(clusters.at(i).core_r, core_num, &core_r[offset]); 
+    dtk::copy_n(clusters.at(i).core_m, core_num, &core_m[offset]); 
+    dtk::copy_n(clusters.at(i).core_is_central, core_num, &core_is_central[offset]); 
+    dtk::copy_n(clusters.at(i).core_step, core_num, &core_step[offset]); 
   } 
   H5::H5File hfile(loc,H5F_ACC_TRUNC);
   std::cout<<"writing out cluster number"<<std::endl;
@@ -1303,6 +1297,9 @@ void write_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
   dtk::write_hdf5(hfile,"/cluster/x",         x);
   dtk::write_hdf5(hfile,"/cluster/y",         y);
   dtk::write_hdf5(hfile,"/cluster/z",         z);
+  dtk::write_hdf5(hfile,"/cluster/z_i",       z_i);
+  dtk::write_hdf5(hfile,"/cluster/m_i",       m_i);
+
   dtk::write_hdf5(hfile,"/cluster/redshift",  redshift);
   dtk::write_hdf5(hfile,"/cluster/step",      step);
   dtk::write_hdf5(hfile,"/cluster/core_offset",core_offset);
@@ -1325,7 +1322,7 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
   dtk::AutoTimer t;
   std::vector<int64_t> htag, core_id, core_htag;
   std::vector<size_t> core_offset, core_size;
-  std::vector<int>  step, core_is_central, core_step;
+  std::vector<int>  step, core_is_central, core_step, z_i, m_i;
   std::vector<float> sod_mass, sod_radius, x, y, z, redshift,
     core_x, core_y, core_z, core_r, core_m;
   size_t cluster_num;
@@ -1338,21 +1335,24 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
   dtk::read_hdf5(hfile, "/cluster/x", x);
   dtk::read_hdf5(hfile, "/cluster/y", y);
   dtk::read_hdf5(hfile, "/cluster/z", z);
+  dtk::read_hdf5(hfile, "/cluster/z_i", z_i);
+  dtk::read_hdf5(hfile, "/cluster/m_i", m_i);
   dtk::read_hdf5(hfile, "/cluster/redshift", redshift);
   dtk::read_hdf5(hfile, "/cluster/core_offset", core_offset);
   dtk::read_hdf5(hfile, "/cluster/core_size", core_size);
   dtk::read_hdf5(hfile, "/cluster/step", step);
   // core info
-  dtk::read_hdf5(hfile, "/core/core_id", core_id);
-  dtk::read_hdf5(hfile, "/core/core_htag", core_htag);
-  dtk::read_hdf5(hfile, "/core/core_x", core_x);
-  dtk::read_hdf5(hfile, "/core/core_y", core_y);
-  dtk::read_hdf5(hfile, "/core/core_z", core_z);
-  dtk::read_hdf5(hfile, "/core/core_r", core_r);
-  dtk::read_hdf5(hfile, "/core/core_m", core_m);
-  dtk::read_hdf5(hfile, "/core/core_is_central", core_is_central);
-  dtk::read_hdf5(hfile, "/core/core_step", core_step);
+  dtk::read_hdf5(hfile, "/cores/core_id", core_id);
+  dtk::read_hdf5(hfile, "/cores/core_htag", core_htag);
+  dtk::read_hdf5(hfile, "/cores/core_x", core_x);
+  dtk::read_hdf5(hfile, "/cores/core_y", core_y);
+  dtk::read_hdf5(hfile, "/cores/core_z", core_z);
+  dtk::read_hdf5(hfile, "/cores/core_r", core_r);
+  dtk::read_hdf5(hfile, "/cores/core_m", core_m);
+  dtk::read_hdf5(hfile, "/cores/core_is_central", core_is_central);
+  dtk::read_hdf5(hfile, "/cores/core_step", core_step);
   clusters.resize(cluster_num);
+  std::cout<<"Cluster number: "<<cluster_num<<std::endl;
   for(int i =0;i<cluster_num;++i){
     Cluster& clstr = clusters[i];
     clstr.htag = htag[i];
@@ -1365,7 +1365,8 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     clstr.core_size = core_size[i];
     clstr.step = step[i];
     size_t clstr_core_offset = core_offset[i];
-
+    // std::cout<<"cluster["<<i<<"] pos: "<<clstr.x<<" "<<clstr.y<<" "<<clstr.z<<std::endl;
+    // std::cout<<"\t num cores: "<<clstr.core_size<<std::endl;
     // core data
     clstr.core_id = new int64_t[clstr.core_size];
     clstr.core_htag = new int64_t[clstr.core_size];
@@ -1386,7 +1387,12 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     dtk::copy_n(&core_r[clstr_core_offset], clstr.core_size, clstr.core_r);
     dtk::copy_n(&core_is_central[clstr_core_offset], clstr.core_size, clstr.core_is_central);
     dtk::copy_n(&core_step[clstr_core_offset], clstr.core_size, clstr.core_step);
+    // for(int j = 0;j<clstr.core_size;++j){
+    //   // std::cout<<"\t\t["<<j<<"]: "<<clstr.core_x[j]<<" "<<clstr.core_y[j]<<" "<<clstr.core_z[j]<<std::endl;
+    //   // std::cout<<"\t\t\t"<<clstr.core_m[j]<<" "<<clstr.core_r[j]<<std::endl;
+    // }
   }
+
   std::cout<<"\tdone: "<<t<<std::endl;
 }
 void bcast_cluster(Cluster& cluster, MPI_Datatype mpi_cluster_type,int root, MPI_Comm comm){
@@ -1496,8 +1502,10 @@ int main(int argc, char** argv){
   std::cout<<"done"<<std::endl;
   load_zmr_sdss(zmr_loc,zmr_sdss);
   if(read_clusters_from_file){
-    if(rank == 0)
+    if(rank == 0){
       read_clusters_fast(cluster_loc,all_clusters);
+      std::cout<<"all cluster size: "<<all_clusters.size()<<std::endl;
+    }
     if(cost_abundance | lock_r_disrupt)
       load_cores();
   }
@@ -1519,14 +1527,14 @@ int main(int argc, char** argv){
   fit_cp.r_merger = r_merger;
   fit_cp.r_fof    = r_fof;
   std::cout<<"----:"<<std::endl;
-  make_zmr(all_clusters,m_infall,r_disrupt,r_fof,r_merger,zmr_cores,true);
+  make_zmr(all_clusters,m_infall,r_disrupt,r_fof,r_merger,zmr_cores,false);
   double cost1 = calc_diff(zmr_sdss, zmr_cores,all_cores,fit_cp);
   double cost2 = calc_diff(zmr_cores,zmr_sdss,all_cores,fit_cp);
 
   fit_cp = find_min(all_clusters, zmr_cores, zmr_sdss, std::log10(m_infall),
    		    std::log10(r_disrupt), std::log10(r_fof), std::log10(r_merger));
 
-  make_zmr(all_clusters,fit_cp,zmr_cores);
+  make_zmr(all_clusters,fit_cp,zmr_cores,false);
   std::cout<<"this is the cost: "<<calc_diff(zmr_sdss, zmr_cores,all_cores,fit_cp)<<std::endl;
 
   std::cout<<"fit parameters: "<<std::endl;
@@ -1635,7 +1643,7 @@ void load_param(char* file_name){
   expected_comov_abundance = param.get<float>("expected_comov_abundance");
   run_mcmc             = param.get<bool>("run_mcmc");
   chain_length         = param.get<int>("chain_length");
-  
+  omp_num_threads       = param.get<int>("omp_num_threads");
   m_infall_constraints = param.get_vector<float>("m_infall_constraints");
   r_disrupt_constraints= param.get_vector<float>("r_disrupt_constraints");
   r_merger_constraints = param.get_vector<float>("r_merger_constraints");
@@ -1669,7 +1677,8 @@ void load_param(char* file_name){
     ++fit_var_num;
   if(fit_r_merger)
     ++fit_var_num;
-
+  if(omp_num_threads != -1)
+    omp_set_num_threads(omp_num_threads);
   t.stop();
   if(rank==0)
     std::cout<<"\tdone. time: "<<t<<std::endl;
@@ -1955,6 +1964,8 @@ void make_zmr(std::vector<Cluster>& clstrs,float m_infall,float r_disrupt,float 
   zmr.zero_out();
   float Ngal;
   std::vector<float> r_cnt(zmr.r_size);
+  if(verbose)
+    std::cout<<"Makign zmr"<<std::endl;
   for(int i =0;i<clstrs.size();++i){
     //zero out the values;
     Ngal = 0;
@@ -1962,7 +1973,6 @@ void make_zmr(std::vector<Cluster>& clstrs,float m_infall,float r_disrupt,float 
       r_cnt[j]=0.0;
     int z_i = dtk::find_bin(zmr.z_bins,clstrs[i].redshift);
     int m_i = dtk::find_bin(zmr.m_bins,clstrs[i].sod_mass);
-
     // std::cout<<"z_i: "<<z_i<<"  m_i: "<<m_i<<std::endl;
     float Ngal_r2_lim =1.0; //galaxies within sqrt(1.0)*r200 are counted for Ngal;
     Galaxies gal;
@@ -2352,7 +2362,7 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
   std::cout<<"halo "<<htag<<" mass: "<<sod_mass<<std::endl;
   Cores corecat = all_cores[step];
   dtk::ChainingMeshIndex& cmi = all_core_cms[step];
-  std::vector<int> my_cores;
+  std::vector<size_t> my_cores;
   // Don't interate over all the cores, only the ones within the box
   // for(int i =0;i<corecat.size;++i){
   //   float dx = fabs(move_together(corecat.x[i] - x,rL));
@@ -2368,23 +2378,29 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
   //   }
   // }
   float halo_pos[3] = {x,y,z};
-  size_t central_cell = cmi.get_cell_id_from_position(halo_pos);
-  size_t* cell_element;
-  size_t cell_element_size;
-  cmi.get_cell_element_indexes(central_cell, cell_element, cell_element_size);
-  for(int i=0;i<cell_element_size;++i){
-    size_t index = cell_element[i];
-    float dx = fabs(move_together(corecat.x[index] - x, rL));
-    float dy = fabs(move_together(corecat.y[index] - y, rL));
-    float dz = fabs(move_together(corecat.z[index] - z, rL));
-    float dr = sqrt(dx*dx + dy*dy + dz*dz);
-    if(scaled_cluster_radial_volume && dr<scaled_cluster_radial_factor*sod_radius){
-      my_cores.push_back(index);
+  if(false){
+    //Old method of getting galaxy cores. Only checks local cell
+    size_t central_cell = cmi.get_cell_id_from_position(halo_pos);
+    size_t* cell_element;
+    size_t cell_element_size;
+    cmi.get_cell_element_indexes(central_cell, cell_element, cell_element_size);
+    for(int i=0;i<cell_element_size;++i){
+      size_t index = cell_element[i];
+      float dx = fabs(move_together(corecat.x[index] - x, rL));
+      float dy = fabs(move_together(corecat.y[index] - y, rL));
+      float dz = fabs(move_together(corecat.z[index] - z, rL));
+      float dr = sqrt(dx*dx + dy*dy + dz*dz);
+      if(scaled_cluster_radial_volume && dr<scaled_cluster_radial_factor*sod_radius){
+	my_cores.push_back(index);
+      }
+      else if(dr<cluster_radial_volume){
+	//std::cout<<(corecat.host_htag[i]==htag)<<" "<<corecat.host_htag[i]<<" "<<dr<<" "<<std::endl;
+	my_cores.push_back(index);
+      }
     }
-    else if(dr<cluster_radial_volume){
-      //std::cout<<(corecat.host_htag[i]==htag)<<" "<<corecat.host_htag[i]<<" "<<dr<<" "<<std::endl;
-      my_cores.push_back(index);
-    }
+  }
+  else{
+    my_cores  = cmi.query_elements_within(halo_pos, cluster_radial_volume);
   }
   std::cout<<"\tfound cores:"<<my_cores.size()<<std::endl;
   alloc_cores(my_cores.size());
