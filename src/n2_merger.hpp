@@ -131,6 +131,42 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size,T merg_len,int64_t* colors_o
       }
     }
   }
+  else if(true){
+    // dtk::Timer t1;t1.start();
+    int* srt = dtk::arg_sort(x, size[0]);
+    dtk::reorder(x,size[0],srt);
+    dtk::reorder(y,size[0],srt);
+    dtk::reorder(z,size[0],srt);
+    dtk::reorder(w,size[0],srt);
+    delete [] srt;
+    float orginal_merger_len = std::sqrt(merger_len);
+    for(int i =1;i<size[0];++i){
+      for(int j =0;j<i;++j){
+	float dist_x = x[i]-x[j];
+	if(dist_x>orginal_merger_len)
+	  break;
+	float dist_y = y[i]-y[j];
+	float dist_z = z[i]-z[j];
+	float dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
+	if(dist <= merger_len)
+	  merg_colors(i,j,colors);
+      }
+    }
+    // t1.stop();
+    // dtk::Timer t2;t2.start();
+    // for(int i =1;i<size[0];++i){
+    //   for(int j =0;j<i;++j){
+    // 	float dist_x = x[i]-x[j];
+    // 	float dist_y = y[i]-y[j];
+    // 	float dist_z = z[i]-z[j];
+    // 	float dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
+    // 	if(dist <= merger_len)
+    // 	  merg_colors(i,j,colors);
+    //   }
+    // }
+    // t2.stop();
+    // std::cout<<"merging timing: n2: "<<t1<<"   n2 smart: "<<t2<<std::endl;
+  }
   else{
     //if we have too many points a naive n2 would take too long. 
     //so we use a chaining mesh. 

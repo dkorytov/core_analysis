@@ -1,5 +1,7 @@
 #!/usr/bin/env python2.7
 
+from __future__ import print_function, division
+
 import numpy as np
 import matplotlib.pyplot as plt
 import dtk
@@ -7,7 +9,10 @@ from matplotlib.colors import LogNorm
 import sys
 
 param_file_name = sys.argv[1]
+param = dtk.Param(param_file_name)
+fit_r_merger = param.get_bool("fit_r_merger")
 lgrid_param = dtk.Param("output/"+sys.argv[1]+"/lgrid.param")
+
 result = np.array(lgrid_param.get_float_list("result"))
 nan_slct = np.isnan(result)
 result[nan_slct] = np.ones(np.sum(nan_slct))*1000000
@@ -18,6 +23,14 @@ rm_bins = np.array(lgrid_param.get_float_list("rm_bins"))
 result2 = result.reshape((mi_bins.size,rd_bins.size,rm_bins.size))
 
 lkhd = result2
+vals = np.unravel_index(np.argmin(result2), result2.shape)
+best_lkhd = result2[vals]
+print("==best likelihood==")
+print("lkdh: {}".format(lkhd[vals]))
+print("\tM_infall: ", mi_bins[vals[0]], np.log10(mi_bins[vals[0]]))
+print("\tR_disrupt: ", rd_bins[vals[1]])
+if(fit_r_merger):
+    print("\tR_merger: ", rm_bins[vals[2]])
 
 
 #mi
@@ -34,7 +47,6 @@ mi_rm_lkhd = np.min(lkhd,axis=1)
 rd_rm_lkhd = np.min(lkhd,axis=0)
 
 plt.figure()
-print mi_lkhd
 plt.plot(mi_bins,mi_lkhd)
 plt.xlabel('M_infall')
 plt.ylabel('likelihood')
@@ -42,43 +54,52 @@ plt.xscale('log')
 plt.yscale('log')
 
 plt.figure()
-print rd_lkhd
-
 plt.plot(rd_bins,rd_lkhd)
 plt.xlabel('R_disrupt')
 plt.ylabel('likelihood')
 plt.xscale('log')
 plt.yscale('log')
 
-plt.figure()
-print rm_lkhd
-plt.plot(rm_bins,rm_lkhd)
-plt.xlabel('R_merger')
-plt.ylabel('likelihood')
-plt.xscale('log')
-plt.yscale('log')
+if(fit_r_merger):
+    plt.figure()
+    plt.plot(rm_bins,rm_lkhd)
+    plt.xlabel('R_merger')
+    plt.ylabel('likelihood')
+    plt.xscale('log')
+    plt.yscale('log')
 
 plt.figure()
-plt.pcolor(mi_bins,rd_bins,1.0/mi_rd_lkhd.T,norm=LogNorm(),cmap='nipy_spectral')
-plt.colorbar()
+plt.pcolor(mi_bins,rd_bins,mi_rd_lkhd.T,norm=LogNorm(),cmap='nipy_spectral_r')
+cb = plt.colorbar()
+cb.set_label('X^2')
 plt.xscale('log')
 plt.xlabel('M_infall')
 plt.ylabel('R_disrupt')
 plt.xlim((np.min(mi_bins),np.max(mi_bins)))
 plt.ylim((np.min(rd_bins),np.max(rd_bins)))
+plt.title('Best X^2: {:.2f}'.format(best_lkhd))
+plt.tight_layout()
 
-plt.figure()
-plt.pcolor(mi_bins,rm_bins,1.0/mi_rm_lkhd.T,norm=LogNorm(),cmap='nipy_spectral')
-plt.colorbar()
-plt.xscale('log')
-plt.xlabel('M_infall')
-plt.ylabel('R_merger')
+if(fit_r_merger):
+    plt.figure()
+    plt.pcolor(mi_bins,rm_bins,mi_rm_lkhd.T,norm=LogNorm(),cmap='nipy_spectral_r')
+    cb = plt.colorbar()
+    cb.set_label('X^2')
+    plt.xscale('log')
+    plt.xlabel('M_infall')
+    plt.ylabel('R_merger')
+    plt.title('Best X^2: {:.2f}'.format(best_lkhd))
+    plt.tight_layout()
 
-plt.figure()
-plt.pcolor(rd_bins,rm_bins,1.0/rd_rm_lkhd.T,norm=LogNorm(),cmap='nipy_spectral')
-plt.colorbar()
-plt.xlabel('R_disrupt')
-plt.ylabel('R_merger')
+if(fit_r_merger):
+    plt.figure()
+    plt.pcolor(rd_bins,rm_bins,rd_rm_lkhd.T,norm=LogNorm(),cmap='nipy_spectral_r')
+    cb = plt.colorbar()
+    cb.set_label('X^2')
+    plt.xlabel('R_disrupt')
+    plt.ylabel('R_merger')
+    plt.title('Best X^2: {:.2f}'.format(best_lkhd))
+    plt.tight_layout()
 
 dtk.save_figs(path='figs/'+param_file_name+"/"+__file__+"/",extension='.png')
 plt.show()

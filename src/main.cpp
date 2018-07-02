@@ -428,18 +428,18 @@ struct Cluster{
   std::vector<float> dis_cp_x,dis_cp_y,dis_cp_z;
   Cluster(){}
   Cluster(int64_t htag,float sod_mass,float rad,float x,float y, float z,int step);
-  void get_compact_galaxies(float m_infall, float r_disrupt, Galaxies& gal);
-  void get_compact_merged_galaxies(float m_infall,float r_disrupt, float r_merger, Galaxies& gal);
-  void get_fof_galaxies(float m_infall, float r_disrupt, float r_fof,Galaxies& gal);
-  void get_fof_galaxies2(float m_infall,float r_disrupt, float r_fof, Galaxies& gal);
+  void get_compact_galaxies(float m_infall, float r_disrupt, Galaxies& gal) const;
+  void get_compact_merged_galaxies(float m_infall,float r_disrupt, float r_merger, Galaxies& gal)const;
+  void get_fof_galaxies(float m_infall, float r_disrupt, float r_fof,Galaxies& gal) const;
+  void get_fof_galaxies2(float m_infall,float r_disrupt, float r_fof, Galaxies& gal)const;
   void get_fof_only_galaxies(float r_disrupt,Galaxies& gal);
 
   void get_radial_bins(float m_infall,float r_disrupt,float r_fof, 
 		       std::vector<float>& r2_bins, float Ngal_r2_lim,
-		       std::vector<float>& r_cnt, float& Ngal);
+		       std::vector<float>& r_cnt, float& Ngal) const;
   void get_radial_bins(Galaxies& gal,std::vector<float>& r_bins,
 		       std::vector<float>& r2_bins, float Ngal_r2_lim,
-		       std::vector<float>& r_cnt, float& Ngal);
+		       std::vector<float>& r_cnt, float& Ngal) const;
   
   void write_out(std::string file,CoreParam cp,Galaxies& gal);
   void alloc_cores(int size);
@@ -486,6 +486,7 @@ struct Cluster{
     delete [] cp_usage;
     delete [] cp_color;
   }
+  void move_cores_together();
 };
 
 struct FunctionParam{
@@ -631,9 +632,9 @@ void broadcast_zmr(ZMR& zmr);
 void make_clusters();
 void defrag_halos(int64_t* htags, int64_t size);
 void move_together(float x0,float* x, int64_t size);
-void make_zmr(std::vector<Cluster>& clstrs,float m_infall,float r_disrupt,
+void make_zmr(const std::vector<Cluster>& clstrs,float m_infall,float r_disrupt,
 	      float r_fof,float r_merger,ZMR& zmr,bool verbose=true);
-void make_zmr(std::vector<Cluster>& clstrs,CoreParam cp, ZMR& zmr,bool verbose=true);
+void make_zmr(const std::vector<Cluster>& clstrs,CoreParam cp, ZMR& zmr,bool verbose=true);
 
 double calc_diff(const ZMR& zmr1, const ZMR& zmr2, const std::map<int,Cores>& all_cores,const CoreParam& cp);
 double calc_diff_gal_density(const ZMR& zmr1, const ZMR& zmr2);
@@ -859,9 +860,20 @@ void run_MCMC(CoreParam cp,int steps,int seed,bool verbose,
   r = gsl_rng_alloc (T);
   gsl_rng_set(r,seed);
   dtk::Timer t;
+  dtk::AutoTimer t3;
+  dtk::AutoTimer t2;
   for(int i=0;i<steps;++i){
-    if(rank==0 and omp_get_thread_num() ==0 and steps/1000 > 0  and i%(steps/1000)==0){
-      std::cout<<"\t\t"<<float(i)/float(steps)<<"\r";
+    if(rank==0 and omp_get_thread_num() ==0){
+      if(steps/10000 > 0  and i%(steps/10000)==0){
+	t.stop();
+	std::cout<<"\t\t"<<float(i)/float(steps)<<"  ("<<t2<<" / "<<t3<<")\r";
+	t2.start();
+      }
+      else if(steps/100 > 0 and i%(steps/100)==0){
+	t.stop();
+	std::cout<<"\t\t"<<float(i)/float(steps)<<"  ("<<t2<<" / "<<t3<<")\r";
+	t2.start();
+      }
     }
     t.start();
     if(verbose)
@@ -1387,6 +1399,7 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     dtk::copy_n(&core_r[clstr_core_offset], clstr.core_size, clstr.core_r);
     dtk::copy_n(&core_is_central[clstr_core_offset], clstr.core_size, clstr.core_is_central);
     dtk::copy_n(&core_step[clstr_core_offset], clstr.core_size, clstr.core_step);
+    clstr.move_cores_together();
     // for(int j = 0;j<clstr.core_size;++j){
     //   // std::cout<<"\t\t["<<j<<"]: "<<clstr.core_x[j]<<" "<<clstr.core_y[j]<<" "<<clstr.core_z[j]<<std::endl;
     //   // std::cout<<"\t\t\t"<<clstr.core_m[j]<<" "<<clstr.core_r[j]<<std::endl;
@@ -1530,9 +1543,9 @@ int main(int argc, char** argv){
   make_zmr(all_clusters,m_infall,r_disrupt,r_fof,r_merger,zmr_cores,false);
   double cost1 = calc_diff(zmr_sdss, zmr_cores,all_cores,fit_cp);
   double cost2 = calc_diff(zmr_cores,zmr_sdss,all_cores,fit_cp);
-
-  fit_cp = find_min(all_clusters, zmr_cores, zmr_sdss, std::log10(m_infall),
-   		    std::log10(r_disrupt), std::log10(r_fof), std::log10(r_merger));
+  if(max_iterations > 0)
+    fit_cp = find_min(all_clusters, zmr_cores, zmr_sdss, std::log10(m_infall),
+		      std::log10(r_disrupt), std::log10(r_fof), std::log10(r_merger));
 
   make_zmr(all_clusters,fit_cp,zmr_cores,false);
   std::cout<<"this is the cost: "<<calc_diff(zmr_sdss, zmr_cores,all_cores,fit_cp)<<std::endl;
@@ -1650,6 +1663,7 @@ void load_param(char* file_name){
   r_fof_constraints    = param.get_vector<float>("r_fof_constraints");
   for(int i =0;i<2;++i){
     m_infall_constraints[i] = std::pow(10,m_infall_constraints[i]);
+    r_merger_constraints[i] = std::log10(r_merger_constraints[i]);
   }
   sigma_init_boost = param.get<float>("sigma_init_boost");
   sigma_m_infall = param.get<float>("sigma_m_infall");
@@ -1951,7 +1965,7 @@ void move_together(float x0,float rL, float* x, int64_t size){
       x[i] -= rL;
   }
 }
-void make_zmr(std::vector<Cluster>& clstrs,float m_infall,float r_disrupt,float r_fof,float r_merger,
+void make_zmr(const std::vector<Cluster>& clstrs, float m_infall,float r_disrupt,float r_fof,float r_merger,
 	      ZMR& zmr,bool verbose){
   zmr.check_same_bins(zmr_sdss);
   if(verbose)
@@ -1966,6 +1980,7 @@ void make_zmr(std::vector<Cluster>& clstrs,float m_infall,float r_disrupt,float 
   std::vector<float> r_cnt(zmr.r_size);
   if(verbose)
     std::cout<<"Makign zmr"<<std::endl;
+  //#pragma omp parallel for
   for(int i =0;i<clstrs.size();++i){
     //zero out the values;
     Ngal = 0;
@@ -1998,7 +2013,10 @@ void make_zmr(std::vector<Cluster>& clstrs,float m_infall,float r_disrupt,float 
     //clstrs[i].get_radial_bins(m_infall,r_disrupt,r_fof,r2_bins,Ngal_r2_lim,r_cnt,Ngal);
     //add the galaxies to the zmr by binning them radially. x
     clstrs[i].get_radial_bins(gal,zmr.r_bins,r2_bins,Ngal_r2_lim,r_cnt,Ngal);
-    zmr.add_cluster(z_i,m_i,r_cnt,Ngal);
+    //#pragma omp critcal
+    {
+      zmr.add_cluster(z_i,m_i,r_cnt,Ngal);
+    }
     //gal.print(10);
   }
   zmr.finalize_data();
@@ -2009,7 +2027,7 @@ void make_zmr(std::vector<Cluster>& clstrs,float m_infall,float r_disrupt,float 
     std::cout<<"\tdone making zmr. time: "<<t<<std::endl;
   }
 }
-void make_zmr(std::vector<Cluster>& clstrs,CoreParam cp, ZMR& zmr,bool verbose){
+void make_zmr(const std::vector<Cluster>& clstrs,CoreParam cp, ZMR& zmr,bool verbose){
   make_zmr(clstrs,cp.m_infall,cp.r_disrupt,cp.r_fof,cp.r_merger,zmr,verbose);
 }
 
@@ -2142,11 +2160,12 @@ double calc_diff_abundance(const std::map<int,Cores>& all_cores,const CoreParam&
 void calculate_likelihood_grid(std::vector<float> mi_bins, std::vector<float> rd_bins,
 			       std::vector<float> rm_bins, std::string       out_loc){
   std::cout<<"Calculating likelihoods..."<<std::endl;
+  std::cout<<"bins size: "<<mi_bins.size()<<" "<<rd_bins.size()<<" "<<rm_bins.size()<<std::endl;
   dtk::AutoTimer t;
   std::vector<double> result(mi_bins.size()*rd_bins.size()*rm_bins.size());
   uint indx =0;
   dtk::AutoTimer t2;
-  //#pragma omp parallel for firstprivate(all_clusters,zmr_cores)
+  //#pragma omp parallel for lastprivate(zmr_cores)
   for(uint mi=0;mi<mi_bins.size();++mi){
     zmr_cores.copy_bins(zmr_sdss);
     std::cout<<"\r\t"<<mi<<"/"<<mi_bins.size()<<"\t*/"<<rd_bins.size()<<" time: "<<t2;
@@ -2363,22 +2382,24 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
   Cores corecat = all_cores[step];
   dtk::ChainingMeshIndex& cmi = all_core_cms[step];
   std::vector<size_t> my_cores;
-  // Don't interate over all the cores, only the ones within the box
-  // for(int i =0;i<corecat.size;++i){
-  //   float dx = fabs(move_together(corecat.x[i] - x,rL));
-  //   float dy = fabs(move_together(corecat.y[i] - y,rL));
-  //   float dz = fabs(move_together(corecat.z[i] - z,rL));
-  //   float dr = sqrt(dx*dx + dy*dy + dz*dz);
-  //   if(scaled_cluster_radial_volume && dr<scaled_cluster_radial_factor*sod_radius){
-  //     my_cores.push_back(i);
-  //   }
-  //   else if(dr<cluster_radial_volume){
-  //     //std::cout<<(corecat.host_htag[i]==htag)<<" "<<corecat.host_htag[i]<<" "<<dr<<" "<<std::endl;
-  //     my_cores.push_back(i);
-  //   }
-  // }
   float halo_pos[3] = {x,y,z};
+  // Don't interate over all the cores, only the ones within the box
   if(false){
+    for(int i =0;i<corecat.size;++i){
+      float dx = fabs(move_together(corecat.x[i] - x,rL));
+      float dy = fabs(move_together(corecat.y[i] - y,rL));
+      float dz = fabs(move_together(corecat.z[i] - z,rL));
+      float dr = sqrt(dx*dx + dy*dy + dz*dz);
+      if(scaled_cluster_radial_volume && dr<scaled_cluster_radial_factor*sod_radius){
+	my_cores.push_back(i);
+      }
+      else if(dr<cluster_radial_volume){
+	//std::cout<<(corecat.host_htag[i]==htag)<<" "<<corecat.host_htag[i]<<" "<<dr<<" "<<std::endl;
+	my_cores.push_back(i);
+      }
+    }
+  }
+  else if(false){
     //Old method of getting galaxy cores. Only checks local cell
     size_t central_cell = cmi.get_cell_id_from_position(halo_pos);
     size_t* cell_element;
@@ -2400,6 +2421,7 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
     }
   }
   else{
+    // Fastest & correct method of getting cores
     my_cores  = cmi.query_elements_within(halo_pos, cluster_radial_volume);
   }
   std::cout<<"\tfound cores:"<<my_cores.size()<<std::endl;
@@ -2451,6 +2473,12 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
     std::cout<<"A central core wasn't found for this halo?!"<<std::endl;
     dtk::pause();
   }
+  //Moving all the core particles across period boundary conditions to
+  //be in one area
+  move_together(x,rL,core_x,core_size);
+  move_together(y,rL,core_y,core_size);
+  move_together(z,rL,core_z,core_size);
+
   //If we don't need core particles, we don't need to load them :)
   if(no_core_particles)
     return;
@@ -2499,9 +2527,6 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
     cp_y[i] = ap.y[accum_indx[i]];
     cp_z[i] = ap.z[accum_indx[i]];
   }
-  move_together(x,rL,core_x,core_size);
-  move_together(y,rL,core_y,core_size);
-  move_together(z,rL,core_z,core_size);
   move_together(x,rL,cp_x,cp_size);
   move_together(y,rL,cp_y,cp_size);
   move_together(z,rL,cp_z,cp_size);
@@ -2574,7 +2599,7 @@ void Cluster::write_out(std::string file_loc,CoreParam cp,Galaxies& gal){
   write_value(file,"r_fof",cp.r_fof);
   
 }
-void Cluster::get_compact_galaxies(float m_infall, float r_disrupt, Galaxies& gal){
+void Cluster::get_compact_galaxies(float m_infall, float r_disrupt, Galaxies& gal) const{
   // std::cout<<"====get_compact_galaxies===="<<m_infall<<"  "<<r_disrupt<<std::endl;
   for(int i =0;i<core_size;++i){
     // std::cout<<i<<" "<<core_m[i]<<" "<<core_r[i];
@@ -2592,7 +2617,7 @@ void Cluster::get_compact_galaxies(float m_infall, float r_disrupt, Galaxies& ga
   }
 }
 void Cluster::get_compact_merged_galaxies(float m_infall,float r_disrupt,float r_merger,
-					  Galaxies& gal){
+					  Galaxies& gal) const{
   //ostd::cout<<"core merger core size: "<<core_size;
   std::vector<float> new_x,new_y,new_z;
   std::vector<int> new_w;
@@ -2624,7 +2649,9 @@ void Cluster::get_compact_merged_galaxies(float m_infall,float r_disrupt,float r
   }
 
 }
-void Cluster::get_fof_galaxies(float m_infall, float r_disrupt, float r_fof,Galaxies& gal){
+void Cluster::get_fof_galaxies(float m_infall, float r_disrupt, float r_fof,Galaxies& gal) const{
+  //Not implemented
+  throw;
   for(int i =0;i<core_size;++i){
     bool use;
     if(core_m[i]>m_infall && core_r[i]>r_disrupt)
@@ -2649,9 +2676,9 @@ void Cluster::get_fof_galaxies(float m_infall, float r_disrupt, float r_fof,Gala
   int result_size = cp_size-indx;
   //  std::cout<<"dis_cp size: "<<result_size<<std::endl;
   for(int i =0;i<result_size;++i){
-    dis_cp_x.push_back(new_x[indx+i]);
-    dis_cp_y.push_back(new_y[indx+i]);
-    dis_cp_z.push_back(new_z[indx+i]);
+    // dis_cp_x.push_back(new_x[indx+i]);
+    // dis_cp_y.push_back(new_y[indx+i]);
+    // dis_cp_z.push_back(new_z[indx+i]);
   }
   n2_merger3d(&new_x[indx],
 	      &new_y[indx],
@@ -2676,7 +2703,9 @@ void Cluster::get_fof_galaxies(float m_infall, float r_disrupt, float r_fof,Gala
   }
   delete [] srt;
 }
-void Cluster::get_fof_galaxies2(float m_infall,float r_disrupt, float r_fof, Galaxies& gal){
+void Cluster::get_fof_galaxies2(float m_infall,float r_disrupt, float r_fof, Galaxies& gal) const{
+  //Not implemented
+  throw;
   for(int i =0;i<core_size;++i){
     bool use;
     if(core_m[i]>m_infall && core_r[i]>r_disrupt)
@@ -2686,8 +2715,8 @@ void Cluster::get_fof_galaxies2(float m_infall,float r_disrupt, float r_fof, Gal
     for(int j=0;j<core_cp_size[i];++j)
       cp_usage[core_cp_offset[i]+j]=use;
   }
-  dtk::reorder(cp_usage,cp_size,cp_cm.get_srt());
-  find_fof_cm(r_fof,cp_x,cp_y,cp_z,cp_usage,cp_color,cp_size,cp_cm);
+  // dtk::reorder(cp_usage,cp_size,cp_cm.get_srt());
+  // find_fof_cm(r_fof,cp_x,cp_y,cp_z,cp_usage,cp_color,cp_size,cp_cm);
   std::vector<std::vector<float> > fof_x,fof_y,fof_z;
   /*std::vector<int> reordered_colors(cp_color,cp_color+cp_size);
   int* srt = dtk::new_sort_array<int>(cp_size);
@@ -2720,7 +2749,7 @@ void Cluster::get_fof_galaxies2(float m_infall,float r_disrupt, float r_fof, Gal
 }
 void Cluster::get_radial_bins(float m_infall,float r_disrupt,float r_fof, 
 			      std::vector<float>& r2_bins, float Ngal_r2_lim,
-			      std::vector<float>& r_cnt, float& Ngal){
+			      std::vector<float>& r_cnt, float& Ngal) const{
   //Note: r2_bins are the radial bin edges squared. <- so we can avoid an unneed square root.
   //same for Ngal_r2_lim.
   //Galaxies gal;
@@ -2731,7 +2760,7 @@ void Cluster::get_radial_bins(float m_infall,float r_disrupt,float r_fof,
 }
 void Cluster::get_radial_bins(Galaxies& gal, std::vector<float>& r_bins,
 			      std::vector<float>& r2_bins, float Ngal_r2_lim,
-			      std::vector<float>& r_cnt, float& Ngal){
+			      std::vector<float>& r_cnt, float& Ngal) const{
   float sqr_r200 = sod_radius*sod_radius;
   /*  for(int i =0;i<r2_bins.size();++i){
     std::cout<<i<<": "<<sqrt(r2_bins[i])<<std::endl;
@@ -2902,7 +2931,11 @@ void Cluster::write_out_lb_prop(std::string file_loc){
   file<<x<<"\t"<<y<<"\t"<<z<<"\t"<<sod_mass<<"\t"<<sod_radius<<"\t"<<redshift<<std::endl;
   file.close();
 }
-
+void Cluster::move_cores_together(){
+  move_together(x,rL,core_x,core_size);
+  move_together(y,rL,core_y,core_size);
+  move_together(z,rL,core_z,core_size);
+}
 void ZMR::write_txt(std::string file_loc){
   std::ofstream file(file_loc.c_str());
   write_array(file,"z_bins",z_bins);
