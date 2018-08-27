@@ -2,10 +2,9 @@
 
 sod_loc /media/luna1/dkorytov/data/OuterRim/sod/m000.${step}.sodproperties
 core_loc /media/luna1/dkorytov/data/OuterRim/cores/03_31_2018.OR.${step}.coreproperties   
-#core_central_loc  /media/luna1/dkorytov/projects/core_tracking/core_central_infall/output/params/q.param/${step}_core_central.gio
 core_central_loc  NULL
-zmr_loc     /home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7/result/type1_weight1_mag1_clr1_result.npz
-zmrh5_loc   /home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7/result/type1_weight1_mag1_clr1_result.hdf5
+zmr_loc     NULL
+zmrh5_loc   /home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_0.2avoid/result/type1_weight1_mag1_clr1_result.hdf5
 core_prtcl_loc NULL
 accum_prtcl_loc NULL
 cluster_loc     tmp_hdf5/clusters_OR.hdf5

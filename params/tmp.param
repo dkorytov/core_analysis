@@ -8,13 +8,13 @@ zmr_loc     /home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7/result/t
 zmrh5_loc   /home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7/result/type1_weight1_mag1_clr1_result.hdf5
 core_prtcl_loc NULL
 accum_prtcl_loc NULL
-cluster_loc     tmp_hdf5/clusters_OR.hdf5
+cluster_loc     tmp_hdf5/tmp.hdf5
 
 use_central_infall	false
 force_central_as_galaxy false
 force_center_on_central false
 
-read_clusters_from_file true
+read_clusters_from_file false
 write_clusters_to_file	false
 write_core_clusters_to_file false
 
