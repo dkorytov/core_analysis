@@ -194,7 +194,7 @@ for zi in range(0,zmr_sdss.z_bins.size-1):
     plt.legend(loc='best',framealpha=0.5)
     plt.xlabel(r'$R/R_{200}$')
     plt.ylabel(r'\text{Error}')
-    plt.yscale('log')
+    # plt.yscale('log')
 dtk.set_fig_path("figs/zmrs/")
 dtk.save_figs("figs/"+param_file+"/"+__file__+"/",extension=".png")
 plt.show()
