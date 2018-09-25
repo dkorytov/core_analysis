@@ -1777,20 +1777,22 @@ void load_cores(){
     //   dtk::reorder(cores.central_step,cores.size,srt);
     // }
     // dtk::reorder(cores.is_central,cores.size,srt);
-    float  len_xyz[3] = {rL, rL, rL};
-    size_t len_ijk[3] = {chaining_mesh_grid_size, chaining_mesh_grid_size, chaining_mesh_grid_size};
-    dtk::ChainingMeshIndex cm(len_xyz, len_ijk, 3);
-    float* data_xyz[3] = {cores.x, cores.y, cores.z};
-    cm.place_onto_mesh(data_xyz, cores.size);
-    std::cout<<"min/max radius: "<<dtk::min(cores.radius,cores.size)
-	     <<"/"<<dtk::max(cores.radius,cores.size)<<std::endl;
-    std::cout<<"min/max infall mass: "<<dtk::min(cores.infall_mass,cores.size)
-	     <<"/"<<dtk::max(cores.infall_mass,cores.size)<<std::endl;
+
+    ///****
+    // float  len_xyz[3] = {rL, rL, rL};
+    // size_t len_ijk[3] = {chaining_mesh_grid_size, chaining_mesh_grid_size, chaining_mesh_grid_size};
+    // dtk::ChainingMeshIndex cm(len_xyz, len_ijk, 3);
+    // float* data_xyz[3] = {cores.x, cores.y, cores.z};
+    // cm.place_onto_mesh(data_xyz, cores.size);
+    // std::cout<<"min/max radius: "<<dtk::min(cores.radius,cores.size)
+    // 	     <<"/"<<dtk::max(cores.radius,cores.size)<<std::endl;
+    // std::cout<<"min/max infall mass: "<<dtk::min(cores.infall_mass,cores.size)
+    // 	     <<"/"<<dtk::max(cores.infall_mass,cores.size)<<std::endl;
 
 
-    all_cores[steps[i]]=cores;
-    all_core_cms[steps[i]]=cm;
-    std::cout<<"here is okay"<<std::endl;
+    // all_cores[steps[i]]=cores;
+    // all_core_cms[steps[i]]=cm;
+    // std::cout<<"here is okay"<<std::endl;
   }
   t.stop();
   std::cout<<"\tdone. time: "<<t<<std::endl;
