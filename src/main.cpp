@@ -2167,7 +2167,7 @@ void calculate_likelihood_grid(std::vector<float> mi_bins, std::vector<float> rd
   std::vector<double> result(mi_bins.size()*rd_bins.size()*rm_bins.size());
   uint indx =0;
   dtk::AutoTimer t2;
-  //#pragma omp parallel for lastprivate(zmr_cores)
+#pragma omp parallel for firstprivate(zmr_cores, t2), private(indx)
   for(uint mi=0;mi<mi_bins.size();++mi){
     zmr_cores.copy_bins(zmr_sdss);
     std::cout<<"\r\t"<<mi<<"/"<<mi_bins.size()<<"\t*/"<<rd_bins.size()<<" time: "<<t2;
