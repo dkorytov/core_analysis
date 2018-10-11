@@ -647,7 +647,8 @@ double param_cost(CoreParam cp);
 void calculate_likelihood_grid(std::vector<float> mi_bins,
 			       std::vector<float> rd_bins,
 			       std::vector<float> rm_bins,
-			       std::string       out_loc);
+			       std::string       out_loc,
+			       CoreParam& max_lkhd_param);
 CoreParam find_min(std::vector<Cluster>& clstrs, ZMR& zmr_cores, const ZMR& zmr_sdss,
 		   float mi0,float rd0,float rfof0,float rm0);
 template<typename T>
@@ -1570,9 +1571,14 @@ int main(int argc, char** argv){
     write_out_clusters(all_clusters,fit_cp);
   if(run_mcmc)
     run_MCMC_all_openmp(fit_cp,chain_length,true);
-  if(calc_likelihood)
-    calculate_likelihood_grid(mi_bins,rd_bins,rm_bins,dtk::make_str("output/",param.get_file_name(),"/lgrid.param"));
-  
+  if(calc_likelihood){
+    CoreParam max_lkhd_param;
+    calculate_likelihood_grid(mi_bins,rd_bins,rm_bins,dtk::make_str("output/",param.get_file_name(),"/lgrid.param"), max_lkhd_param);
+    make_zmr(all_clusters, max_lkhd_param, zmr_cores, false);
+    std::string lkhd_cores_file_loc = dtk::make_str("output/", param.get_file_name(), "/zmr_lkhd_cores.param");
+    zmr_cores.write_txt(lkhd_cores_file_loc);
+    //write_core_param(max_lkhd_param
+  }
   
 
   //test_mcmc(fit_cp);  
@@ -2160,7 +2166,8 @@ double calc_diff_abundance(const std::map<int,Cores>& all_cores,const CoreParam&
 }
 
 void calculate_likelihood_grid(std::vector<float> mi_bins, std::vector<float> rd_bins,
-			       std::vector<float> rm_bins, std::string       out_loc){
+			       std::vector<float> rm_bins, std::string       out_loc, 
+			       CoreParam& max_lkhd_param){
   std::cout<<"Calculating likelihoods..."<<std::endl;
   std::cout<<"bins size: "<<mi_bins.size()<<" "<<rd_bins.size()<<" "<<rm_bins.size()<<std::endl;
   dtk::AutoTimer t;
@@ -2193,6 +2200,27 @@ void calculate_likelihood_grid(std::vector<float> mi_bins, std::vector<float> rd
       }
     }
   }
+  int max_lkhd_indx = 0;
+  float max_lkhd_val = result[max_lkhd_indx];
+  for(int i =0; i< result.size();++i){
+    if(result[i]<max_lkhd_val){
+      max_lkhd_indx=i;
+      max_lkhd_val = result[i];
+    }
+  }
+  int mi_max_indx, rd_max_indx, rm_max_indx;
+  mi_max_indx = max_lkhd_indx/(rm_bins.size()*rd_bins.size());
+  rd_max_indx = (max_lkhd_indx/rm_bins.size())%rd_bins.size();
+  rm_max_indx = max_lkhd_indx%rm_bins.size();
+  max_lkhd_param.m_infall  = mi_bins[mi_max_indx];
+  max_lkhd_param.r_disrupt = rd_bins[rd_max_indx];
+  max_lkhd_param.r_merger  = rm_bins[rm_max_indx];
+  max_lkhd_param.r_fof     = -1.0;
+  std::cout<<std::endl;
+  std::cout<<"log likelihood: "<<max_lkhd_val<<std::endl;
+  std::cout<<"m_infall best: "<<mi_bins[mi_max_indx]<<std::endl;
+  std::cout<<"r_disrup best: "<<rd_bins[rd_max_indx]<<std::endl;
+  std::cout<<"r_merger best: "<<rm_bins[rm_max_indx]<<std::endl;
   std::ofstream file(out_loc.c_str());
   write_array(file,"result",result);
   write_array(file,"mi_bins",mi_bins);
@@ -2200,7 +2228,6 @@ void calculate_likelihood_grid(std::vector<float> mi_bins, std::vector<float> rd
   write_array(file,"rm_bins",rm_bins);
   file.close();
   std::cout<<"done time: "<<t<<std::endl;
-  
 }
 double param_cost(double m_i,double r_d,double r_m,double r_fof){
   double massive_cost = 100000;
