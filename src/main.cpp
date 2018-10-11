@@ -853,7 +853,7 @@ void run_MCMC(CoreParam cp,int steps,int seed,bool verbose,
   make_zmr(all_clusters,cp,zmr_mcmc_core,verbose);
   double current_state_log_likelihood;
   //current_state_log_likelihood = fake_log_likelihood(cp);//calc_diff(zmr_mcmc_core,zmr_sdss)+param_cost(cp);
-  current_state_log_likelihood = calc_diff(zmr_mcmc_core,zmr_sdss,all_cores,cp)+param_cost(cp);
+  current_state_log_likelihood = calc_diff(zmr_mcmc_core,zmr_sdss,all_cores,cp)/2.0+param_cost(cp);
   float current_val;
   const gsl_rng_type * T;
   gsl_rng * r;
@@ -884,7 +884,7 @@ void run_MCMC(CoreParam cp,int steps,int seed,bool verbose,
     make_zmr(all_clusters,cp2,zmr_mcmc_core,verbose);
     double new_state_log_likelihood;
     //new_state_log_likelihood = fake_log_likelihood(cp2);
-    new_state_log_likelihood = calc_diff(zmr_mcmc_core,zmr_sdss,all_cores,cp)+param_cost(cp2);
+    new_state_log_likelihood = calc_diff(zmr_mcmc_core,zmr_sdss,all_cores,cp)/2.0+param_cost(cp2);
     double diff_state_log_likelihood = new_state_log_likelihood-current_state_log_likelihood;
     if(verbose)
       std::cout<<"diff loglh: "<<diff_state_log_likelihood<<std::endl;
