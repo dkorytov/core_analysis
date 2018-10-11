@@ -2177,12 +2177,17 @@ void calculate_likelihood_grid(std::vector<float> mi_bins, std::vector<float> rd
 #pragma omp parallel for firstprivate(zmr_cores, t2), private(indx)
   for(uint mi=0;mi<mi_bins.size();++mi){
     zmr_cores.copy_bins(zmr_sdss);
-    std::cout<<"\r\t"<<mi<<"/"<<mi_bins.size()<<"\t*/"<<rd_bins.size()<<" time: "<<t2;
+    // if(omp_get_thread_num()==0)
+    //   std::cout<<"\r\t"<<mi<<"/"<<mi_bins.size()<<"\t*/"<<rd_bins.size()<<" time: "<<t2;
     t2.start();
     for(uint rd=0;rd<rd_bins.size();++rd){
-      //std::cout<<"\r\t"<<mi<<"/"<<mi_bins.size()<<"\t"<<rd<<"/"<<rd_bins.size();
+      // if(omp_get_thread_num()==0)
+      // 	std::cout<<"\r\t"<<mi<<"/"<<mi_bins.size()<<"\t"<<rd<<"/"<<rd_bins.size();
       //float r_dspt = get_locked_r_disrupt(mi_bins.at(mi),all_cores[421]);
       for(uint rm=0;rm<rm_bins.size();++rm){
+	if(omp_get_thread_num()==0)
+	  std::cout<<"\r\t"<<mi<<"/"<<mi_bins.size()<<"\t"<<rd<<"/"<<rd_bins.size()<<"\t"<<rm<<"/"<<rm_bins.size();
+
 	indx = rm + rd*rm_bins.size() + mi*rm_bins.size()*rd_bins.size();
 
 	make_zmr(all_clusters,mi_bins.at(mi),rd_bins.at(rd),0.0,rm_bins.at(rm),zmr_cores,false);
