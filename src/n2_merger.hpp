@@ -103,17 +103,13 @@ void n2_merger(T* x,T* y, int* w, int* size,T merg_len,int64_t* colors_out){
 }
 
 template<typename T>
-void n2_merger3d(T* x,T* y, T* z, int* w, int* size,T merg_len,int64_t* colors_out){
+void n2_merger3d(T* x,T* y, T* z, int* w, int* size,T merger_len,int64_t* colors_out){
   //std::cout<<"We are c n2_merger3d"<<std::endl;
   //std::cout<<"size: "<<size[0]<<" merg_len: "<<merg_len<<std::endl;
   //  for(int i = 0;i<10;++i){
   //  std::cout<<x[i]<<" "<<y[i]<<std::endl;
   // }
-  float merger_len;
-  if(merg_len > 0)
-    merger_len = merg_len*merg_len;
-  else
-    merger_len = 0;
+  float merger_len_sq= merger_len*merger_len;
   std::vector<int64_t> colors(size[0]);
   for(int i =0;i<size[0];++i){
     colors[i] =i;
@@ -125,8 +121,8 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size,T merg_len,int64_t* colors_o
 	float dist_x = x[i]-x[j];
 	float dist_y = y[i]-y[j];
 	float dist_z = z[i]-z[j];
-	float dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
-	if(dist <= merger_len)
+	float dist_sq = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
+	if(dist_sq <= merger_len_sq)
 	  merg_colors(i,j,colors);
       }
     }
@@ -139,11 +135,10 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size,T merg_len,int64_t* colors_o
     dtk::reorder(z,size[0],srt);
     dtk::reorder(w,size[0],srt);
     delete [] srt;
-    float orginal_merger_len = std::sqrt(merger_len);
     for(int i =1;i<size[0];++i){
       for(int j =0;j<i;++j){
 	float dist_x = x[i]-x[j];
-	if(dist_x>orginal_merger_len)
+	if(dist_x>merger_len)
 	  break;
 	float dist_y = y[i]-y[j];
 	float dist_z = z[i]-z[j];
