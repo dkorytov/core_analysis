@@ -429,7 +429,7 @@ struct Cluster{
   Cluster(){}
   Cluster(int64_t htag,float sod_mass,float rad,float x,float y, float z,int step);
   void get_compact_galaxies(float m_infall, float r_disrupt, Galaxies& gal) const;
-  void get_compact_merged_galaxies(float m_infall,float r_disrupt, float r_merger, Galaxies& gal)const;
+  void get_compact_merged_galaxies(float m_infall,float r_disrupt, float r_merger, Galaxies& gal, bool verbose = false)const;
   void get_fof_galaxies(float m_infall, float r_disrupt, float r_fof,Galaxies& gal) const;
   void get_fof_galaxies2(float m_infall,float r_disrupt, float r_fof, Galaxies& gal)const;
   void get_fof_only_galaxies(float r_disrupt,Galaxies& gal);
@@ -446,7 +446,7 @@ struct Cluster{
   void alloc_cp(int size);
   void write_out_lb_cores(std::string file);
   void write_out_lb_prop(std::string file_loc);
-  void print_prop(){
+  void print_prop() const{
     std::cout<<"htag: "<<htag<<std::endl;
     std::cout<<"mass: "<<sod_mass<<std::endl;
     std::cout<<"radius: "<<sod_radius<<std::endl;
@@ -457,16 +457,21 @@ struct Cluster{
     std::cout<<"core_size: "<<core_size<<std::endl;
     std::cout<<"cp_size: "<<cp_size<<std::endl;
   }
-  void print_cores(){
+  void print_cores() const{
     std::cout<<"core size: "<<core_size<<std::endl;
     for(int i =0;i<10;++i){
-      std::cout<<i<<": "<<core_id[i]<<" "<<core_htag[i]<<" "<<core_m[i]<<" "<<core_cp_offset[i]<<" "<<core_cp_size[i]
+      std::cout<<i<<": "<<core_id[i]<<" "<<core_htag[i]<<" "<<core_m[i]<<" "
 	       <<"\t"<<core_x[i]<<" "<<core_y[i]<<" "<<core_z[i]<<" "<<core_r[i]<<std::endl;
+
     }
-    for(int i=core_size-10;i<core_size;++i){
-      std::cout<<i<<": "<<core_id[i]<<" "<<core_htag[i]<<" "<<core_m[i]<<" "<<core_cp_offset[i]<<" "<<core_cp_size[i]
-	       <<"\t"<<core_x[i]<<" "<<core_y[i]<<" "<<core_z[i]<<" "<<core_r[i]<<std::endl;
-    }
+    // for(int i =0;i<10;++i){
+    //   std::cout<<i<<": "<<core_id[i]<<" "<<core_htag[i]<<" "<<core_m[i]<<" "<<core_cp_offset[i]<<" "<<core_cp_size[i]
+    // 	       <<"\t"<<core_x[i]<<" "<<core_y[i]<<" "<<core_z[i]<<" "<<core_r[i]<<std::endl;
+    // }
+    // for(int i=core_size-10;i<core_size;++i){
+    //   std::cout<<i<<": "<<core_id[i]<<" "<<core_htag[i]<<" "<<core_m[i]<<" "<<core_cp_offset[i]<<" "<<core_cp_size[i]
+    // 	       <<"\t"<<core_x[i]<<" "<<core_y[i]<<" "<<core_z[i]<<" "<<core_r[i]<<std::endl;
+    // }
   }
   void print_cp(){
     std::cout<<"cp_size: "<<cp_size<<std::endl;
@@ -1406,7 +1411,6 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     //   // std::cout<<"\t\t\t"<<clstr.core_m[j]<<" "<<clstr.core_r[j]<<std::endl;
     // }
   }
-
   std::cout<<"\tdone: "<<t<<std::endl;
 }
 void bcast_cluster(Cluster& cluster, MPI_Datatype mpi_cluster_type,int root, MPI_Comm comm){
@@ -1542,12 +1546,14 @@ int main(int argc, char** argv){
   fit_cp.r_fof    = r_fof;
   std::cout<<"----:"<<std::endl;
   make_zmr(all_clusters,m_infall,r_disrupt,r_fof,r_merger,zmr_cores,false);
+  std::cout<<"not make zmr"<<std::endl;
   double cost1 = calc_diff(zmr_sdss, zmr_cores,all_cores,fit_cp);
   double cost2 = calc_diff(zmr_cores,zmr_sdss,all_cores,fit_cp);
-  if(max_iterations > 0)
+  std::cout<<"it's not the cost"<<std::endl;
+  if(max_iterations > 0){
     fit_cp = find_min(all_clusters, zmr_cores, zmr_sdss, std::log10(m_infall),
 		      std::log10(r_disrupt), std::log10(r_fof), std::log10(r_merger));
-
+  }
   make_zmr(all_clusters,fit_cp,zmr_cores,false);
   std::cout<<"this is the cost: "<<calc_diff(zmr_sdss, zmr_cores,all_cores,fit_cp)<<std::endl;
 
@@ -1629,7 +1635,11 @@ void load_param(char* file_name){
   use_central_infall = param.get<bool>("use_central_infall");
   force_central_as_galaxy = param.get<bool>("force_central_as_galaxy");
   force_center_on_central = param.get<bool>("force_center_on_central");
-
+  if(use_central_infall || force_central_as_galaxy || force_center_on_central){
+    std::cout<<"The use of use_central_infall, force_central_as_galaxy, force_center_on_central is not allowed"<<std::endl;
+    std::cout<<"Maybe force_center_on_central may work, but needs to be looked into"<<std::endl;
+    throw;
+  }
   read_clusters_from_file = param.get<bool>("read_clusters_from_file");
   write_clusters_to_file = param.get<bool>("write_clusters_to_file");
   write_core_clusters_to_file = param.get<bool>("write_core_clusters_to_file");
@@ -1999,11 +2009,19 @@ void make_zmr(const std::vector<Cluster>& clstrs, float m_infall,float r_disrupt
     // std::cout<<"z_i: "<<z_i<<"  m_i: "<<m_i<<std::endl;
     float Ngal_r2_lim =1.0; //galaxies within sqrt(1.0)*r200 are counted for Ngal;
     Galaxies gal;
-    //clstrs[i].print_prop();
+    // std::cout<<"Printing cluster info"<<std::endl;
+    // clstrs[i].print_prop();
     // clstrs[i].print_cores();
     gal.reserve(clstrs[i].core_size);
+    bool massive = clstrs[i].sod_mass > 1.1e+14;
+    //std::cout<<clstrs[i].sod_mass<<std::endl;
     if(fit_r_merger){
-      clstrs[i].get_compact_merged_galaxies(m_infall,r_disrupt,r_merger,gal);
+      if(verbose && massive && false){
+	std::cout<<"mass: "<<clstrs[i].sod_mass<<std::endl;
+	std::cout<<"we are merging shit!"<<std::endl;
+	std::cout<<r_merger<<std::endl;
+      }
+      clstrs[i].get_compact_merged_galaxies(m_infall,r_disrupt,r_merger,gal, verbose=false);
     }
     else{
       // std::cout<<"Standard compact cores"<<std::endl;
@@ -2031,7 +2049,7 @@ void make_zmr(const std::vector<Cluster>& clstrs, float m_infall,float r_disrupt
 
   t.stop();
   if(verbose){
-    zmr.print_non_zero();
+    //zmr.print_non_zero();
     std::cout<<"\tdone making zmr. time: "<<t<<std::endl;
   }
 }
@@ -2138,8 +2156,8 @@ double calc_diff_abundance(const std::map<int,Cores>& all_cores,const CoreParam&
   double cost = 0.0;
   float box_vol = rL*rL*rL;
   float expected_sum = expected_comov_abundance*box_vol; 
+  // std::cout<<"parameters: "<<cp.m_infall<<" "<<cp.r_disrupt<<std::endl;  
   // std::cout<<"expected_sum: "<<expected_sum<<std::endl;
-  // std::cout<<cp.m_infall<<" "<<cp.r_disrupt<<std::endl; // 
   //  dtk::pause();
   for(int i =0;i<steps.size();++i){
     const Cores cores = all_cores.at(steps[i]);
@@ -2150,18 +2168,19 @@ double calc_diff_abundance(const std::map<int,Cores>& all_cores,const CoreParam&
     }		
     float offset =0;
     float sum = std::accumulate(compact,compact+cores.size,offset);
-    //float sum = ssum;
     // std::cout<<"sum:"<<sum<<std::endl;
     float sum_err = std::sqrt(sum+1.0);
-    // std::cout<<"diff: "<<expected_sum-sum<<"/"<<sum_err<<std::endl;
+    // std::cout<<"sum_err: "<<sum_err<<std::endl;
+    // std::cout<<"diff: "<<expected_sum-sum<<std::endl;
     float err = (expected_sum-sum)/sum_err;
-    // std::cout<<"err:"<<err*err<<"<-"<<err<<std::endl;
+    // std::cout<<"err: "<<err<<std::endl;
+    // std::cout<<"err^2: "<<err*err<<std::endl;
     cost += err*err;
     delete [] compact;
   }
   //std::cout<<"cost: "<<cost<<std::endl;
-  //std::cout<<"\n"<<std::endl;
-  //  dtk::pause();
+  // std::cout<<"\n"<<std::endl;
+  // dtk::pause();
   return cost;
 }
 
@@ -2314,18 +2333,18 @@ CoreParam find_min(std::vector<Cluster>& clstrs, ZMR& zmr_cores, const ZMR& zmr_
   std::cout<<fit_var_num<<std::endl;
   for(int i =0;i<fit_var_num;++i){
     std::cout<<"["<<i<<"]: "<<gsl_vector_get(x,i)<<std::endl;
+    
   }
   gsl_multimin_function gmf; //the struct describing the functoin to minimize.
   gmf.f = min_func_gsl; //the function to minimize
   gmf.n = fit_var_num; //the number of variables to search over in x.
   gmf.params = (void*) &fparam; //the constant params of the function
-  
   const gsl_multimin_fminimizer_type* T = gsl_multimin_fminimizer_nmsimplex2rand;
   gsl_multimin_fminimizer* state= NULL;
   size_t iter=0;
   int status;
   double size;
-  step_size = gsl_vector_alloc(fit_var_num);
+  step_size = gsl_vector_alloc(fit_var_num);  
   gsl_vector_set_all(step_size,simplex_step_size);
   gsl_vector_set(step_size,0,simplex_step_size*4.0);
   state = gsl_multimin_fminimizer_alloc(T,fit_var_num);
@@ -2456,6 +2475,10 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
   }
   else{
     // Fastest & correct method of getting cores
+    std::cout<<__LINE__<<std::endl;
+    std::cout<<cluster_radial_volume<<std::endl;
+    std::cout<<halo_pos<<std::endl;
+    std::cout<<halo_pos[0]<<std::endl;
     my_cores  = cmi.query_elements_within(halo_pos, cluster_radial_volume);
   }
   std::cout<<"\tfound cores:"<<my_cores.size()<<std::endl;
@@ -2651,7 +2674,7 @@ void Cluster::get_compact_galaxies(float m_infall, float r_disrupt, Galaxies& ga
   }
 }
 void Cluster::get_compact_merged_galaxies(float m_infall,float r_disrupt,float r_merger,
-					  Galaxies& gal) const{
+					  Galaxies& gal, bool verbose ) const{
   //ostd::cout<<"core merger core size: "<<core_size;
   std::vector<float> new_x,new_y,new_z;
   std::vector<int> new_w;
@@ -2664,7 +2687,12 @@ void Cluster::get_compact_merged_galaxies(float m_infall,float r_disrupt,float r
     }
   }
   int result_size=new_x.size();
-  //std::cout<<" n2 start size: "<<result_size;
+  if(verbose){
+    std::cout<<"m_infall: "<<m_infall<<std::endl;
+    std::cout<<"r_disrupt: "<<r_disrupt<<std::endl;
+    std::cout<<"r_merger: "<<r_merger<<std::endl<<std::endl;
+    std::cout<<" n2 start size: "<<result_size;
+  }
   n2_merger3d(&new_x[0],
 	      &new_y[0],
 	      &new_z[0],
@@ -2672,7 +2700,8 @@ void Cluster::get_compact_merged_galaxies(float m_infall,float r_disrupt,float r
 	      &result_size,
 	      r_merger,
 	      NULL);
-  //std::cout<<" -> end size "<<result_size<<std::endl;
+  if(verbose)
+    std::cout<<" -> end size "<<result_size<<std::endl;
   for(int i=0;i<result_size;++i){
     gal.x.push_back(new_x[i]);
     gal.y.push_back(new_y[i]);
@@ -2803,8 +2832,8 @@ void Cluster::get_radial_bins(Galaxies& gal, std::vector<float>& r_bins,
     float dx = gal.x[i]-x;
     float dy = gal.y[i]-y;
     float dz = gal.z[i]-z;
-    
-    float dr = sqrt(dx*dx + dy*dy + dz*dz)/sod_radius; 
+    //TODO: Remove temp factor of 1.2
+    float dr = sqrt(dx*dx + dy*dy + dz*dz)/(sod_radius); 
     
     if(false){//only one projection along z-axis
       float dr2 = dx*dx+dy*dy;
@@ -2860,6 +2889,7 @@ void Cluster::get_radial_bins(Galaxies& gal, std::vector<float>& r_bins,
       }
       std::cout<<"sum: "<<sum<<std::endl;
     }
+    //Correct code in this section
     else{
       if(dr < r_bins[0]){
 	//doesn't even make into any radial bin
@@ -3016,6 +3046,8 @@ float get_locked_r_disrupt(float m_infall,Cores cores){
   int r_min_num = get_num_compact_cores(m_infall,r_min,cores);
   int r_max_num = get_num_compact_cores(m_infall,r_max,cores);
   if(expected_sum > r_max_num){
+    // std::cout<<"locked_r_disrupt Error: expected_sum ["<<expected_sum<<"] is larger than maximum possible ["<<r_max_num<<"]"<<std::endl;
+    // throw;
     return 1.0; //We expect more cores than we actually have. 
   }
   // std::cout<<"we are starting..."<<std::endl;
