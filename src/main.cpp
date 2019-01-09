@@ -2186,7 +2186,7 @@ double calc_diff_abundance(const std::map<int,Cores>& all_cores,const CoreParam&
     int* compact = new int[cores.size];
     int ssum;
     for(int j =0;j<cores.size;++j){
-      compact[j]=(cores.radius[j]<cp.r_disrupt) && (cores.central_mass[j]>cp.m_infall);
+      compact[j]=(cores.radius[j]<cp.r_disrupt) && (cores.infall_mass[j]>cp.m_infall);
     }		
     float offset =0;
     float sum = std::accumulate(compact,compact+cores.size,offset);
@@ -3058,7 +3058,7 @@ void write_core_params(CoreParam cp, std::string file_loc){
 int get_num_compact_cores(float m_infall, float r_disrupt, Cores cores){
   int num=0;
   for(int i =0;i<cores.size;++i){
-    num += (cores.central_mass[i]<m_infall) && (cores.radius[i]<r_disrupt);
+    num += (cores.infall_mass[i]>m_infall) && (cores.radius[i]<r_disrupt);
   }
   return num;
 }
