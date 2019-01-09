@@ -553,6 +553,7 @@ std::vector<int> steps;
 float step;
 //std::string fof_loc;
 std::string sod_loc;
+bool sod_hdf5; //If false, sod_loc is a gio file. If true, it's a hdf5 file.
 std::string core_loc;
 std::string core_central_loc;
 std::string zmr_loc;
@@ -630,7 +631,7 @@ dtk::StepRedshift stepz(200,0,500);
 
 void load_param(char* file_name);
 void load_cores();
-void load_cores(std::string file_name,Cores& cores);
+// void load_cores(std::string file_name,Cores& cores);
 void load_halo_cats();
 void load_zmr_sdss(std::string,ZMR& zmr_sdss);
 void broadcast_zmr(ZMR& zmr);
@@ -1454,6 +1455,11 @@ void bcast_cluster(Cluster& cluster, MPI_Datatype mpi_cluster_type,int root, MPI
   MPI_Bcast(cluster.cp_z,         cluster.cp_size, MPI_FLOAT,   root,comm);
 }
 void bcast_clusters(std::vector<Cluster>& clusters, int root, MPI_Comm comm){
+  if(nproc == 1){
+    std::cout<<"No need to bcast clusters"<<std::endl;
+    return;
+  }
+
   if(rank==0)
     std::cout<<"Starting to Bcast clusters"<<std::endl;
   dtk::AutoTimer t;
@@ -1623,6 +1629,10 @@ void load_param(char* file_name){
 
   //fof_loc = param.get<std::string>("fof_loc");
   sod_loc = param.get<std::string>("sod_loc");
+  if(param.has("sod_hdf5"))
+    sod_hdf5 = param.get<bool>("sod_hdf5");
+  else
+    sod_hdf5 = false;
   core_loc = param.get<std::string>("core_loc");
   core_central_loc = param.get<std::string>("core_central_loc");
   zmr_loc = param.get<std::string>("zmrh5_loc");
@@ -1794,21 +1804,20 @@ void load_cores(){
     // }
     // dtk::reorder(cores.is_central,cores.size,srt);
 
-    ///****
-    // float  len_xyz[3] = {rL, rL, rL};
-    // size_t len_ijk[3] = {chaining_mesh_grid_size, chaining_mesh_grid_size, chaining_mesh_grid_size};
-    // dtk::ChainingMeshIndex cm(len_xyz, len_ijk, 3);
-    // float* data_xyz[3] = {cores.x, cores.y, cores.z};
-    // cm.place_onto_mesh(data_xyz, cores.size);
+    float  len_xyz[3] = {rL, rL, rL};
+    size_t len_ijk[3] = {chaining_mesh_grid_size, chaining_mesh_grid_size, chaining_mesh_grid_size};
+    dtk::ChainingMeshIndex cm(len_xyz, len_ijk, 3);
+    float* data_xyz[3] = {cores.x, cores.y, cores.z};
+    cm.place_onto_mesh(data_xyz, cores.size);
     // std::cout<<"min/max radius: "<<dtk::min(cores.radius,cores.size)
     // 	     <<"/"<<dtk::max(cores.radius,cores.size)<<std::endl;
     // std::cout<<"min/max infall mass: "<<dtk::min(cores.infall_mass,cores.size)
     // 	     <<"/"<<dtk::max(cores.infall_mass,cores.size)<<std::endl;
 
 
-    // all_cores[steps[i]]=cores;
-    // all_core_cms[steps[i]]=cm;
-    // std::cout<<"here is okay"<<std::endl;
+    all_cores[steps[i]]=cores;
+    all_core_cms[steps[i]]=cm;
+    std::cout<<"here is okay"<<std::endl;
   }
   t.stop();
   std::cout<<"\tdone. time: "<<t<<std::endl;
@@ -1866,12 +1875,25 @@ void load_halo_cats(){
     //std::string fof_file = dtk::rep_str(fof_loc,"${step}",step[i]);
     HaloCat hc;
     std::string sod_file = dtk::rep_str(sod_loc,"${step}",steps[i]);
-    dtk::read_gio_quick(sod_file,"fof_halo_tag",hc.htag,hc.size);
-    dtk::read_gio_quick(sod_file,"fof_halo_center_x",hc.x,hc.size);
-    dtk::read_gio_quick(sod_file,"fof_halo_center_y",hc.y,hc.size);
-    dtk::read_gio_quick(sod_file,"fof_halo_center_z",hc.z,hc.size);
-    dtk::read_gio_quick(sod_file,"sod_halo_mass",hc.sod_mass,hc.size);
-    dtk::read_gio_quick(sod_file,"sod_halo_radius",hc.sod_radius,hc.size);
+    // If 
+    if(sod_hdf5){
+      std::cout<<sod_file<<std::endl;
+      std::cout<<hc.htag<<" "<<hc.size<<std::endl;
+      dtk::read_hdf5(sod_file, "fof_halo_tag",      hc.htag,       hc.size, true); 
+      dtk::read_hdf5(sod_file, "fof_halo_center_x", hc.x,          hc.size, true);
+      dtk::read_hdf5(sod_file, "fof_halo_center_y", hc.y,          hc.size, true);
+      dtk::read_hdf5(sod_file, "fof_halo_center_z", hc.z,          hc.size, true);
+      dtk::read_hdf5(sod_file, "sod_halo_mass_m200m",     hc.sod_mass,   hc.size, true);
+      dtk::read_hdf5(sod_file, "sod_halo_radius_r200m",   hc.sod_radius, hc.size, true);
+    }
+    else{
+      dtk::read_gio_quick(sod_file,"fof_halo_tag",      hc.htag,       hc.size);
+      dtk::read_gio_quick(sod_file,"fof_halo_center_x", hc.x,          hc.size);
+      dtk::read_gio_quick(sod_file,"fof_halo_center_y", hc.y,          hc.size);
+      dtk::read_gio_quick(sod_file,"fof_halo_center_z", hc.z,          hc.size);
+      dtk::read_gio_quick(sod_file,"sod_halo_mass",     hc.sod_mass,   hc.size);
+      dtk::read_gio_quick(sod_file,"sod_halo_radius",   hc.sod_radius, hc.size);
+    }
     all_halocats[steps[i]]=hc;
   }
   t.stop();
@@ -2428,14 +2450,16 @@ float move_together(float dx, float rL){
 Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, float z,int step):
   htag(htag),sod_mass(sod_mass),sod_radius(sod_radius),redshift(stepz.z_from_step(step)),
   x(x),y(y),z(z),step(step),core_size(0),cp_size(0){
+  //Q: why is sod_radius scaled this way??
+  //A: it looks like this sod is only used for scaled_cluster_radial selection of cores. 
   sod_radius = sod_radius/(1.0/(redshift+1.0));
   //find the cores that belong to this halo/clusters
   std::cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<std::endl;
   std::cout<<"halo "<<htag<<" mass: "<<sod_mass<<std::endl;
-  Cores corecat = all_cores[step];
-  dtk::ChainingMeshIndex& cmi = all_core_cms[step];
-  std::vector<size_t> my_cores;
-  float halo_pos[3] = {x,y,z};
+  Cores corecat = all_cores[step]; std::cout<<__LINE__<<std::endl;
+  dtk::ChainingMeshIndex& cmi = all_core_cms.at(step);std::cout<<__LINE__<<std::endl;
+  std::vector<size_t> my_cores;std::cout<<__LINE__<<std::endl;
+  float halo_pos[3] = {x,y,z};std::cout<<__LINE__<<std::endl;
   // Don't interate over all the cores, only the ones within the box
   if(false){
     for(int i =0;i<corecat.size;++i){
