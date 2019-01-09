@@ -2224,15 +2224,20 @@ void calculate_likelihood_grid(std::vector<float> mi_bins, std::vector<float> rd
     for(uint rd=0;rd<rd_bins.size();++rd){
       // if(omp_get_thread_num()==0)
       // 	std::cout<<"\r\t"<<mi<<"/"<<mi_bins.size()<<"\t"<<rd<<"/"<<rd_bins.size();
-      //float r_dspt = get_locked_r_disrupt(mi_bins.at(mi),all_cores[421]);
+      float r_dspt_lock_val;
+      if(lock_r_disrupt)
+	r_dspt_lock_val= get_locked_r_disrupt(mi_bins.at(mi),all_cores[401]);
       for(uint rm=0;rm<rm_bins.size();++rm){
 	if(omp_get_thread_num()==0)
 	  std::cout<<"\r\t"<<mi<<"/"<<mi_bins.size()<<"\t"<<rd<<"/"<<rd_bins.size()<<"\t"<<rm<<"/"<<rm_bins.size();
 
 	indx = rm + rd*rm_bins.size() + mi*rm_bins.size()*rd_bins.size();
-
-	make_zmr(all_clusters,mi_bins.at(mi),rd_bins.at(rd),0.0,rm_bins.at(rm),zmr_cores,false);
-	//make_zmr(all_clusters,mi_bins.at(mi),r_dspt,0.0,rm_bins.at(rm),zmr_cores,false);
+	if(!lock_r_disrupt){
+	  make_zmr(all_clusters,mi_bins.at(mi),rd_bins.at(rd),0.0,rm_bins.at(rm),zmr_cores,false);
+	}
+	else{
+	  make_zmr(all_clusters,mi_bins.at(mi),r_dspt_lock_val,0.0,rm_bins.at(rm),zmr_cores,false);
+	}
 	CoreParam cp;
 	cp.m_infall = mi_bins[mi];
 	cp.r_disrupt=rd_bins[rd];
