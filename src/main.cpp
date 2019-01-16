@@ -1506,12 +1506,23 @@ void bcast_clusters(std::vector<Cluster>& clusters, int root, MPI_Comm comm){
 }
 void write_core_params(CoreParam cp, std::string file_loc);
 float get_locked_r_disrupt(float m_infall,Cores cores);
+int core_fit(char* param_fname);
+
 //Main...you know the thing that runs
 //everything...
 int main(int argc, char** argv){
   MPI_Init(&argc,&argv);
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   MPI_Comm_size(MPI_COMM_WORLD,&nproc);
+  dtk::AutoTimer t1;
+  for(int i =1;i<argc;++i){
+    std::cout<<"running: "<<argv[i]<<std::endl;
+    core_fit(argv[i]);
+  }
+  std::cout<<"\n\nAll param files done: "<<t1<<std::endl;
+  MPI_Finalize();
+}
+int core_fit(char* param_fname){
 
 
   dtk::Timer t;t.start();
@@ -1519,7 +1530,7 @@ int main(int argc, char** argv){
     std::cout<<"Fitting cores"<<std::endl;
     std::cout<<"num ranks: "<<nproc<<std::endl;
   }
-  load_param(argv[1]);
+  load_param(param_fname);
   std::cout<<"tring this out.."<<std::endl;
   std::string file_loc = dtk::make_str("output/",param.get_file_name(),"/mcmc.gio");
   dtk::ensure_file_path(file_loc);
@@ -1612,7 +1623,6 @@ int main(int argc, char** argv){
   t.stop();
   if(rank==0)
     std::cout<<" total time "<<t<<std::endl;
-  MPI_Finalize();
 }
 
 
