@@ -13,7 +13,12 @@ rc('text',usetex=True)
 param_file = sys.argv[1]
 
 zmr_sdss = ZMR(file_loc="output/"+param_file+"/zmr_sdss.param")
-zmr_cores = ZMR(file_loc="output/"+param_file+"/zmr_cores.param")
+if dtk.file_exists("output/"+param_file+"/zmr_lkhd_cores.param"):
+    zmr_cores = ZMR(file_loc="output/"+param_file+"/zmr_lkhd_cores.param")
+    print "likelihood zmrs"
+else:
+    zmr_cores = ZMR(file_loc="output/"+param_file+"/zmr_cores.param")
+    print "fit zmrs"
 #zmr_sdss_npz = np.load("/home/dkorytov/phys/Ngal_sdss/data/normal_mask4/result/type1_weight1_mag1_clr1_result.npz")
 #print zmr_sdss_npz.keys()
 
@@ -59,18 +64,17 @@ for zi in range(0,zmr_sdss.z_bins.size-1):
     plt.xlabel(r'$r/R_{200}$')
     plt.ylabel(r'$\Sigma_{gal}$[$gal/R_{200}^{2}$]')
     plt.yscale('log')
-
+c_i=0
 for mi in range(0,zmr_sdss.m_bins.size-1):
     if(np.sum(zmr_sdss.zm_counts[:,mi])==0 or np.sum(zmr_cores.zm_counts[:,mi])==0):
         continue #Both don't have data here
     plt.figure()
     #plt.title(r"Galaxy Density %.2f $<$ z $<$ %.2f"%(zmr_sdss.z_bins[zi],zmr_sdss.z_bins[zi+1]))
     plt.title(r'%.2e$<$M200$<$%.2e'%(zmr_sdss.m_bins[mi],zmr_sdss.m_bins[mi+1]))
-    c_i=0
+    c = colors[c_i%len(colors)]
+    c_i +=1
     for zi in range(0,zmr_sdss.z_bins.size-1):
         if(zmr_sdss.zm_counts[zi,mi] > 0 and zmr_cores.zm_counts[zi,mi] > 0):
-            c = colors[c_i%len(colors)]
-            c_i +=1
             zmr_gd = zmr_sdss.zmr_gal_density[zi,mi]
             err = zmr_sdss.zmr_gal_density_err[zi,mi]
             min_err = np.clip(zmr_gd-err,1e-1,np.max(zmr_gd-err))
@@ -166,6 +170,7 @@ for zi in range(0,zmr_sdss.z_bins.size-1):
     plt.figure()
     c_i =0;
     total_sum = 0
+    dof = 0
     for mi in range(0,zmr_sdss.m_bins.size-1):
         if(zmr_sdss.zm_counts[zi,mi] > 0 and zmr_cores.zm_counts[zi,mi] > 0):
             c = colors[c_i%len(colors)]
@@ -179,7 +184,9 @@ for zi in range(0,zmr_sdss.z_bins.size-1):
             res = diff/err
             total = np.sum(res)
             total_sum += np.sum(res)
-            plt.plot(r_avg,res,'o-',color=c,label='%.2e$<$M200$<$%.2e:%f'%(zmr_sdss.m_bins[mi],zmr_sdss.m_bins[mi+1],total))
+            dof += np.size(res)
+            plt.plot(r_avg, res, '-',color=c,label='%.2f$<$M200$<$%.2f err:%.1f'%(np.log10(zmr_sdss.m_bins[mi]),np.log10(zmr_sdss.m_bins[mi+1]),total))
+            plt.fill_between(r_avg, 0, res, alpha=0.3, color=c)
             if(c_i ==9):
                 for i in range(0,10):
                     print "diff:"
@@ -189,7 +196,9 @@ for zi in range(0,zmr_sdss.z_bins.size-1):
                     print zmr_err_sdss[i],"+",zmr_err_core[i],"=",err[i]
                     print "res:"
                     print res[i]
-    plt.title("Source of Error [%f]"%total_sum)
+    ylim = plt.ylim()
+    plt.ylim([0, ylim[1]])
+    plt.title("Source of Error [%f] $\chi^{2}$=%f"%(total_sum,(total_sum/2.0)/(dof-2)))
     plt.grid()
     plt.legend(loc='best',framealpha=0.5)
     plt.xlabel(r'$R/R_{200}$')
