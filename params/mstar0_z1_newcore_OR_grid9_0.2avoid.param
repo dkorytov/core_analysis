@@ -69,9 +69,9 @@ r_fof_constraints     0  1
 
 #For the likelihood grid 
 calc_likelihood true
-mi_bins_info 12.0    13.0    64
-rd_bins_info 0.001   1.0     64
-rm_bins_info 0.001   0.3     64
+mi_bins_info 12.0    13.0    16
+rd_bins_info 0.001   1.0     16
+rm_bins_info 0.001   0.3     16
 rf_bins_info 0.001   0.3     2 
 
 #for the simplex walker 

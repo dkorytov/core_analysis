@@ -5,7 +5,7 @@ GIOLIBDIR= /media/luna1/dkorytov/projects/hacc/trunk/datastar.cpu/frontend/lib
 GIOLIBMPIDIR= /media/luna1/dkorytov/projects/hacc/trunk/datastar.cpu/mpi/lib
 GIOINCDIR= /media/luna1/dkorytov/projects/hacc/trunk/genericio
 hdf5_opts= /usr/lib/x86_64-linux-gnu/libhdf5_hl_cpp.a /usr/lib/x86_64-linux-gnu/libhdf5_cpp.a /usr/lib/x86_64-linux-gnu/libhdf5_hl.a /usr/lib/x86_64-linux-gnu/libhdf5.a -Bsymbolic-functions -z relro -lpthread -lz -ldl -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../x86_64-linux-gnu/crtn.o
-CFLAGS   =  -O3 -g -Isrc -I${GIOINCDIR} -Idtk -fPIC -fopenmp -pg
+CFLAGS   =  -O3 -Isrc -I${GIOINCDIR} -Idtk -fPIC -fopenmp -g
 #-L/usr/lib/openmpi/lib -lmpi_cxx -lmpi
 
 #LDFLAGS  = -Lgenericio/genericio.build/libs -Ldtk/lib -lGenericIO -ldtk -lgsl -lgslcblas ${hdf5_opts} -ldtk -pthread
