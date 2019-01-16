@@ -19,8 +19,10 @@ import numpy.random
 from matplotlib.colors import LogNorm
 from scipy.optimize import minimize
 
+
+
+
 def plot_1d_likelihood(label, data_bins, lkhd_data, fit_data, data_bds, log = False):
-    print(",,,", label)
     plt.figure()
     plt.plot(data_bins, lkhd_data, 'x-', label='likelihood: {:.3f}->{:.3f}'.format(data_bins[data_bds[0]], data_bins[data_bds[1]]))
     ylim = plt.ylim()
@@ -47,9 +49,6 @@ def plot_2d_likelihood(labels, data_bins, lkhd_data):
     cs = plt.pcolor(data_bins[0]-dx, data_bins[1]-dy, lkhd_data.T, cmap='Blues')
 
     #cs_lines = plt.contour(np.log10(mi_bins), rd_bins, lkhd_mi_rd.T, c='k')
-    print(data_bins[0].shape)
-    print(data_bins[1].shape)
-    print(lkhd_data.shape)
     cs_lines = dtk.quick_contour(data_bins[0], data_bins[1], lkhd_data, 
                                  levels = (0.68, 0.87),
                                  colors = 'k',
@@ -91,17 +90,19 @@ def get_bounds_limits(vals, bins, fit, limit=0.67):
     # ax = plt.gca()
     # i = 0
     while(True):
-        print(l_indx, r_indx,end='')
+        # print(l_indx, r_indx)
         if current_sum >= limit:
             break
         if r_indx == vals.size-1:
             while(current_sum >= limit):
                 current_sum += vals[l_indx]
                 l_indx -= 1
+            break
         if l_indx == 0:
             while(current_sum >= limit):
                 current_sum += vals[r_indx]
                 r_indx += 1
+            break
         if vals[r_indx+1] > vals[l_indx-1]:
             r_indx += 1
             current_sum += vals[r_indx]
@@ -113,13 +114,205 @@ def get_bounds_limits(vals, bins, fit, limit=0.67):
         # i +=1
         # print("->" , l_indx, r_indx, '\t', current_sum)
 
-    # print("final: ", l_indx, r_indx)
+    # print("pre-final: ", l_indx, r_indx)
     if l_indx< 0:
         l_indx = 0
     if r_indx == vals.size:
         r_indx -=1
+    # print("final: ", l_indx, r_indx)
     return l_indx, r_indx
             
+
+def get_1d_axis_sum(dim, dims):
+    result = []
+    for i in dims:
+        pass
+
+
+def corner_plot(labels, grid_dic = None, mcmc_dic = None):
+    """Plot a corner plot for either from the likelihood calculated on a
+    grid and/or from an MCMC.
+
+    """
+    size = len(labels)
+    #If there is anything to plot at all
+    if grid_dic is None and mcmc_dic is None and cost_dic is None:
+        return 
+    #Make sure the plotting options are compatible 
+    if grid_dic is not None and mcmc_dic is not None:
+        assert grid_dic['cost'] == None, "cost fucntion plotting cannot work with mcmc plotting"
+    
+    # Create the figure
+    fig, axs = plt.subplots(size, size,  sharex = 'col', figsize=(10,8))
+    #Plotting
+    if grid_dic is not None and mcmc_dic is not None:
+        corner_plot_mcmc(labels, mcmc_dic['mcmc_loc'], fig, axs, colors = ['r', 'r', 'r'], plot_hist = False, alpha = 0.1)
+        corner_plot_grid(labels, grid_dic['bins'], grid_dic['lkhd'], fig, axs, cost=grid_dic['cost'], colors = ['b', 'b', 'b'], plot_hist=True, alpha=0.1)
+
+    elif grid_dic is not None:
+        corner_plot_grid(labels, grid_dic['bins'], grid_dic['lkhd'], fig, axs, cost=grid_dic['cost'])
+    elif mcmc_dic is not None:
+        corner_plot_mcmc(labels, mcmc_dic['mcmc_loc'], fig, axs)
+    #Adding axis labels
+    for i in range(0,size):
+        ax = axs[size-1,i]
+        ax.set_xlabel(labels[i])
+    for i in range(1, size):
+        ax = axs[i,0]
+        ax.set_ylabel(labels[i])
+    #Formatting
+    fig.tight_layout()
+    fig.subplots_adjust(hspace=0,wspace=0)
+    #Get rid of upper right corner of subplots
+    for i in range(size):
+        for j in range(size):
+            if i < j:
+                axs[i][j].set_visible(False)
+
+
+def corner_plot_mcmc(labels, mcmc_loc, fig, axs, colors =['b', 'k', 'r'], plot_hist = True, alpha = 0.3):
+    mcmc_m_i  = dtk.gio_read(mcmc_loc,"mcmc_mass_infall")
+    mcmc_r_d  = dtk.gio_read(mcmc_loc,"mcmc_r_disrupt")
+    mcmc_id   = dtk.gio_read(mcmc_loc,"mcmc_walker_id")
+    mcmc_step = dtk.gio_read(mcmc_loc,"mcmc_walker_step")
+    mcmc_val  = dtk.gio_read(mcmc_loc,"mcmc_value")
+    size = len(labels)
+    data = []
+    slct = mcmc_step > np.max(mcmc_step)/2.0
+    data.append(np.log10(mcmc_m_i[slct]))
+    data.append(mcmc_r_d[slct])
+    best_fit_indx = np.argmin(mcmc_val[slct])
+    #Diagonal Covariance 
+    for i in range(0, len(labels)):
+        ax = axs[i][i]
+        h, xbins = np.histogram(data[i], bins = 50, density=True)
+        ax.plot(dtk.bins_avg(xbins), h, c=colors[0])
+
+        # Calculate 1 simga limits
+        b1, b2 = get_bounds_limits(h, xbins, 0)
+        b2 += 0
+        b1 += 0
+        b1a = b1-1
+        ylim = ax.get_ylim()
+        print(np.shape(dtk.bins_avg(xbins[b1a:b2])))
+        print(np.shape(h[b1:b2]))
+        ax.fill_between(dtk.bins_avg(xbins[b1a:b2]), 0, h[b1:b2], lw=0.0, alpha=alpha, color=colors[0])
+        ax.set_xlim(np.min(xbins), np.max(xbins))
+        ax.set_ylim(ylim) #restore old ylims before fill_bewteen
+        ax.axvline(data[i][best_fit_indx], c=colors[2], ls='--')
+    for i in range(size):
+        for j in range(size):
+            if i <= j:
+                continue
+            ax = axs[i][j]
+            h, xbins,ybins = np.histogram2d(data[j], data[i], bins = 50)
+            if plot_hist:
+                ax.pcolor(xbins,ybins, h.T, cmap='Greys')
+            dtk.quick_contour(xbins, ybins, h, ax=ax,
+                              levels = (0.68, 0.87),
+                              colors = colors[1],
+                              label = False,
+                              smoothen = False,
+                              bins_edges = True)
+            ax.axvline(data[j][best_fit_indx], c=colors[2], ls='--')
+            ax.axhline(data[i][best_fit_indx], c=colors[2], ls='--')
+            plt.sca(ax)
+            plt.xticks(rotation=45)
+
+    
+def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 'r'], plot_hist = True, alpha = 0.3):
+    assert len(labels) == len(bins), "label count [{}] doesn't match bin count[{}]".format(len(labels), len(bins))
+    assert len(labels) == len(np.shape(lkhd)), "Likelihood dims [{}] don't match label count [{}]".format(len(np.shape(lkhd)), len(labels))
+    for i in range(0, len(labels)):
+        assert len(bins[i]) == np.shape(lkhd)[i], "Likelihood matrix length [{}] on dim [{}, {}] doesn't match bin length [{}]. Lkhd matrix: {}".format(np.shape(lkhd[i])[i], i, labels[i], len(bins[i]), np.shape(lkhd))
+    print(np.argmax(lkhd))
+    size = len(labels)
+    if cost is None:
+        fig.suptitle("Likelihood")
+    else:
+        fig.suptitle("Fit Cost")
+    axs_list = np.arange(0,size)
+    limits = []
+    max_lkhd = [] #Maximum likelihood value
+    max_lkhd_limits = [] #maxiumum likelihood 1-sigma indexs
+    max_lkhd_limits_val = []#maxiumum likelihood 1-sigma values
+    for i in range(size):
+        ax = axs[i][i]
+        lkhd_1d = np.sum(lkhd, axis=tuple(np.delete(axs_list, i)))
+        dx = bins[i][1]-bins[i][0]
+        lkhd_1d = lkhd_1d/dx/np.sum(lkhd_1d)
+        limits.append((np.min(bins[i]), np.max(bins[i])))
+        max_lkhd.append(bins[i][np.argmax(lkhd_1d)])
+        max_lkhd_limits.append(get_bounds_limits(lkhd_1d, bins[i], max_lkhd[i]))
+        max_lkhd_limits_val.append((bins[i][max_lkhd_limits[i][0]], bins[i][max_lkhd_limits[i][1]]))
+        b1, b2 = max_lkhd_limits[i]
+        b2 = b2 + 1
+        if b2 == len(bins[i]):
+            b2 = len(bins[i])-1
+    
+        if cost is None:
+            ax.plot(bins[i], lkhd_1d, c=colors[0])
+            ylim = ax.get_ylim()
+            ax.fill_between(bins[i][b1:b2], 0, lkhd_1d[b1:b2], lw=0.0, alpha=alpha, color=colors[0])
+        else:
+            print(cost.shape)
+            print(tuple(np.delete(axs_list, i)))
+            t1 = np.amin(cost, axis=tuple(np.delete(axs_list, i)))
+            ax.plot(bins[i], t1.flatten())
+        ax.axvline(max_lkhd[i], c=colors[2],ls='--')
+        ax.set_xlim(limits[i])
+        if cost is None:
+            ax.set_ylim(ylim)
+
+        plt.sca(ax)
+        plt.xticks(rotation=45)
+        lim_plus = bins[i][b2] - max_lkhd[i]
+        lim_minus = max_lkhd[i] -bins[i][b1]
+        test = "{} = $\mathrm{{ {:.3f}^{{ +{:.3f} }}_{{ -{:.3f} }} }}$".format(labels[i],
+                                                                               max_lkhd[i], 
+                                                                               lim_plus, 
+                                                                               lim_minus)
+        ax.set_title(test)
+        ax.set_yticks([])
+        if i == 0:
+            if cost is None:
+                ax.set_ylabel('Likelihood')
+            else:
+                ax.set_ylabel('Cost')
+        if cost is not None:
+            ax.set_yscale('log')
+        ax.yaxis.tick_right()
+    for i in range(size):
+        for j in range(size):
+            if i == j:
+                continue
+            if i < j:
+                continue
+            lkhd_2d = np.sum(lkhd, axis=tuple(np.delete(axs_list, (i,j))))
+            if cost is not None:
+                print(cost.shape)
+                cost_2d = np.amin(cost, axis=tuple(np.delete(axs_list, (i,j))))
+                print(cost_2d.shape)
+            ax = axs[i][j] 
+            dx = bins[j][1]-bins[j][0]
+            dy = bins[i][1]-bins[i][0]
+            if plot_hist:
+                if cost is not None:
+                    ax.pcolor(bins[j]-dx/2.0, bins[i]-dy/2.0, cost_2d.T, cmap='nipy_spectral_r', norm=clr.LogNorm())
+                else:
+                    ax.pcolor(bins[j]-dx/2.0, bins[i]-dy/2.0, lkhd_2d.T, cmap='Greys')
+            dtk.quick_contour(bins[j], bins[i], lkhd_2d,
+                              ax =ax,
+                              levels=(0.68, 0.87),
+                              colors = colors[1],
+                              label = False,
+                              smoothen = False,
+                              bins_edges=False,)
+            ax.axvline(max_lkhd[j], c=colors[2], ls='--')
+            ax.axhline(max_lkhd[i], c=colors[2], ls='--')
+            plt.sca(ax)
+            plt.xticks(rotation=45)
+
 
 def calc_likelihood_bounds(param_file_name):
     param = dtk.Param(param_file_name)
@@ -139,8 +332,7 @@ def calc_likelihood_bounds(param_file_name):
     result2 = result.reshape((mi_bins.size,rd_bins.size,rm_bins.size))
     
     #print(np.min(result2), np.max(result2))
-    lkhd = np.exp(-(result2-np.min(result2))/2.0)
-    
+    lkhd = np.exp(-(result2-np.min(result2)))
     lkhd_mi = np.sum(lkhd, axis=(1,2))
     lkhd_rd = np.sum(lkhd, axis=(0,2))
     lkhd_rm = np.sum(lkhd, axis=(0,1))
@@ -165,81 +357,33 @@ def calc_likelihood_bounds(param_file_name):
         rm_bds = get_bounds_limits(lkhd_rm, np.log10(rm_bins), np.log10(fit_rm))
         rm_bounds = np.log10(rm_bins)[rm_bds[0]] - np.log10(fit_rm), np.log10(rm_bins)[rm_bds[1]] - np.log10(fit_rm)
         print("mi: ",np.log10(fit_mi),mi_bounds)
-
-    plot_1d_likelihood("Minfall", np.log10(mi_bins), lkhd_mi, np.log10(fit_mi), mi_bds)
-
-    
-    # plt.figure()
-    # plt.plot(np.log10(mi_bins), lkhd_mi, label='likelihood')
-    # ylim = plt.ylim()
-    # plt.ylim([0, ylim[1]])
-    # plt.fill_between(np.log10(mi_bins[mi_bds[0]:mi_bds[1]]), 0, lkhd_mi[mi_bds[0]:mi_bds[1]], lw=0.0, alpha=0.3)
-    # plt.axvline(np.log10(fit_mi),c='k', ls='--')
-    # plt.plot([],[],'k--',label='grad descn fit value')
-
-    # plt.grid()
-    # plt.legend(loc='best')
-    # plt.xlabel('M$_{infall}$ [h$^{-1}$M$_\odot$]')
-    # plt.ylabel('Likelihood ')
-
+    if has_rd and not has_rm:
+        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2), 'cost': None})
+        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2), 'cost': np.sum(result2, axis=2)})
+        # corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], mcmc_dic = {'mcmc_loc': "output/{}/mcmc.gio".format(param_file_name)})
+        # corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2), 'cost': None}, mcmc_dic = {'mcmc_loc': "output/{}/mcmc.gio".format(param_file_name)})
+    if has_rm and not has_rd:
+        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{merger}}$'], grid_dic = {'bins': [np.log10(mi_bins), rm_bins], 'lkhd': np.sum(lkhd, axis=1), 'cost': None})
+        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{merger}}$'], grid_dic = {'bins': [np.log10(mi_bins), rm_bins], 'lkhd': np.sum(lkhd, axis=1), 'cost': np.sum(result2, axis=1)})
+    if has_rm and has_rd:
+        
+        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':None})
+        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':result2})
+        #corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], [np.log10(mi_bins), rd_bins, rm_bins], lkhd, cost = result2)
+    if not has_rm and not has_rd:
+        plot_1d_likelihood("M$_{infall}$", mi_bins, lkhd_mi, fit_mi, mi_bds, log=True);
+        
+    txt_file = file("figs/"+param_file_name+"/"+__file__+"/grid_fit_param.txt", 'a')
+    txt_file.write("mi\t{}".format(np.log10(mi_bins[np.argmax(lkhd_mi)])))
+    txt_file.write("mi_limits\t{}\t{}\n".format(mi_bins[mi_bds[0]],mi_bins[mi_bds[1]]))
     if has_rd:
-        plot_1d_likelihood('R$_{disrupt}$ [h$^{-1}$Mpc]',rd_bins, lkhd_rd, fit_rd, rd_bds)
-
-    if has_rm:
-        plot_1d_likelihood('R$_{merger}$ [h$^{-1}$Mpc]',rm_bins, lkhd_rm, fit_rm, rm_bds)
-
-    # plt.figure()
-    # plt.plot(rm_bins, lkhd_rm)
-
-    # plt.figure()
-
-    # plt.grid()
-    # plt.xlabel('log10(M_infall/h^-1 Msun)')
-    # plt.ylabel('R_disrupt [h^-1 Mpc]')
-    if has_rd:
-        plot_2d_likelihood(('M_infall', 'R_merger'), (np.log10(mi_bins), rd_bins), lkhd_mi_rd)
-
-    if has_rm:
-        plot_2d_likelihood(('M_infall', 'R_merger'), (np.log10(mi_bins), rm_bins), lkhd_mi_rm)
-    # plt.figure()
-    # cs = plt.pcolor(np.log10(mi_bins), rd_bins, lkhd_mi_rd.T, cmap='Blues')
-
-    # #cs_lines = plt.contour(np.log10(mi_bins), rd_bins, lkhd_mi_rd.T, c='k')
-    # cs_lines = dtk.quick_contour(np.log10(mi_bins), rd_bins, lkhd_mi_rd, 
-    #                              levels = (0.68, 0.87),
-    #                              colors = 'k',
-    #                              label = False,
-    #                              smoothen = True,
-    #                              bins_edges = False)
-                      
-
-    # plt.xlabel('log10(M$_{infall}$ h$^{-1}$ Msun)')
-    # plt.ylabel('R$_{disrupt}$ [h$^{-1} Mpc]')
-    # plt.grid()
-    # cb = plt.colorbar(cs)
-    # cb.add_lines(cs_lines)
-
-    # plt.figure()
-    # plt.title('Confidence Contours')
-
-    # plt.xlabel('M$_{infall}$ [h$^{-1}$M$_\odot$]')
-    # plt.ylabel('R$_{disrupt}$ [h$^{-1}$Mpc]')
-    # plt.grid()
-    # plt.tight_layout()
-
-    dtk.save_figs('figs/'+param_file_name+'/'+__file__+'/')
-    txt_file = file("figs/"+param_file_name+"/"+__file__+"/fit_param.txt", 'a')
-    txt_file.write("mi_limits \t{}\t{}\n".format(mi_bins[mi_bds[0]],mi_bins[mi_bds[1]]))
-    if has_rd:
-        txt_file.write("rd_limits \t{}\t{}\n".format(rd_bins[rd_bds[0]],rd_bins[rd_bds[1]]))
+        txt_file.write("rd\t{}".format(rd_bins[np.argmax(lkhd_rd)]))
+        txt_file.write("rd_limits\t{}\t{}\n".format(rd_bins[rd_bds[0]],rd_bins[rd_bds[1]]))
     if has_rm: 
+        txt_file.write("rm\t{}".format(rm_bins[np.argmax(lkhd_rm)]))
         txt_file.write("rm_limits \t{}\t{}\n".format(rm_bins[rm_bds[0]],rm_bins[rm_bds[1]]))
 
-
     
-    plt.show()
-
-
 def write_fit_param(param_file):
     fname = "output/"+param_file+"/fit_core_params.hdf5"
     print(fname)
@@ -252,7 +396,10 @@ def write_fit_param(param_file):
     grad_descent_hfile.close()
     txt_file.close()
 
+
 if __name__ == "__main__":
-    write_fit_param(sys.argv[1])
+    param_file_name = sys.argv[1]
+    write_fit_param(param_file_name)
     calc_likelihood_bounds(sys.argv[1])
-    
+    dtk.save_figs('figs/'+param_file_name+'/'+__file__+'/')
+    plt.show()    
