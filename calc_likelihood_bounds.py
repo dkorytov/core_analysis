@@ -68,11 +68,8 @@ def plot_2d_likelihood(labels, data_bins, lkhd_data):
 def renormalize(vals, bins):
     print("norm", np.shape(vals))
     width = bins[1]-bins[0]
-    print(np.shape(width))
     vals2 = vals/width
-    print(np.shape(vals2))
     a = vals2/np.sum(vals2)
-    print(np.shape(a))
     return a
 
 
@@ -194,8 +191,6 @@ def corner_plot_mcmc(labels, mcmc_loc, fig, axs, colors =['b', 'k', 'r'], plot_h
         b1 += 0
         b1a = b1-1
         ylim = ax.get_ylim()
-        print(np.shape(dtk.bins_avg(xbins[b1a:b2])))
-        print(np.shape(h[b1:b2]))
         ax.fill_between(dtk.bins_avg(xbins[b1a:b2]), 0, h[b1:b2], lw=0.0, alpha=alpha, color=colors[0])
         ax.set_xlim(np.min(xbins), np.max(xbins))
         ax.set_ylim(ylim) #restore old ylims before fill_bewteen
@@ -225,7 +220,6 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
     assert len(labels) == len(np.shape(lkhd)), "Likelihood dims [{}] don't match label count [{}]".format(len(np.shape(lkhd)), len(labels))
     for i in range(0, len(labels)):
         assert len(bins[i]) == np.shape(lkhd)[i], "Likelihood matrix length [{}] on dim [{}, {}] doesn't match bin length [{}]. Lkhd matrix: {}".format(np.shape(lkhd[i])[i], i, labels[i], len(bins[i]), np.shape(lkhd))
-    print(np.argmax(lkhd))
     size = len(labels)
     if cost is None:
         fig.suptitle("Likelihood")
@@ -255,8 +249,6 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
             ylim = ax.get_ylim()
             ax.fill_between(bins[i][b1:b2], 0, lkhd_1d[b1:b2], lw=0.0, alpha=alpha, color=colors[0])
         else:
-            print(cost.shape)
-            print(tuple(np.delete(axs_list, i)))
             t1 = np.amin(cost, axis=tuple(np.delete(axs_list, i)))
             ax.plot(bins[i], t1.flatten())
         ax.axvline(max_lkhd[i], c=colors[2],ls='--')
@@ -290,9 +282,7 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
                 continue
             lkhd_2d = np.sum(lkhd, axis=tuple(np.delete(axs_list, (i,j))))
             if cost is not None:
-                print(cost.shape)
                 cost_2d = np.amin(cost, axis=tuple(np.delete(axs_list, (i,j))))
-                print(cost_2d.shape)
             ax = axs[i][j] 
             dx = bins[j][1]-bins[j][0]
             dy = bins[i][1]-bins[i][0]
@@ -351,12 +341,12 @@ def calc_likelihood_bounds(param_file_name):
         fit_rd = hfile_fit['r_disrupt'].value[0]
         rd_bds = get_bounds_limits(lkhd_rd, rd_bins, fit_rd)
         rd_bounds = rd_bins[rd_bds[0]], rd_bins[rd_bds[1]]
-        print("rd: ",fit_rd, rd_bounds)
+        print("rd: {} + {:.2f} - {:.2f}".format(fit_rd, rd_bounds[0], rd_bounds[1]))
     if has_rm:
         fit_rm = hfile_fit['r_merger'].value[0]
         rm_bds = get_bounds_limits(lkhd_rm, np.log10(rm_bins), np.log10(fit_rm))
         rm_bounds = np.log10(rm_bins)[rm_bds[0]] - np.log10(fit_rm), np.log10(rm_bins)[rm_bds[1]] - np.log10(fit_rm)
-        print("mi: ",np.log10(fit_mi),mi_bounds)
+        print("rm: {} + {:.2f} - {:.2f}".format(np.log10(fit_rm), rm_bounds[0], rm_bounds[1]))
     if has_rd and not has_rm:
         corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2), 'cost': None})
         corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2), 'cost': np.sum(result2, axis=2)})
@@ -372,7 +362,7 @@ def calc_likelihood_bounds(param_file_name):
         #corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], [np.log10(mi_bins), rd_bins, rm_bins], lkhd, cost = result2)
     if not has_rm and not has_rd:
         plot_1d_likelihood("M$_{infall}$", mi_bins, lkhd_mi, fit_mi, mi_bds, log=True);
-        
+        # corner_plot([r'M$_{\mathrm{infall}}$'], grid_dic = {'bins':[np.log10(mi_bins)]]
     txt_file = file("figs/"+param_file_name+"/"+__file__+"/grid_fit_param.txt", 'a')
     txt_file.write("mi\t{}".format(np.log10(mi_bins[np.argmax(lkhd_mi)])))
     txt_file.write("mi_limits\t{}\t{}\n".format(mi_bins[mi_bds[0]],mi_bins[mi_bds[1]]))
