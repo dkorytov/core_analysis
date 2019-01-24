@@ -1711,7 +1711,6 @@ void load_param(char* file_name){
   mi_bins_info = param.get_vector<float>("mi_bins_info");
   rd_bins_info = param.get_vector<float>("rd_bins_info");
   rm_bins_info = param.get_vector<float>("rm_bins_info");
-  std::cout<<"these bins?!"<<std::endl;
   mi_bins = dtk::logspace(mi_bins_info[0],mi_bins_info[1],mi_bins_info[2]);
   rd_bins = dtk::linspace(rd_bins_info[0],rd_bins_info[1],rd_bins_info[2]);
   rm_bins = dtk::linspace(rm_bins_info[0],rm_bins_info[1],rm_bins_info[2]);
