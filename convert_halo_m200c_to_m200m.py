@@ -23,7 +23,7 @@ def load_halo_cat(sod_location, h_scaling):
     cat['sod_halo_radius']     = dtk.gio_read(sod_location, 'sod_halo_radius')/h_scaling; print("1")
     cat['sod_halo_cdelta']           = dtk.gio_read(sod_location, 'sod_halo_cdelta'); print("1")
     slct = cat['sod_halo_cdelta'] < 1
-    cat['sod_halo_cdelta'][slct] = 5.5
+    cat['sod_halo_cdelta'][slct] = 5.75
     slct = cat['sod_halo_cdelta'] > 20
     cat['sod_halo_cdelta'][slct] = 20
     print("done loading")
@@ -77,6 +77,7 @@ def convert_halo_m200c_to_m200m( sod_location, sod_output, time_step, redshift ,
     M_200c = cat['sod_halo_mass_m200c']
     M_200m = cat['sod_halo_mass_m200m']
 
+
     h, xbins, ybins = np.histogram2d(np.log10(M_200c), np.log10(M_200m), bins = 250)
     plt.figure()
     plt.pcolor(xbins, ybins, h.T, cmap = 'Blues', norm = clr.LogNorm())
@@ -94,8 +95,44 @@ def convert_halo_m200c_to_m200m( sod_location, sod_output, time_step, redshift ,
     plt.figure()
     plt.plot(dtk.bins_avg(xbins), h, '-x')
 
+    from colossus.halo import mass_adv
+    from colossus.cosmology import cosmology
+    cosmology.setCosmology('WMAP7')
+    
+    M200m_col, R200m_col, c200m_col = mass_adv.changeMassDefinitionCModel(cat['sod_halo_mass_m200c'], redshift,
+                                                                          "200c","200m", c_model='child18')#cat['sod_cdelta']
+    plt.figure()
+    h, xbins,ybins = np.histogram2d(np.log10(M_200m), np.log10(M200m_col), bins =256)
+    plt.pcolor(xbins, ybins, h.T, cmap='Blues', norm=clr.LogNorm())
+    plt.plot([np.min(xbins), np.max(xbins)], [np.min(xbins), np.max(xbins)], '--k')
+    plt.xlabel("my m200m")
+    plt.ylabel('colossus m200m')
+
+
+    plt.figure()
+    h, xbins, ybins = np.histogram2d(np.log10(M_200c), M_200c/M_200m, bins=100)
+    plt.pcolor(xbins, ybins, h.T, cmap='Blues', norm=clr.LogNorm())
+    xbins_cen = dtk.bins_avg(xbins)
+    median = dtk.binned_median(np.log10(M_200c), M_200c/M_200m, xbins)
+    plt.plot(xbins_cen, median, '-k', label='median')
+    plt.legend(loc='best', framealpha=0.0)
+    plt.xlabel("M200c")
+    plt.ylabel("M200c/M200m")
+
+    plt.figure()
+    h, xbins, ybins = np.histogram2d(np.log10(M_200m), M_200c/M_200m, bins=100)
+    plt.pcolor(xbins, ybins, h.T, cmap='Blues', norm=clr.LogNorm())
+    xbins_cen = dtk.bins_avg(xbins)
+    median = dtk.binned_median(np.log10(M_200m), M_200c/M_200m, xbins)
+    plt.plot(xbins_cen, median, '-k', label='median')
+    plt.legend(loc='best', framealpha=0.0)
+    plt.xlabel("M200m")
+    plt.ylabel("M200c/M200m")
+
+
+
     plt.show()
-    write_halo_cat(sod_output.replace("${step}", str(time_step)), cat)
+    # write_halo_cat(sod_output.replace("${step}", str(time_step)), cat)
 
 
 if __name__ == "__main__":
