@@ -674,6 +674,16 @@ void write_value(std::ofstream& file,std::string name,T data){
   file<<name<<" "<<data<<std::endl;
 }
 
+template<typename T, typename U>
+void multiply_vector(std::vector<T>& vec, U val){
+  for(size_t i =0;i<vec.size();++i)
+    vec[i] = vec[i]*3;
+}
+template<typename T, typename U>
+void multiply_array(T* vec, size_t size, U val){
+  for(size_t i =0;i<size;++i)
+    vec[i] = vec[i]*val;
+}
 
 float fake_log_likelihood(CoreParam cp){
   float sigma_mi =1;
@@ -1370,6 +1380,7 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
   dtk::read_hdf5(hfile, "/cores/core_m", core_m);
   dtk::read_hdf5(hfile, "/cores/core_is_central", core_is_central);
   dtk::read_hdf5(hfile, "/cores/core_step", core_step);
+
   clusters.resize(cluster_num);
   std::cout<<"Cluster number: "<<cluster_num<<std::endl;
   for(int i =0;i<cluster_num;++i){
@@ -1523,8 +1534,6 @@ int main(int argc, char** argv){
   MPI_Finalize();
 }
 int core_fit(char* param_fname){
-
-
   dtk::Timer t;t.start();
   if(rank==0){
     std::cout<<"Fitting cores"<<std::endl;
@@ -2468,12 +2477,12 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
   //A: it looks like this sod is only used for scaled_cluster_radial selection of cores. 
   sod_radius = sod_radius/(1.0/(redshift+1.0));
   //find the cores that belong to this halo/clusters
-  std::cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<std::endl;
-  std::cout<<"halo "<<htag<<" mass: "<<sod_mass<<std::endl;
-  Cores corecat = all_cores[step]; std::cout<<__LINE__<<std::endl;
-  dtk::ChainingMeshIndex& cmi = all_core_cms.at(step);std::cout<<__LINE__<<std::endl;
-  std::vector<size_t> my_cores;std::cout<<__LINE__<<std::endl;
-  float halo_pos[3] = {x,y,z};std::cout<<__LINE__<<std::endl;
+  // std::cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<std::endl;
+  // std::cout<<"halo "<<htag<<" mass: "<<sod_mass<<std::endl;
+  Cores corecat = all_cores[step]; // std::cout<<__LINE__<<std::endl;
+  dtk::ChainingMeshIndex& cmi = all_core_cms.at(step);// std::cout<<__LINE__<<std::endl;
+  std::vector<size_t> my_cores;// std::cout<<__LINE__<<std::endl;
+  float halo_pos[3] = {x,y,z};// std::cout<<__LINE__<<std::endl;
   // Don't interate over all the cores, only the ones within the box
   if(false){
     for(int i =0;i<corecat.size;++i){
@@ -2513,15 +2522,15 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
   }
   else{
     // Fastest & correct method of getting cores
-    std::cout<<__LINE__<<std::endl;
-    std::cout<<cluster_radial_volume<<std::endl;
-    std::cout<<halo_pos<<std::endl;
-    std::cout<<halo_pos[0]<<std::endl;
+    // std::cout<<__LINE__<<std::endl;
+    // std::cout<<cluster_radial_volume<<std::endl;
+    // std::cout<<halo_pos<<std::endl;
+    // std::cout<<halo_pos[0]<<std::endl;
     my_cores  = cmi.query_elements_within(halo_pos, cluster_radial_volume);
   }
-  std::cout<<"\tfound cores:"<<my_cores.size()<<std::endl;
+  // std::cout<<"\tfound cores:"<<my_cores.size()<<std::endl;
   alloc_cores(my_cores.size());
-  std::cout<<"\t alloc was fine.."<<std::endl;
+  // std::cout<<"\t alloc was fine.."<<std::endl;
   //copying the cores to clusters local info
   bool center_replaced =false;
   float central_mass = 0;

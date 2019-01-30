@@ -68,6 +68,7 @@ if __name__ == "__main__":
     
     inter_bl = np.interp(-21.22, mags, cum_sum_bl)
     inter_md = np.interp(-21.22, mags, cum_sum_md)
+    
     print("Balton:", inter_bl)
     print("Monter:", inter_md)
     plt.show()

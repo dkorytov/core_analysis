@@ -56,7 +56,7 @@ class ClusterData:
         ax1.set_aspect('equal')
         ax2.set_aspect('equal')
 
-    def plot_fit_cluster(self, i , m_infall,  r_disrupt, r_merger = None):
+    def plot_fit_cluster(self, i , m_infall,  r_disrupt, r_merger = 0.0):
         if self.mass[i] > 2e14:
             return
         start = self.core_offset[i]
@@ -108,7 +108,7 @@ class ClusterData:
         x = core_x[slct &  slct_compact]
         y = core_y[slct &  slct_compact]
         z = core_z[slct &  slct_compact]
-        gal_x, gal_y, gal_z, gal_w = n2merger.n2merger3d(x, y, z, 0.1)
+        gal_x, gal_y, gal_z, gal_w = n2merger.n2merger3d(x, y, z, r_merger)
         ax1.scatter(x, y, facecolor='g', edgecolor='g', alpha=0.3)
         ax1.scatter(gal_x, gal_y, facecolor='r', edgecolor='r', alpha=0.3)
 
@@ -123,8 +123,21 @@ class ClusterData:
         ax1.set_aspect('equal')
         ax2.set_aspect('equal')
         ax2.set_title("cores[{}]".format(self.core_size[i]))
-        ax1.set_title("cluster[{}] \n Mass {:.2e}".format(i, self.mass[i]))
+        ax1.set_title("cluster[{}] \n Mass {:.2e}, R200: {:.2f}".format(i, self.mass[i], self.rad[i]))
 
+
+class SODData:
+    def load_sod(self, sod_loc, sod_hdf5):
+        if sod_hdf5:
+            hfile = h5py.File(sod_loc, 'r')
+            self.rad = hfile['sod_halo_radius_r200m'].value
+            self.mass = hfile['sod_halo_mass_m200m'].value
+            self.rad_c = hfile['sod_halo_radius_r200m'].value
+            self.mass_c = hfile['sod_halo_radius_r200c'].value
+        else:
+            self.rad = dtk.gio_read(sod_loc, 'sod_halo_radius')
+            self.mass = dtk.gio_read(sod_loc, 'sod_halo_mass')
+        
 n2merger= None
 def plot_saved_clusters(param_filename):
     global n2merger
@@ -137,11 +150,52 @@ def plot_saved_clusters(param_filename):
     print(n2lib_loc)
     cluster_data.load_file(cluster_loc)
     for i in range(0,cluster_data.num):
-        cluster_data.plot_fit_cluster(i, 12.5, 0.05)
+        cluster_data.plot_fit_cluster(i, 12.2, 0.02)
         plt.show()
+
+def plot_hist(data, bins, style='-', label=None, ):
+    h, xbins = np.histogram(data, bins=bins)
+    bins_cen = dtk.bins_avg(xbins)
+    plt.plot(bins_cen, h, style, label=label)
+
+def test_saved_clusters(param_filename):
+    param = dtk.Param(param_filename)
+    cluster_loc = param.get_string('cluster_loc')
+    sod_loc = param.get_string("sod_loc")
+    sod_hdf5 = param.get_string("sod_hdf5")
+    
+    sod_data_raw = SODData();
+
+    sod_data_saved = SODData();
+    sod_data_saved.load_sod('/media/luna1/dkorytov/data/OuterRim/sod_200m/sod_m200m.401.test1.hdf5', True)
+
+    saved_cluster = ClusterData()
+    saved_cluster.load_file('tmp_hdf5/clusters_OR_M200m.test1.hdf5')
+    # sod_data_raw.load_sod('/media/luna1/dkorytov/data/OuterRim/sod/m000.401.sodproperties', False)
+    plt.figure()
+    bins = np.logspace(12, 16, 32)
+    plt.title("Mass")
+    # plot_hist(sod_data_raw.mass, bins, label='sod_raw')
+    plot_hist(sod_data_saved.mass, bins, label='sod saved')
+    plot_hist(saved_cluster.mass, bins, label='saved cluster')
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.xlabel('m200')
+    plt.legend(loc='best')
+
+    plt.figure()
+    bins = np.linspace(0,5,64)
+    plt.title("radius")
+    # plot_hist(sod_data_raw.rad, bins, label='sod_raw')
+    plot_hist(sod_data_saved.rad, bins, label='sod saved')
+    plot_hist(saved_cluster.rad, bins, label='saved cluster')
+    plt.yscale('log')
+    plt.xlabel('r200')
+    plt.legend(loc='best')
+    plt.show()
 
 if __name__ == "__main__":
     plot_saved_clusters(sys.argv[1])
-
+    #test_saved_clusters(sys.argv[1])
 
 
