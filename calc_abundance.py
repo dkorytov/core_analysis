@@ -15,8 +15,7 @@ import dtk
 import sys
 import time
 
-from scipy.special import gammainc
-
+from astropy.cosmology import WMAP7
 
 ## All in i-band
 
@@ -40,6 +39,17 @@ luminosity_function_blanton =       lambda x: press_schecter(0.00504  /0.7**3, -
 #     #return luminosity_function_blanton_funct()(mag_i) uncorrected for h=1
 #     return luminosity_function_blanton_funct()(mag_i)
 
+def convert_physical_to_comoving_vol( end_z):
+    z_bins = np.linspace(0, end_z, 1000)
+    comov_vol = WMAP7.comoving_volume(z_bins)
+    comov_shell = comov_vol[:-1] - comov_vol[1:]
+    z_shell = (z_bins[:-1] + z_bins[1:])/2.0
+    a_shell = 1.0/(1.0+z_shell)
+    a3_shell = a_shell**3
+    total_comov_vol = np.sum(comov_shell)
+    total_phys_vol = np.sum(comov_shell*a3_shell)
+    return total_phys_vol/total_comov_vol
+    
 if __name__ == "__main__":    
     mags = np.linspace(-25, -15, 100000)
     dmags = mags[1]-mags[0]
@@ -68,9 +78,18 @@ if __name__ == "__main__":
     
     inter_bl = np.interp(-21.22, mags, cum_sum_bl)
     inter_md = np.interp(-21.22, mags, cum_sum_md)
-    
-    print("Balton:", inter_bl)
-    print("Monter:", inter_md)
+    a = 1./(1.+0.21)
+    factor = convert_physical_to_comoving_vol(0.21)
+    print("Mstar+0")
+    print("Balton:", inter_bl/factor)
+    print("Monter:", inter_md/factor)
+
+    inter_bl = np.interp(-20.22, mags, cum_sum_bl)
+    inter_md = np.interp(-20.22, mags, cum_sum_md)
+    print("Mstar+1")
+    print("Balton:", inter_bl/factor)
+    print("Monter:", inter_md/factor)
+
     plt.show()
 
     

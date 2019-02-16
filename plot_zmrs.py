@@ -1,7 +1,14 @@
 #!/usr/bin/env python2.7
 
+import matplotlib
+import os
+#checks if there is a display to use.
+if os.environ.get('DISPLAY') is None:
+    matplotlib.use('Agg')
+
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from matplotlib import rc
 from zmr import ZMR
 import dtk
@@ -34,6 +41,7 @@ colors = ['b','r','g','m','c','y']
 c_i = 0
 
 
+#Plot all overlapping mass bins
 for zi in range(0,zmr_sdss.z_bins.size-1):
     if(np.sum(zmr_sdss.zm_counts[zi,:])==0 or np.sum(zmr_cores.zm_counts[zi,:])==0):
         continue #Both don't have data here
@@ -65,6 +73,10 @@ for zi in range(0,zmr_sdss.z_bins.size-1):
     plt.ylabel(r'$\Sigma_{gal}$[$gal/R_{200}^{2}$]')
     plt.yscale('log')
 c_i=0
+
+#plot individual mass bins
+gs=gridspec.GridSpec(5,1)
+#gs.update(hspace=0.05)
 for mi in range(0,zmr_sdss.m_bins.size-1):
     if(np.sum(zmr_sdss.zm_counts[:,mi])==0 or np.sum(zmr_cores.zm_counts[:,mi])==0):
         continue #Both don't have data here
@@ -75,29 +87,38 @@ for mi in range(0,zmr_sdss.m_bins.size-1):
     c_i +=1
     for zi in range(0,zmr_sdss.z_bins.size-1):
         if(zmr_sdss.zm_counts[zi,mi] > 0 and zmr_cores.zm_counts[zi,mi] > 0):
-            zmr_gd = zmr_sdss.zmr_gal_density[zi,mi]
+            ax1 = plt.subplot(gs[:4,:])
+            zmr_plt_sdss = zmr_sdss.zmr_gal_density[zi,mi]
             err = zmr_sdss.zmr_gal_density_err[zi,mi]
-            min_err = np.clip(zmr_gd-err,1e-1,np.max(zmr_gd-err))
-            plt.plot(r_avg,zmr_gd,'s--',color=c,lw=2,mfc='none',mec=c,mew=1.5,ms=8)
-            #plt.scatter(r_avg,zmr_gd,marker='s',facecolor='none',edgecolor=c)
-            plt.fill_between(r_avg,min_err,zmr_gd+err,color=c,alpha=0.3)
-            zmr_gd = zmr_cores.zmr_gal_density[zi,mi]
+            min_err = np.clip(zmr_plt_sdss-err,1e-1,np.max(zmr_plt_sdss-err))
+            ax1.plot(r_avg,zmr_plt_sdss,'s--',color=c,lw=2,mfc='none',mec=c,mew=1.5,ms=8)
+            #plt.scatter(r_avg,zmr_plt_sdss,marker='s',facecolor='none',edgecolor=c)
+            ax1.fill_between(r_avg,min_err,zmr_plt_sdss+err,color=c,alpha=0.3)
+            zmr_plt_cores = zmr_cores.zmr_gal_density[zi,mi]
             err = zmr_cores.zmr_gal_density_err[zi,mi]
-            min_err = np.clip(zmr_gd-err,1e-1,np.max(zmr_gd-err))
-            zmr_gd = np.clip(zmr_gd,1e-1,np.max(zmr_gd))
-            plt.plot(r_avg,zmr_gd,'o-',color=c)
-            plt.fill_between(r_avg,min_err,zmr_gd+err,color=c,alpha=0.3)
-            plt.plot
+            min_err = np.clip(zmr_plt_cores-err,1e-1,np.max(zmr_plt_cores-err))
+            zmr_plt_cores = np.clip(zmr_plt_cores,1e-1,np.max(zmr_plt_cores))
+            ax1.plot(r_avg,zmr_plt_cores,'o-',color=c)
+            ax1.fill_between(r_avg,min_err,zmr_plt_cores+err,color=c,alpha=0.3)
+            plt.yscale('log')
+    
             #plt.plot([],[],label=r'%.2e$<$M200$<$%.2e'%(zmr_sdss.m_bins[mi],zmr_sdss.m_bins[mi+1]),color=c)
-            plt.plot
+
             plt.plot([],[],label=r"%.2f $<$ z $<$ %.2f"%(zmr_sdss.z_bins[zi],zmr_sdss.z_bins[zi+1]))
-    plt.plot([],[],'ks--',lw=2,label=r'RedMapper Gal. Profile',mfc='none',mew=1.5,ms=8)
-    plt.plot([],[],'ko-',label=r'Core Profile')
-    plt.grid()
-    plt.legend(loc='best',framealpha=0.5)
-    plt.xlabel(r'$r/R_{200}$')
-    plt.ylabel(r'$\Sigma_{gal}$[$gal/R_{200}^{2}$]')
-    plt.yscale('log')
+            ax2 = plt.subplot(gs[4,:])
+            yerr = np.sqrt( (zmr_sdss.zmr_gal_density_err[zi,mi]/zmr_plt_sdss)**2 + (zmr_cores.zmr_gal_density_err[zi,mi]/zmr_plt_cores)**2)
+            ax2.errorbar(r_avg, zmr_plt_cores/zmr_plt_sdss,  yerr = yerr, fmt = 'o', color=c)
+            ax2.set_ylim((0.0,2.0))
+            ax2.axhline(1.0, color='k', ls='--')
+            ax2.set_ylabel('$\Sigma_{cores}/\Sigma_{sdss}$')
+    ax1.plot([],[],'ks--',lw=2,label=r'RedMapper Gal. Profile',mfc='none',mew=1.5,ms=8)
+    ax1.plot([],[],'ko-',label=r'Core Profile')
+    ax1.get_xaxis().set_visible(False)
+    ax1.grid()
+    ax1.legend(loc='best',framealpha=0.5)
+    ax2.set_xlabel(r'$r/R_{200}$')
+    ax1.set_ylabel(r'$\Sigma$[$galaxies/R_{200}^{2}$]')
+
 
 for zi in range(0,zmr_sdss.z_bins.size-1):
     if(np.sum(zmr_sdss.zm_counts[zi,:])==0 or np.sum(zmr_cores.zm_counts[zi,:])==0):

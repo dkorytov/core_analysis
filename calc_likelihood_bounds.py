@@ -72,11 +72,18 @@ def renormalize(vals, bins):
     a = vals2/np.sum(vals2)
     return a
 
+def interpolate_fine_grain(vals, bins, num):
+    new_bins = np.linspace(np.min(bins), np.max(bins), num)
+    new_vals = np.interp(new_bins, bins, vals)
+    return new_vals, new_bins
 
-def get_bounds_limits(vals, bins, fit, limit=0.67):
+def get_bounds_limits(vals, bins, fit, limit=0.67, fine_grain=None):
+    if fine_grain is not None:
+        vals_new, bins = interpolate_fine_grain(vals, bins, fine_grain)
+        vals = vals_new
     tot = np.sum(vals)
     vals = vals/tot
-    #fit_indx = np.searchsorted(bins,fit)
+    # fit_indx = np.searchsorted(bins,fit)
     fit_indx = np.argmax(vals)
     r_indx = fit_indx 
     l_indx = fit_indx 
@@ -87,16 +94,20 @@ def get_bounds_limits(vals, bins, fit, limit=0.67):
     # ax = plt.gca()
     # i = 0
     while(True):
-        # print(l_indx, r_indx)
+        # print(l_indx, r_indx, current_sum)
         if current_sum >= limit:
             break
         if r_indx == vals.size-1:
-            while(current_sum >= limit):
+            # print("r_indx_max")
+            # print(current_sum,"?>=", limit)
+            while(current_sum <= limit):
                 current_sum += vals[l_indx]
                 l_indx -= 1
+                # print(current_sum,"?>=", limit)
             break
         if l_indx == 0:
-            while(current_sum >= limit):
+            print("l_indx_max")
+            while(current_sum <= limit):
                 current_sum += vals[r_indx]
                 r_indx += 1
             break
@@ -109,7 +120,7 @@ def get_bounds_limits(vals, bins, fit, limit=0.67):
             current_sum += vals[l_indx]
         #     ax.annotate(str(i), xy=(bins[l_indx],vals[l_indx]))
         # i +=1
-        # print("->" , l_indx, r_indx, '\t', current_sum)
+    #     print("->" , l_indx, r_indx, '\t', current_sum)
 
     # print("pre-final: ", l_indx, r_indx)
     if l_indx< 0:
@@ -117,7 +128,10 @@ def get_bounds_limits(vals, bins, fit, limit=0.67):
     if r_indx == vals.size:
         r_indx -=1
     # print("final: ", l_indx, r_indx)
-    return l_indx, r_indx
+    if fine_grain is None:
+        return l_indx, r_indx
+    else:
+        return l_indx, r_indx, vals_new, bins
             
 
 def get_1d_axis_sum(dim, dims):
@@ -126,7 +140,7 @@ def get_1d_axis_sum(dim, dims):
         pass
 
 
-def corner_plot(labels, grid_dic = None, mcmc_dic = None):
+def corner_plot(labels, grid_dic = None, mcmc_dic = None, expected_comov_abundance = None):
     """Plot a corner plot for either from the likelihood calculated on a
     grid and/or from an MCMC.
 
@@ -160,11 +174,33 @@ def corner_plot(labels, grid_dic = None, mcmc_dic = None):
     #Formatting
     fig.tight_layout()
     fig.subplots_adjust(hspace=0,wspace=0)
-    #Get rid of upper right corner of subplots
+    # Get rid of upper right corner of subplots
     for i in range(size):
         for j in range(size):
-            if i < j:
+            if i < j: 
                 axs[i][j].set_visible(False)
+    # Add the abundance line to rd/disrupt plot
+    if expected_comov_abundance is not None:
+        print("teststeat")
+        disrupt_index = -1
+        infall_index = -1
+        for i in range(0,len(labels)):
+            if 'disrupt' in labels[i]:
+                disrupt_index = i
+            elif 'infall' in labels[i]:
+                infall_index = i
+        if disrupt_index != -1 and infall_index != -1:
+            hfile = h5py.File('tmp_hdf5/abundance={}.hdf5'.format(expected_comov_abundance))
+            abund_infall_mass = hfile['abund_infall_mass'].value
+            abund_radius = hfile['abund_radius'].value
+            ax= axs[infall_index][disrupt_index]
+            ax= axs[disrupt_index][infall_index]
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+            ax.plot(np.log10(abund_infall_mass), abund_radius, '--k', lw=2.0)
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+        
 
 
 def corner_plot_mcmc(labels, mcmc_loc, fig, axs, colors =['b', 'k', 'r'], plot_hist = True, alpha = 0.3):
@@ -191,7 +227,7 @@ def corner_plot_mcmc(labels, mcmc_loc, fig, axs, colors =['b', 'k', 'r'], plot_h
         b1 += 0
         b1a = b1-1
         ylim = ax.get_ylim()
-        ax.fill_between(dtk.bins_avg(xbins[b1a:b2]), 0, h[b1:b2], lw=0.0, alpha=alpha, color=colors[0])
+        ax.fill_between(dtk.bins_avg(bbins[b1a:b2]), 0, h[b1:b2], lw=0.0, alpha=alpha, color=colors[0])
         ax.set_xlim(np.min(xbins), np.max(xbins))
         ax.set_ylim(ylim) #restore old ylims before fill_bewteen
         ax.axvline(data[i][best_fit_indx], c=colors[2], ls='--')
@@ -224,12 +260,13 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
     if cost is None:
         fig.suptitle("Likelihood")
     else:
-        fig.suptitle("Fit Cost")
+        min_cost = np.min(cost)
+        fig.suptitle("           Fit Cost = {:.1f} X^2_red={:.2f}".format(min_cost, min_cost/(5*16-2)))
     axs_list = np.arange(0,size)
     limits = []
     max_lkhd = [] #Maximum likelihood value
-    max_lkhd_limits = [] #maxiumum likelihood 1-sigma indexs
-    max_lkhd_limits_val = []#maxiumum likelihood 1-sigma values
+    # max_lkhd_limits = [] #maxiumum likelihood 1-sigma indexs
+    # max_lkhd_limits_val = []#maxiumum likelihood 1-sigma values
     for i in range(size):
         ax = axs[i][i]
         lkhd_1d = np.sum(lkhd, axis=tuple(np.delete(axs_list, i)))
@@ -237,17 +274,18 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
         lkhd_1d = lkhd_1d/dx/np.sum(lkhd_1d)
         limits.append((np.min(bins[i]), np.max(bins[i])))
         max_lkhd.append(bins[i][np.argmax(lkhd_1d)])
-        max_lkhd_limits.append(get_bounds_limits(lkhd_1d, bins[i], max_lkhd[i]))
-        max_lkhd_limits_val.append((bins[i][max_lkhd_limits[i][0]], bins[i][max_lkhd_limits[i][1]]))
-        b1, b2 = max_lkhd_limits[i]
+        # max_lkhd_limits.append(get_bounds_limits(lkhd_1d, bins[i], max_lkhd[i]))
+        # max_lkhd_limits_val.append((bins[i][max_lkhd_limits[i][0]], bins[i][max_lkhd_limits[i][1]]))
+        b1, b2, vals, bbins = get_bounds_limits(lkhd_1d, bins[i], max_lkhd[i], fine_grain=5000)
+        # b1, b2 = max_lkhd_limits[i]
         b2 = b2 + 1
-        if b2 == len(bins[i]):
-            b2 = len(bins[i])-1
+        if b2 == len(bbins):
+            b2 = len(bbins)-1
     
         if cost is None:
             ax.plot(bins[i], lkhd_1d, c=colors[0])
             ylim = ax.get_ylim()
-            ax.fill_between(bins[i][b1:b2], 0, lkhd_1d[b1:b2], lw=0.0, alpha=alpha, color=colors[0])
+            ax.fill_between(bbins[b1:b2], 0, vals[b1:b2], lw=0.0, alpha=alpha, color=colors[0])
         else:
             t1 = np.amin(cost, axis=tuple(np.delete(axs_list, i)))
             ax.plot(bins[i], t1.flatten())
@@ -258,8 +296,8 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
 
         plt.sca(ax)
         plt.xticks(rotation=45)
-        lim_plus = bins[i][b2] - max_lkhd[i]
-        lim_minus = max_lkhd[i] -bins[i][b1]
+        lim_plus = bbins[b2] - max_lkhd[i]
+        lim_minus = max_lkhd[i] -bbins[b1]
         test = "{} = $\mathrm{{ {:.3f}^{{ +{:.3f} }}_{{ -{:.3f} }} }}$".format(labels[i],
                                                                                max_lkhd[i], 
                                                                                lim_plus, 
@@ -306,13 +344,15 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
 
 def calc_likelihood_bounds(param_file_name):
     param = dtk.Param(param_file_name)
+    expected_comov_abundance = param.get_float('expected_comov_abundance')
     lgrid_param = dtk.Param("output/"+param_file_name+"/lgrid.param")
     has_rm = param.get_bool("fit_r_merger")
     has_rd = param.get_float_list("rd_bins_info")[2]>2
     
+ 
     result = np.array(lgrid_param.get_double_list("result"))
     hfile_fit = h5py.File("output/"+param_file_name+"/fit_core_params.hdf5")
-    fit_mi = hfile_fit['m_infall'].value[0]
+
     nan_slct = np.isnan(result)
     result[nan_slct] = np.ones(np.sum(nan_slct))*1000000
     mi_bins = np.array(lgrid_param.get_float_list("mi_bins"))
@@ -333,45 +373,55 @@ def calc_likelihood_bounds(param_file_name):
     lkhd_mi_rd = np.sum(lkhd, axis=2)
     lkhd_mi_rm = np.sum(lkhd, axis=1)
     #print(np.shape(lkhd_mi))
-
-    mi_bds = get_bounds_limits(lkhd_mi, np.log10(mi_bins), np.log10(fit_mi))
-    mi_bounds = np.log10(mi_bins)[mi_bds[0]] - np.log10(fit_mi), np.log10(mi_bins)[mi_bds[1]] - np.log10(fit_mi)
-    print("mi: ",np.log10(fit_mi),mi_bounds)
+    fit_mi = hfile_fit['m_infall'].value[0]
+    fit_mi_bds_lwr, fit_mi_bds_upr, _, fit_mi_bins = get_bounds_limits(lkhd_mi, np.log10(mi_bins), np.log10(fit_mi),fine_grain=5000)
     if has_rd:
         fit_rd = hfile_fit['r_disrupt'].value[0]
-        rd_bds = get_bounds_limits(lkhd_rd, rd_bins, fit_rd)
-        rd_bounds = rd_bins[rd_bds[0]], rd_bins[rd_bds[1]]
-        print("rd: {} + {:.2f} - {:.2f}".format(fit_rd, rd_bounds[0], rd_bounds[1]))
+        fit_rd_bds_lwr, fit_rd_bds_upr, _, fit_rd_bins = get_bounds_limits(lkhd_rd, rd_bins, fit_rd,fine_grain=5000)
     if has_rm:
         fit_rm = hfile_fit['r_merger'].value[0]
-        rm_bds = get_bounds_limits(lkhd_rm, np.log10(rm_bins), np.log10(fit_rm))
-        rm_bounds = np.log10(rm_bins)[rm_bds[0]] - np.log10(fit_rm), np.log10(rm_bins)[rm_bds[1]] - np.log10(fit_rm)
-        print("rm: {} + {:.2f} - {:.2f}".format(np.log10(fit_rm), rm_bounds[0], rm_bounds[1]))
+        fit_rm_bds_lwr, fit_rm_bds_upr, _, fit_rm_bins = get_bounds_limits(lkhd_rm, rm_bins, fit_rm,fine_grain=5000)
     if has_rd and not has_rm:
-        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2), 'cost': None})
-        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2), 'cost': np.sum(result2, axis=2)})
+        corner_plot([r'M$_{\mathrm{infall}}$',
+                     'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins':
+                                                            [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2),
+                                                            'cost': None},
+                    expected_comov_abundance=expected_comov_abundance)
+        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'],
+                    grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 
+                                'lkhd': np.sum(lkhd, axis=2),
+                                'cost': np.sum(result2, axis=2)},
+                    expected_comov_abundance=expected_comov_abundance)
         # corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], mcmc_dic = {'mcmc_loc': "output/{}/mcmc.gio".format(param_file_name)})
         # corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2), 'cost': None}, mcmc_dic = {'mcmc_loc': "output/{}/mcmc.gio".format(param_file_name)})
     if has_rm and not has_rd:
-        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{merger}}$'], grid_dic = {'bins': [np.log10(mi_bins), rm_bins], 'lkhd': np.sum(lkhd, axis=1), 'cost': None})
-        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{merger}}$'], grid_dic = {'bins': [np.log10(mi_bins), rm_bins], 'lkhd': np.sum(lkhd, axis=1), 'cost': np.sum(result2, axis=1)})
+        corner_plot([r'M$_{\mathrm{infall}}$',
+                     'R$_{\mathrm{merger}}$'], grid_dic = {'bins':
+                                                           [np.log10(mi_bins), rm_bins], 'lkhd': np.sum(lkhd, axis=1),
+                                                           'cost': None},
+                    expected_comov_abundance=expected_comov_abundance)
+        corner_plot([r'M$_{\mathrm{infall}}$',
+                     'R$_{\mathrm{merger}}$'], grid_dic = {'bins':
+                                                           [np.log10(mi_bins), rm_bins], 'lkhd': np.sum(lkhd, axis=1),
+                                                           'cost': np.sum(result2,
+                                                                          axis=1)},expected_comov_abundance=expected_comov_abundance)
     if has_rm and has_rd:
         
-        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':None})
-        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':result2})
+        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':None}, expected_comov_abundance=expected_comov_abundance)
+        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':result2}, expected_comov_abundance=expected_comov_abundance)
         #corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], [np.log10(mi_bins), rd_bins, rm_bins], lkhd, cost = result2)
     if not has_rm and not has_rd:
         plot_1d_likelihood("M$_{infall}$", mi_bins, lkhd_mi, fit_mi, mi_bds, log=True);
         # corner_plot([r'M$_{\mathrm{infall}}$'], grid_dic = {'bins':[np.log10(mi_bins)]]
-    txt_file = file("figs/"+param_file_name+"/"+__file__+"/grid_fit_param.txt", 'a')
-    txt_file.write("mi\t{}".format(np.log10(mi_bins[np.argmax(lkhd_mi)])))
-    txt_file.write("mi_limits\t{}\t{}\n".format(mi_bins[mi_bds[0]],mi_bins[mi_bds[1]]))
+    txt_file = file("figs/"+param_file_name+"/"+__file__+"/grid_fit_param.txt", 'w')
+    txt_file.write("mi\t{}\n".format(np.log10(mi_bins[np.argmax(lkhd_mi)])))
+    txt_file.write("mi_limits\t{}\t{}\n".format(fit_mi_bins[fit_mi_bds_lwr], fit_mi_bins[fit_mi_bds_upr]))
     if has_rd:
-        txt_file.write("rd\t{}".format(rd_bins[np.argmax(lkhd_rd)]))
-        txt_file.write("rd_limits\t{}\t{}\n".format(rd_bins[rd_bds[0]],rd_bins[rd_bds[1]]))
+        txt_file.write("rd\t{}\n".format(rd_bins[np.argmax(lkhd_rd)]))
+        txt_file.write("rd_limits\t{}\t{}\n".format(fit_rd_bins[fit_rd_bds_lwr], fit_rd_bins[fit_rd_bds_upr]))
     if has_rm: 
-        txt_file.write("rm\t{}".format(rm_bins[np.argmax(lkhd_rm)]))
-        txt_file.write("rm_limits \t{}\t{}\n".format(rm_bins[rm_bds[0]],rm_bins[rm_bds[1]]))
+        txt_file.write("rm\t{}\n".format(rm_bins[np.argmax(lkhd_rm)]))
+        txt_file.write("rm_limits\t{}\t{}\n".format(fit_rm_bins[fit_rm_bds_lwr], fit_rm_bins[fit_rm_bds_upr]))
 
     
 def write_fit_param(param_file):

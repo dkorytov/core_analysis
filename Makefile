@@ -13,7 +13,7 @@ LDFLAGS  = -L${GIOLIBMPIDIR} -Ldtk/lib -lGenericIOMPI -ldtk -lgsl -lgslcblas ${h
 SOURCES  = $(wildcard src/*.cpp)
 HEADERS  = $(wildcard src/*.hpp)
 OBJECTS  = $(SOURCES:src/%.cpp=obj/%.o)
-EXE      = main
+EXE      = core_fit
 N2LIB    = lib/libn2merg.so
 
 all: ${EXE} ${N2LIB}
@@ -26,6 +26,8 @@ ${OBJECTS}: obj/%.o : src/%.cpp
 
 ${N2LIB}: obj/n2_merger.o 
 	${CC} -shared -o $@ $<
+
+
 
 .PHONY:
 clean:
