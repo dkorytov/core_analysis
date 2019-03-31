@@ -2974,7 +2974,7 @@ void Cluster::get_radial_bins(Galaxies& gal, std::vector<float>& r_bins,
 	  if(dr<r_bins[i+1]){
 	    float weight = 0.0+std::cos(start_angle); //(area(pi/2) - area(start_angle))/tot_area
 	    //float weight = -1.0+std::cos(start_angle); //(area(pi/2) - area(start_angle))/tot_area
-	    r_cnt[i] = weight;
+	    r_cnt[i] += weight;
 	    // std::cout<<"["<<i<<"]a:"<<weight<<std::endl;
 	    // std::cout<<"start_angle: "<<start_angle<<std::endl;
 	    // if(std::isnan(weight)){
