@@ -385,6 +385,9 @@ struct Galaxies{
   std::vector<float> w; //the number of mergered galaxies.
   std::vector<float> r; //distance from the center of the cluster.
   std::vector<int>   type;
+  std::vector<float> probability; // The probability of this core
+				  // being a galaxy. Useful for the
+				  // soft transition model.
   void reserve(size_t size){
     x.reserve(size);
     y.reserve(size);
@@ -433,7 +436,7 @@ struct Cluster{
   void get_fof_galaxies(float m_infall, float r_disrupt, float r_fof,Galaxies& gal) const;
   void get_fof_galaxies2(float m_infall,float r_disrupt, float r_fof, Galaxies& gal)const;
   void get_fof_only_galaxies(float r_disrupt,Galaxies& gal);
-
+  void get_sigmoid_galaxies(float m_infall, float m_infall_k, float r_disrupt, float r_disrupt_k) const;
   void get_radial_bins(float m_infall,float r_disrupt,float r_fof, 
 		       std::vector<float>& r2_bins, float Ngal_r2_lim,
 		       std::vector<float>& r_cnt, float& Ngal) const;
@@ -2713,6 +2716,7 @@ void Cluster::get_compact_galaxies(float m_infall, float r_disrupt, Galaxies& ga
       gal.z.push_back(core_z[i]);
       gal.w.push_back(1);
       gal.type.push_back(0);
+      gal.probability.push_back(1.0);
       // std::cout<<" accepted"<<std::endl;
     }
     else{
@@ -2756,6 +2760,7 @@ void Cluster::get_compact_merged_galaxies(float m_infall,float r_disrupt,float r
     gal.w.push_back(new_w[i]);
     //if(new_w[i]
     gal.type.push_back(0);
+    gal.probability.push_back(1.0);
   }
 
 }
@@ -2856,6 +2861,12 @@ void Cluster::get_fof_galaxies2(float m_infall,float r_disrupt, float r_fof, Gal
     fof_zs.clear();
     }
     delete [] srt;*/
+}
+float sigmoid(x, x0, k){
+  return 1.0/(1+exp((x-x0)*(k/x0)));
+}
+void Cluster::get_sigmoid_galaxies(float m_infall, float m_infall_k, float r_disrupt, float r_disrupt_k, Galaxies& gal) const{
+  
 }
 void Cluster::get_radial_bins(float m_infall,float r_disrupt,float r_fof, 
 			      std::vector<float>& r2_bins, float Ngal_r2_lim,
