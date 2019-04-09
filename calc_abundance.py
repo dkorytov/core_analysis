@@ -90,6 +90,19 @@ if __name__ == "__main__":
     print("Balton:", inter_bl/factor)
     print("Monter:", inter_md/factor)
 
+    inter_bl = np.interp(-20.72, mags, cum_sum_bl)
+    inter_md = np.interp(-20.72, mags, cum_sum_md)
+    print("Mstar+0.5")
+    print("Balton:", inter_bl/factor)
+    print("Monter:", inter_md/factor)
+
+
+    inter_bl = np.interp(-21.6, mags, cum_sum_bl)
+    inter_md = np.interp(-21.6, mags, cum_sum_md)
+    print("Mr -21.6")
+    print("Balton:", inter_bl/factor)
+    print("Monter:", inter_md/factor)
+
     plt.show()
 
     

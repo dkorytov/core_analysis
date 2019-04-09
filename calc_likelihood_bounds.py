@@ -181,7 +181,6 @@ def corner_plot(labels, grid_dic = None, mcmc_dic = None, expected_comov_abundan
                 axs[i][j].set_visible(False)
     # Add the abundance line to rd/disrupt plot
     if expected_comov_abundance is not None:
-        print("teststeat")
         disrupt_index = -1
         infall_index = -1
         for i in range(0,len(labels)):
@@ -190,7 +189,7 @@ def corner_plot(labels, grid_dic = None, mcmc_dic = None, expected_comov_abundan
             elif 'infall' in labels[i]:
                 infall_index = i
         if disrupt_index != -1 and infall_index != -1:
-            hfile = h5py.File('tmp_hdf5/abundance={}.hdf5'.format(expected_comov_abundance))
+            hfile = h5py.File('tmp_hdf5/abundance={}.hdf5'.format(expected_comov_abundance), 'r')
             abund_infall_mass = hfile['abund_infall_mass'].value
             abund_radius = hfile['abund_radius'].value
             ax= axs[infall_index][disrupt_index]
