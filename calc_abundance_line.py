@@ -74,8 +74,8 @@ def calc_abundance_line(param_fname, plot = False):
         x1[i] = calc_abundance_infall_mass(cat, y1[i], expected_num)
     if plot:
         plt.plot(x1, y1, '-x')
-        print(x)
-        print(y)
+        print(x1)
+        print(y1)
 
     abund_infall_mass = np.concatenate((x,x1))
     abund_radius = np.concatenate((y,y1))
@@ -88,7 +88,6 @@ def calc_abundance_line(param_fname, plot = False):
     hfile.close()
     plt.show()
     
-
 
 if __name__ == "__main__":
     calc_abundance_line(sys.argv[1], plot=True);

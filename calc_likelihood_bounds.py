@@ -189,6 +189,7 @@ def corner_plot(labels, grid_dic = None, mcmc_dic = None, expected_comov_abundan
             elif 'infall' in labels[i]:
                 infall_index = i
         if disrupt_index != -1 and infall_index != -1:
+            print('tmp_hdf5/abundance={}.hdf5'.format(expected_comov_abundance))
             hfile = h5py.File('tmp_hdf5/abundance={}.hdf5'.format(expected_comov_abundance), 'r')
             abund_infall_mass = hfile['abund_infall_mass'].value
             abund_radius = hfile['abund_radius'].value
@@ -200,7 +201,6 @@ def corner_plot(labels, grid_dic = None, mcmc_dic = None, expected_comov_abundan
             ax.set_xlim(xlim)
             ax.set_ylim(ylim)
         
-
 
 def corner_plot_mcmc(labels, mcmc_loc, fig, axs, colors =['b', 'k', 'r'], plot_hist = True, alpha = 0.3):
     mcmc_m_i  = dtk.gio_read(mcmc_loc,"mcmc_mass_infall")

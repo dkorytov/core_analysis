@@ -11,7 +11,7 @@ do
     for cost_type in "${cost_types[@]}"; do
     	for fit_type in "${fit_types[@]}"; do
 	    param_file="${1}${mass_def}${cost_type}${fit_type}"
-    	    ./main "${param_file}"
+    	    ./core_fit "${param_file}"
 	    exit_code=$?
 	    echo "\n\nexitcode: $?"
 	    if [ "$?" -eq "0" ] 
