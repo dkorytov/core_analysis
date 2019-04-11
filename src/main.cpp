@@ -628,6 +628,9 @@ std::vector<float> rm_bins;
 
 int cm_num;
 float ll;
+
+int radial_bin_start; // when computing the gal_profile, start count at this
+// radial bin (0=center)
 //std::default_random_engine rnd_gen;
 //std::uniform_real_distribution<float> rnd_theta(0,M_PI/4);
 dtk::StepRedshift stepz(200,0,500);
@@ -1730,7 +1733,14 @@ void load_param(char* file_name){
   simplex_step_size = param.get<double>("simplex_step_size");
   simplex_cnvrg_size= param.get<double>("simplex_cnvrg_size");
   max_iterations = param.get<int>("max_iterations");
-  std::cout<<"we got here"<<std::endl;
+
+  if(param.has("radial_bin_start")){
+    radial_bin_start = param.get<int>("radial_bin_start");
+  }
+  else{
+    radial_bin_start = 0;
+  }
+
   fit_var_num = 2;
   if(lock_r_disrupt)
     --fit_var_num;
@@ -2128,7 +2138,7 @@ double calc_diff_gal_density(const ZMR& zmr1, const ZMR& zmr2){
     for(int m_i=0;m_i<m_size;++m_i){
       int indx = zmr1.index(z_i,m_i);
       if(zmr1.zm_counts[indx] > cost_min_cluster_num && zmr2.zm_counts[indx] > cost_min_cluster_num){ //only calculate the difference where
-	for(int r_i=0;r_i<r_size;++r_i){//both zmrs have clusters. 
+	for(int r_i=radial_bin_start;r_i<r_size;++r_i){//both zmrs have clusters. 
 	  int indx = zmr1.index(z_i,m_i,r_i);
 	  float diff = std::fabs(zmr1.zmr_gal_density[indx]-zmr2.zmr_gal_density[indx]);
 	  diff = diff*diff;
@@ -2236,7 +2246,7 @@ void calculate_likelihood_grid(std::vector<float> mi_bins, std::vector<float> rd
   std::vector<double> result(mi_bins.size()*rd_bins.size()*rm_bins.size());
   uint indx =0;
   dtk::AutoTimer t2;
-#pragma omp parallel for firstprivate(zmr_cores, t2), private(indx), schedule(dynamic)
+#pragma omp parallel for  firstprivate(zmr_cores, t2), private(indx), schedule(dynamic)
   for(uint mi=0;mi<mi_bins.size();++mi){
     zmr_cores.copy_bins(zmr_sdss);
     // if(omp_get_thread_num()==0)
