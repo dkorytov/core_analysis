@@ -2913,50 +2913,6 @@ void Cluster::get_radial_bins(Galaxies& gal, std::vector<float>& r_bins,
 	Ngal+=1.0;
       }
     }
-    else if(false){ //various projection count
-      double weight = 1.0/diff_projection_num;
-      for(int j =0;j<diff_projection_num;++j){
-	float theta = rand_float()*M_PI/2.0;
-	float proj_dr = std::sin(theta)*dr;
-	float proj_dr2 = proj_dr*proj_dr;
-	int indx = dtk::find_bin(r2_bins,proj_dr2);
-	if(indx !=-1){
-	  r_cnt.at(indx) += weight;
-	  //std::cout<<"i="<<indx<<"  "<<sqrt(r2_bins[indx])<<" < "<<sqrt(r2)<<" < "<<sqrt(r2_bins[indx+1])<<std::endl;
-	}
-	if(proj_dr2 < Ngal_r2_lim)
-	  Ngal += weight;
-      }
-    }
-    else if(false){//analytical projections //WRONG!!!!
-      throw; //THis should never be used!!! I'm not deleting just to keep a 
-      //record of it. 
-      if(dr <= r_bins[0]) //the galaxy doesn't make it to any bin. 
-	continue;
-      float start_angle = std::asin(r_bins[0]/dr);
-      //start_angle = 0;
-      std::cout<<"radius: "<<dr<<std::endl;
-      float sum = 0;
-      for(int i =0;i<r_bins.size()-1;++i){
-	std::cout<<"["<<i<<"]: "<<r_bins[i]<<"->"<<r_bins[i+1]<<std::endl;
-	if(dr<r_bins[i+1]){
-	  r_cnt[i] += (M_PI/2.0-start_angle)/(M_PI/2.0);
-	  std::cout<<"["<<i<<"]b:"<<(M_PI/2.0-start_angle)/(M_PI/2.0)<<std::endl;;
-	  sum +=(M_PI/2.0-start_angle)/(M_PI/2.0);
-	  break; //the remainder of the projected angle goes int this bin
-	}
-	else{
-	  float end_angle = std::asin(r_bins[i+1]/dr);
-	  //std::cout<<"\t\tstart_angle: "<<start_angle<<std::endl;
-	  //std::cout<<"\t\tend_angle: "<<end_angle<<std::endl;
-	  r_cnt[i] += (end_angle-start_angle)/(M_PI/2.0);
-	  std::cout<<"["<<i<<"]a:"<<(end_angle-start_angle)/(M_PI/2.0)<<std::endl;
-	  sum +=(end_angle-start_angle)/(M_PI/2.0);
-	  start_angle = end_angle;
-	}
-      }
-      std::cout<<"sum: "<<sum<<std::endl;
-    }
     //Correct code in this section
     else{
       if(dr < r_bins[0]){
