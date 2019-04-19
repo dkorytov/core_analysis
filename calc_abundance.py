@@ -75,18 +75,26 @@ if __name__ == "__main__":
     plt.plot(mags, cum_sum_md, label='Montero')
     plt.legend(loc='best')
     plt.yscale('log')
-    
-    inter_bl = np.interp(-21.22, mags, cum_sum_bl)
-    inter_md = np.interp(-21.22, mags, cum_sum_md)
+
     a = 1./(1.+0.21)
     factor = convert_physical_to_comoving_vol(0.21)
-    print("Mstar+0")
+
+    inter_bl = np.interp(-22.22, mags, cum_sum_bl)
+    inter_md = np.interp(-22.22, mags, cum_sum_md)
+    print("Mstar-1")
     print("Balton:", inter_bl/factor)
     print("Monter:", inter_md/factor)
 
-    inter_bl = np.interp(-20.22, mags, cum_sum_bl)
-    inter_md = np.interp(-20.22, mags, cum_sum_md)
-    print("Mstar+1")
+    inter_bl = np.interp(-21.72, mags, cum_sum_bl)
+    inter_md = np.interp(-21.72, mags, cum_sum_md)
+    print("Mstar-0.5")
+    print("Balton:", inter_bl/factor)
+    print("Monter:", inter_md/factor)
+
+    
+    inter_bl = np.interp(-21.22, mags, cum_sum_bl)
+    inter_md = np.interp(-21.22, mags, cum_sum_md)
+    print("Mstar+0")
     print("Balton:", inter_bl/factor)
     print("Monter:", inter_md/factor)
 
@@ -96,6 +104,11 @@ if __name__ == "__main__":
     print("Balton:", inter_bl/factor)
     print("Monter:", inter_md/factor)
 
+    inter_bl = np.interp(-20.22, mags, cum_sum_bl)
+    inter_md = np.interp(-20.22, mags, cum_sum_md)
+    print("Mstar+1")
+    print("Balton:", inter_bl/factor)
+    print("Monter:", inter_md/factor)
 
     inter_bl = np.interp(-21.6, mags, cum_sum_bl)
     inter_md = np.interp(-21.6, mags, cum_sum_md)

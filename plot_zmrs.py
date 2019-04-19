@@ -54,14 +54,14 @@ for zi in range(0,zmr_sdss.z_bins.size-1):
             c_i +=1
             zmr_gd = zmr_sdss.zmr_gal_density[zi,mi]
             err = zmr_sdss.zmr_gal_density_err[zi,mi]
-            min_err = np.clip(zmr_gd-err,1e-1,np.max(zmr_gd-err))
+            min_err = np.clip(zmr_gd-err,1e-2,np.max(zmr_gd-err))
             plt.plot(r_avg,zmr_gd,'s--',color=c,lw=2,mfc='none',mec=c,mew=1.5,ms=8)
             #plt.scatter(r_avg,zmr_gd,marker='s',facecolor='none',edgecolor=c)
             plt.fill_between(r_avg,min_err,zmr_gd+err,color=c,alpha=0.3)
             zmr_gd = zmr_cores.zmr_gal_density[zi,mi]
             err = zmr_cores.zmr_gal_density_err[zi,mi]
-            min_err = np.clip(zmr_gd-err,1e-1,np.max(zmr_gd-err))
-            zmr_gd = np.clip(zmr_gd,1e-1,np.max(zmr_gd))
+            min_err = np.clip(zmr_gd-err,1e-2,np.max(zmr_gd-err))
+            zmr_gd = np.clip(zmr_gd,1e-2,np.max(zmr_gd))
             plt.plot(r_avg,zmr_gd,'o-',color=c)
             plt.fill_between(r_avg,min_err,zmr_gd+err,color=c,alpha=0.3)
             plt.plot([],[],label=r'%.2e$<$M200$<$%.2e'%(zmr_sdss.m_bins[mi],zmr_sdss.m_bins[mi+1]),color=c)
@@ -90,14 +90,14 @@ for mi in range(0,zmr_sdss.m_bins.size-1):
             ax1 = plt.subplot(gs[:4,:])
             zmr_plt_sdss = zmr_sdss.zmr_gal_density[zi,mi]
             err = zmr_sdss.zmr_gal_density_err[zi,mi]
-            min_err = np.clip(zmr_plt_sdss-err,1e-1,np.max(zmr_plt_sdss-err))
+            min_err = np.clip(zmr_plt_sdss-err,1e-2,np.max(zmr_plt_sdss-err))
             ax1.plot(r_avg,zmr_plt_sdss,'s--',color=c,lw=2,mfc='none',mec=c,mew=1.5,ms=8)
             #plt.scatter(r_avg,zmr_plt_sdss,marker='s',facecolor='none',edgecolor=c)
             ax1.fill_between(r_avg,min_err,zmr_plt_sdss+err,color=c,alpha=0.3)
             zmr_plt_cores = zmr_cores.zmr_gal_density[zi,mi]
             err = zmr_cores.zmr_gal_density_err[zi,mi]
-            min_err = np.clip(zmr_plt_cores-err,1e-1,np.max(zmr_plt_cores-err))
-            zmr_plt_cores = np.clip(zmr_plt_cores,1e-1,np.max(zmr_plt_cores))
+            min_err = np.clip(zmr_plt_cores-err,1e-2,np.max(zmr_plt_cores-err))
+            zmr_plt_cores = np.clip(zmr_plt_cores,1e-2,np.max(zmr_plt_cores))
             ax1.plot(r_avg,zmr_plt_cores,'o-',color=c)
             ax1.fill_between(r_avg,min_err,zmr_plt_cores+err,color=c,alpha=0.3)
             plt.yscale('log')
@@ -134,13 +134,13 @@ for zi in range(0,zmr_sdss.z_bins.size-1):
             c_i +=1
             zmr_dgdr = zmr_sdss.zmr_dgal_dr[zi,mi]
             err = zmr_sdss.zmr_dgal_dr_err[zi,mi]
-            min_err = np.clip(zmr_dgdr-err,1e-1,np.max(zmr_dgdr-err))
+            min_err = np.clip(zmr_dgdr-err,1e-2,np.max(zmr_dgdr-err))
             plt.plot(r_avg,zmr_dgdr,'x--',color=c)
             plt.fill_between(r_avg,min_err,zmr_dgdr+err,color=c,alpha=0.5)
             zmr_dgdr = zmr_cores.zmr_dgal_dr[zi,mi]
             err = zmr_cores.zmr_dgal_dr_err[zi,mi]
-            min_err = np.clip(zmr_dgdr-err,1e-1,np.max(zmr_dgdr-err))
-            zmr_dgdr = np.clip(zmr_dgdr,1e-1,np.max(zmr_dgdr))
+            min_err = np.clip(zmr_dgdr-err,1e-2,np.max(zmr_dgdr-err))
+            zmr_dgdr = np.clip(zmr_dgdr,1e-2,np.max(zmr_dgdr))
             plt.plot(r_avg,zmr_dgdr,'o-',color=c)
             plt.fill_between(r_avg,min_err,zmr_dgdr+err,color=c,alpha=0.5)
             plt.plot([],[],label='%.2e$<$M200$<$%.2e'%(zmr_sdss.m_bins[mi],zmr_sdss.m_bins[mi+1]),color=c)
@@ -166,13 +166,13 @@ for zi in range(0,zmr_sdss.z_bins.size-1):
             c_i +=1
             zmr_gacm = zmr_sdss.zmr_gal_accum[zi,mi]
             err = zmr_sdss.zmr_gal_accum_err[zi,mi]
-            min_err = np.clip(zmr_gacm-err,1e-1,np.max(zmr_gacm-err))
+            min_err = np.clip(zmr_gacm-err,1e-2,np.max(zmr_gacm-err))
             plt.plot(r_avg,zmr_gacm,'s--',lw=3,color=c)
             plt.fill_between(r_avg,min_err,zmr_gacm+err,color=c,alpha=0.5)
             zmr_gacm = zmr_cores.zmr_gal_accum[zi,mi]
             err = zmr_cores.zmr_gal_accum_err[zi,mi]
-            min_err = np.clip(zmr_gacm-err,1e-1,np.max(zmr_gacm-err))
-            zmr_gacm = np.clip(zmr_gacm,1e-1,np.max(zmr_gacm))
+            min_err = np.clip(zmr_gacm-err,1e-2,np.max(zmr_gacm-err))
+            zmr_gacm = np.clip(zmr_gacm,1e-2,np.max(zmr_gacm))
             plt.plot(r_avg,zmr_gacm,'o-',color=c)
             plt.fill_between(r_avg,min_err,zmr_gacm+err,color=c,alpha=0.5)
             plt.plot([],[],label='%.2e$<$M200$<$%.2e'%(zmr_sdss.m_bins[mi],zmr_sdss.m_bins[mi+1]),color=c)
