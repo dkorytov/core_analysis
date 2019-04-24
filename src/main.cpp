@@ -1754,6 +1754,29 @@ void load_param(char* file_name){
   if(rank==0)
     std::cout<<"\tdone. time: "<<t<<std::endl;
 }
+void load_cores_gio(std::string fname, Cores& cores){
+  dtk::read_gio_quick(fname, "fof_halo_tag",        cores.host_htag,   cores.size);
+  dtk::read_gio_quick(fname, "core_tag",            cores.ctag,        cores.size);
+  dtk::read_gio_quick(fname, "radius",              cores.radius,      cores.size);
+  dtk::read_gio_quick(fname, "x",                   cores.x,           cores.size);
+  dtk::read_gio_quick(fname, "y",                   cores.y,           cores.size);
+  dtk::read_gio_quick(fname, "z",                   cores.z,           cores.size);
+  dtk::read_gio_quick(fname, "infall_mass",         cores.infall_mass, cores.size);
+  dtk::read_gio_quick(fname, "infall_step",         cores.infall_step, cores.size);
+  dtk::read_gio_quick(fname, "infall_fof_halo_tag", cores.infall_htag, cores.size);
+}
+void load_cores_hdf5(std::string fname, Cores& cores){
+  dtk::read_hdf5(fname, "fof_htag",           cores.host_htag,   cores.size);
+  dtk::read_hdf5(fname, "id",                 cores.ctag,        cores.size);
+  dtk::read_hdf5(fname, "r_peak",             cores.radius,      cores.size);
+  dtk::read_hdf5(fname, "x",                  cores.x,           cores.size);
+  dtk::read_hdf5(fname, "y",                  cores.y,           cores.size);
+  dtk::read_hdf5(fname, "z",                  cores.z,           cores.size);
+  dtk::read_hdf5(fname, "m_peak",             cores.infall_mass, cores.size);
+  dtk::read_hdf5(fname, "infall_step",        cores.infall_step, cores.size);
+  // dtk::read_hdf5(file, "infall_fof_halo_tag",cores.infall_htag, cores.size);
+  cores.infall_htag = new int64_t[cores.size];
+}
 void load_cores(){
   dtk::Timer t;t.start();
   std::cout<<"loading core catalog"<<std::endl;
@@ -1761,15 +1784,10 @@ void load_cores(){
   for(int i=0;i<steps.size();++i){
     std::string file = dtk::rep_str(core_loc,"${step}",steps[i]);
     Cores cores;
-    dtk::read_gio_quick(file,"fof_halo_tag",cores.host_htag, cores.size);
-    dtk::read_gio_quick(file,"core_tag",cores.ctag,     cores.size);
-    dtk::read_gio_quick(file,"radius",cores.radius,     cores.size);
-    dtk::read_gio_quick(file,"x",cores.x,               cores.size);
-    dtk::read_gio_quick(file,"y",cores.y,               cores.size);
-    dtk::read_gio_quick(file,"z",cores.z,               cores.size);
-    dtk::read_gio_quick(file,"infall_mass",cores.infall_mass,  cores.size);
-    dtk::read_gio_quick(file,"infall_step",cores.infall_step,  cores.size);
-    dtk::read_gio_quick(file,"infall_fof_halo_tag",cores.infall_htag,cores.size);
+    if( dtk::string_has(file, ".hdf5"))
+      load_cores_hdf5(file, cores);
+    else
+      load_cores_gio(file, cores);
     cores.is_central = new int[cores.size];
     cores.compact = new int[cores.size];
     if(use_central_infall || force_central_as_galaxy || force_center_on_central){
