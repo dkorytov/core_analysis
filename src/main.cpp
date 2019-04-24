@@ -1766,16 +1766,16 @@ void load_cores_gio(std::string fname, Cores& cores){
   dtk::read_gio_quick(fname, "infall_fof_halo_tag", cores.infall_htag, cores.size);
 }
 void load_cores_hdf5(std::string fname, Cores& cores){
-  dtk::read_hdf5(fname, "fof_htag",           cores.host_htag,   cores.size);
-  dtk::read_hdf5(fname, "id",                 cores.ctag,        cores.size);
-  dtk::read_hdf5(fname, "r_peak",             cores.radius,      cores.size);
-  dtk::read_hdf5(fname, "x",                  cores.x,           cores.size);
-  dtk::read_hdf5(fname, "y",                  cores.y,           cores.size);
-  dtk::read_hdf5(fname, "z",                  cores.z,           cores.size);
-  dtk::read_hdf5(fname, "m_peak",             cores.infall_mass, cores.size);
-  dtk::read_hdf5(fname, "infall_step",        cores.infall_step, cores.size);
+  dtk::read_hdf5(fname, "fof_htag",           cores.host_htag,   cores.size, true);
+  dtk::read_hdf5(fname, "id",                 cores.ctag,        cores.size, true);
+  dtk::read_hdf5(fname, "r_peak",             cores.radius,      cores.size, true);
+  dtk::read_hdf5(fname, "x",                  cores.x,           cores.size, true);
+  dtk::read_hdf5(fname, "y",                  cores.y,           cores.size, true);
+  dtk::read_hdf5(fname, "z",                  cores.z,           cores.size, true);
+  dtk::read_hdf5(fname, "m_peak",             cores.infall_mass, cores.size, true);
+  dtk::read_hdf5(fname, "infall_step",        cores.infall_step, cores.size, true);
   // dtk::read_hdf5(file, "infall_fof_halo_tag",cores.infall_htag, cores.size);
-  cores.infall_htag = new int64_t[cores.size];
+  cores.infall_htag = new int64_t[cores.size];  std::cout<<__LINE__<<std::endl;
 }
 void load_cores(){
   dtk::Timer t;t.start();
