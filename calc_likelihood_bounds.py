@@ -20,8 +20,6 @@ from matplotlib.colors import LogNorm
 from scipy.optimize import minimize
 
 
-
-
 def plot_1d_likelihood(label, data_bins, lkhd_data, fit_data, data_bds, log = False):
     plt.figure()
     plt.plot(data_bins, lkhd_data, 'x-', label='likelihood: {:.3f}->{:.3f}'.format(data_bins[data_bds[0]], data_bins[data_bds[1]]))
@@ -72,19 +70,29 @@ def renormalize(vals, bins):
     a = vals2/np.sum(vals2)
     return a
 
-def interpolate_fine_grain(vals, bins, num):
+
+def interpolate_fine_grain(vals, bins, num, fit_index = None):
     new_bins = np.linspace(np.min(bins), np.max(bins), num)
     new_vals = np.interp(new_bins, bins, vals)
-    return new_vals, new_bins
+    if fit_index is None:
+        return new_vals, new_bins, None
+    else:
+        new_fit_index = np.searchsorted(new_bins, bins[fit_index])
+        return new_vals, new_bins, new_fit_index
 
-def get_bounds_limits(vals, bins, fit, limit=0.67, fine_grain=None):
+
+def get_bounds_limits(vals, bins, fit, limit=0.67, fine_grain=None, fit_index=None):
     if fine_grain is not None:
-        vals_new, bins = interpolate_fine_grain(vals, bins, fine_grain)
+        vals_new, bins, fit_index = interpolate_fine_grain(vals, bins, fine_grain, fit_index=fit_index)
         vals = vals_new
     tot = np.sum(vals)
     vals = vals/tot
     # fit_indx = np.searchsorted(bins,fit)
-    fit_indx = np.argmax(vals)
+    if fit_index is None:
+        fit_indx = np.argmax(vals)
+    else:
+        fit_indx= fit_index
+        # print("fit index: ", fit_indx, np.argmax(vals))
     r_indx = fit_indx 
     l_indx = fit_indx 
     current_sum = vals[fit_indx]
@@ -106,7 +114,6 @@ def get_bounds_limits(vals, bins, fit, limit=0.67, fine_grain=None):
                 # print(current_sum,"?>=", limit)
             break
         if l_indx == 0:
-            print("l_indx_max")
             while(current_sum <= limit):
                 current_sum += vals[r_indx]
                 r_indx += 1
@@ -120,7 +127,7 @@ def get_bounds_limits(vals, bins, fit, limit=0.67, fine_grain=None):
             current_sum += vals[l_indx]
         #     ax.annotate(str(i), xy=(bins[l_indx],vals[l_indx]))
         # i +=1
-    #     print("->" , l_indx, r_indx, '\t', current_sum)
+        # print("->" , l_indx, r_indx, '\t', current_sum)
 
     # print("pre-final: ", l_indx, r_indx)
     if l_indx< 0:
@@ -128,6 +135,8 @@ def get_bounds_limits(vals, bins, fit, limit=0.67, fine_grain=None):
     if r_indx == vals.size:
         r_indx -=1
     # print("final: ", l_indx, r_indx)
+    # plt.show()
+    # exit()
     if fine_grain is None:
         return l_indx, r_indx
     else:
@@ -260,10 +269,12 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
         fig.suptitle("Likelihood")
     else:
         min_cost = np.min(cost)
-        fig.suptitle("           Fit Cost = {:.1f} X^2_red={:.2f}".format(min_cost, min_cost/(5*16-2)))
+        fig.suptitle("           Fit Cost = {:.1f} X^2_red={:.2f}".format(min_cost, min_cost/(5*15-len(labels))))
     axs_list = np.arange(0,size)
     limits = []
     max_lkhd = [] #Maximum likelihood value
+    max_lkhd_indx = np.unravel_index(np.argmax(lkhd, axis=None), lkhd.shape)
+    # HERE
     # max_lkhd_limits = [] #maxiumum likelihood 1-sigma indexs
     # max_lkhd_limits_val = []#maxiumum likelihood 1-sigma values
     for i in range(size):
@@ -272,10 +283,11 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
         dx = bins[i][1]-bins[i][0]
         lkhd_1d = lkhd_1d/dx/np.sum(lkhd_1d)
         limits.append((np.min(bins[i]), np.max(bins[i])))
-        max_lkhd.append(bins[i][np.argmax(lkhd_1d)])
+        # max_lkhd.append(bins[i][np.argmax(lkhd_1d)])
+        max_lkhd.append(bins[i][max_lkhd_indx[i]])
         # max_lkhd_limits.append(get_bounds_limits(lkhd_1d, bins[i], max_lkhd[i]))
         # max_lkhd_limits_val.append((bins[i][max_lkhd_limits[i][0]], bins[i][max_lkhd_limits[i][1]]))
-        b1, b2, vals, bbins = get_bounds_limits(lkhd_1d, bins[i], max_lkhd[i], fine_grain=5000)
+        b1, b2, vals, bbins = get_bounds_limits(lkhd_1d, bins[i], max_lkhd[i], fine_grain=5000, fit_index=max_lkhd_indx[i])
         # b1, b2 = max_lkhd_limits[i]
         b2 = b2 + 1
         if b2 == len(bbins):
@@ -372,14 +384,15 @@ def calc_likelihood_bounds(param_file_name):
     lkhd_mi_rd = np.sum(lkhd, axis=2)
     lkhd_mi_rm = np.sum(lkhd, axis=1)
     #print(np.shape(lkhd_mi))
+    max_lkhd = np.unravel_index(np.argmax(lkhd, axis=None), lkhd.shape)
     fit_mi = hfile_fit['m_infall'].value[0]
-    fit_mi_bds_lwr, fit_mi_bds_upr, _, fit_mi_bins = get_bounds_limits(lkhd_mi, np.log10(mi_bins), np.log10(fit_mi),fine_grain=5000)
+    fit_mi_bds_lwr, fit_mi_bds_upr, _, fit_mi_bins = get_bounds_limits(lkhd_mi, np.log10(mi_bins), np.log10(fit_mi),fine_grain=5000, fit_index = max_lkhd[0])
     if has_rd:
         fit_rd = hfile_fit['r_disrupt'].value[0]
-        fit_rd_bds_lwr, fit_rd_bds_upr, _, fit_rd_bins = get_bounds_limits(lkhd_rd, rd_bins, fit_rd,fine_grain=5000)
+        fit_rd_bds_lwr, fit_rd_bds_upr, _, fit_rd_bins = get_bounds_limits(lkhd_rd, rd_bins, fit_rd,fine_grain=5000, fit_index=max_lkhd[1])
     if has_rm:
         fit_rm = hfile_fit['r_merger'].value[0]
-        fit_rm_bds_lwr, fit_rm_bds_upr, _, fit_rm_bins = get_bounds_limits(lkhd_rm, rm_bins, fit_rm,fine_grain=5000)
+        fit_rm_bds_lwr, fit_rm_bds_upr, _, fit_rm_bins = get_bounds_limits(lkhd_rm, rm_bins, fit_rm,fine_grain=5000, fit_index=max_lkhd[2])
     if has_rd and not has_rm:
         corner_plot([r'M$_{\mathrm{infall}}$',
                      'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins':
@@ -415,14 +428,20 @@ def calc_likelihood_bounds(param_file_name):
     txt_file = file("figs/"+param_file_name+"/"+__file__+"/grid_fit_param.txt", 'w')
     txt_file.write("mi\t{}\n".format(np.log10(mi_bins[np.argmax(lkhd_mi)])))
     txt_file.write("mi_limits\t{}\t{}\n".format(fit_mi_bins[fit_mi_bds_lwr], fit_mi_bins[fit_mi_bds_upr]))
+    param_num = 1
     if has_rd:
         txt_file.write("rd\t{}\n".format(rd_bins[np.argmax(lkhd_rd)]))
         txt_file.write("rd_limits\t{}\t{}\n".format(fit_rd_bins[fit_rd_bds_lwr], fit_rd_bins[fit_rd_bds_upr]))
+        param_num += 1
     if has_rm: 
         txt_file.write("rm\t{}\n".format(rm_bins[np.argmax(lkhd_rm)]))
         txt_file.write("rm_limits\t{}\t{}\n".format(fit_rm_bins[fit_rm_bds_lwr], fit_rm_bins[fit_rm_bds_upr]))
-
+        param_num += 1
+    txt_file.write("cost\t{}\n".format(np.min(result2)))
+    dof = (5*15)-param_num #Five mass bins w/ halos. Each halo has 15 radial bins
+    txt_file.write("X_red\t{}\n".format(np.min(result2)/dof))
     
+
 def write_fit_param(param_file):
     fname = "output/"+param_file+"/fit_core_params.hdf5"
     print(fname)
