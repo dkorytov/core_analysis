@@ -149,7 +149,7 @@ def get_1d_axis_sum(dim, dims):
         pass
 
 
-def corner_plot(labels, grid_dic = None, mcmc_dic = None, expected_comov_abundance = None):
+def corner_plot(labels, grid_dic = None, mcmc_dic = None, expected_comov_abundance = None, core_loc=None):
     """Plot a corner plot for either from the likelihood calculated on a
     grid and/or from an MCMC.
 
@@ -198,8 +198,8 @@ def corner_plot(labels, grid_dic = None, mcmc_dic = None, expected_comov_abundan
             elif 'infall' in labels[i]:
                 infall_index = i
         if disrupt_index != -1 and infall_index != -1:
-            print('tmp_hdf5/abundance={}.hdf5'.format(expected_comov_abundance))
-            hfile = h5py.File('tmp_hdf5/abundance={}.hdf5'.format(expected_comov_abundance), 'r')
+            print('tmp_hdf5/{}/abundance={}.hdf5'.format(core_loc, expected_comov_abundance))
+            hfile = h5py.File('tmp_hdf5/{}/abundance={}.hdf5'.format(core_loc, expected_comov_abundance), 'r')
             abund_infall_mass = hfile['abund_infall_mass'].value
             abund_radius = hfile['abund_radius'].value
             ax= axs[infall_index][disrupt_index]
@@ -356,6 +356,7 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
 def calc_likelihood_bounds(param_file_name):
     param = dtk.Param(param_file_name)
     expected_comov_abundance = param.get_float('expected_comov_abundance')
+    core_loc = param.get_string('core_loc')
     lgrid_param = dtk.Param("output/"+param_file_name+"/lgrid.param")
     has_rm = param.get_bool("fit_r_merger")
     has_rd = param.get_float_list("rd_bins_info")[2]>2
@@ -398,12 +399,12 @@ def calc_likelihood_bounds(param_file_name):
                      'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins':
                                                             [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2),
                                                             'cost': None},
-                    expected_comov_abundance=expected_comov_abundance)
+                    expected_comov_abundance=expected_comov_abundance, core_loc=core_loc)
         corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'],
                     grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 
                                 'lkhd': np.sum(lkhd, axis=2),
                                 'cost': np.sum(result2, axis=2)},
-                    expected_comov_abundance=expected_comov_abundance)
+                    expected_comov_abundance=expected_comov_abundance, core_loc = core_loc)
         # corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], mcmc_dic = {'mcmc_loc': "output/{}/mcmc.gio".format(param_file_name)})
         # corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2), 'cost': None}, mcmc_dic = {'mcmc_loc': "output/{}/mcmc.gio".format(param_file_name)})
     if has_rm and not has_rd:
@@ -411,12 +412,12 @@ def calc_likelihood_bounds(param_file_name):
                      'R$_{\mathrm{merger}}$'], grid_dic = {'bins':
                                                            [np.log10(mi_bins), rm_bins], 'lkhd': np.sum(lkhd, axis=1),
                                                            'cost': None},
-                    expected_comov_abundance=expected_comov_abundance)
+                    expected_comov_abundance=expected_comov_abundance, core_loc=core_loc)
         corner_plot([r'M$_{\mathrm{infall}}$',
                      'R$_{\mathrm{merger}}$'], grid_dic = {'bins':
                                                            [np.log10(mi_bins), rm_bins], 'lkhd': np.sum(lkhd, axis=1),
                                                            'cost': np.sum(result2,
-                                                                          axis=1)},expected_comov_abundance=expected_comov_abundance)
+                                                                          axis=1)},expected_comov_abundance=expected_comov_abundance, core_loc=core_loc)
     if has_rm and has_rd:
         
         corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':None}, expected_comov_abundance=expected_comov_abundance)
