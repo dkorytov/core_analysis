@@ -30,32 +30,80 @@ class ClusterData:
         self.z =    hfile['cluster/z'].value
         self.rad =  hfile['cluster/sod_radius'].value
         self.mass = hfile['cluster/sod_mass'].value
+        self.htag = hfile['cluster/htag'].value
 
         self.core_offset = hfile['cluster/core_offset'].value
         self.core_size = hfile['cluster/core_size'].value
+        self.core_htag = hfile['cores/core_htag'].value
+        self.core_infall_htag = hfile['cores/core_infall_htag'].value
+        print(hfile['cores'].keys())
         self.core_x = hfile['cores/core_x'].value
         self.core_y = hfile['cores/core_y'].value
         self.core_z = hfile['cores/core_z'].value
         self.core_r = hfile['cores/core_r'].value
         self.core_m = hfile['cores/core_m'].value
+        self.core_step = hfile['cores/core_step'].value
+        #self.core_infall_htag= hfile['cores/infall_htag'].value
+        self.core_is_central = hfile['cores/core_is_central'].value
+        
 
     def plot_cluster(self, i):
         f, (ax1, ax2) = plt.subplots(1,2,figsize=(25,10))
         start = self.core_offset[i]
         stop = start + self.core_size[i]
         ax1.plot(self.core_x[start:stop], self.core_y[start:stop], 'go',mfc='none',mec='g')
+        
+        slct_central = self.core_step[start:stop] == 401
+        slct_halo_central = (self.core_step[start:stop]==401) & (self.core_htag[start:stop] == self.htag[i])
+        print(np.sum(slct_halo_central))
+        dx = self.x[i] - self.core_x[start:stop]
+        dy = self.y[i] - self.core_y[start:stop]
+        dz = self.z[i] - self.core_z[start:stop]
+        dr = dx*dx + dy*dy + dz*dz
+        srt = np.argsort(dr)
+        
+        print(self.htag[i], "{:.2e}".format(self.mass[i]))
+        print(self.x[i], self.y[i], self.z[i])
+        cnt = 0
+        for j in range(0, np.sum(slct_halo_central)):
+            print(self.core_htag[start:stop][slct_halo_central][j], self.core_step[start:stop][slct_halo_central][j], "mass:{:.2e} rad:{:.4f} dr:{:.3f} ".format(self.core_m[start:stop][slct_halo_central][j], self.core_r[start:stop][slct_halo_central][j], dr[slct_halo_central][j]))
+            # print("\t", self.core_step[start:stop][srt][j]==401)
+            # print("\t", self.core_htag[start:stop][srt][j]==self.htag[i])
+                  #, self.core_x[start:stop][j], self.core_y[start:stop][j], self.core_z[start:stop][j])
+        print("\n")
+
+        ax1.plot(self.core_x[start:stop][slct_central],  self.core_y[start:stop][slct_central], '+r',mfc='none',mec='r', mew=2)
+        ax1.plot(self.core_x[start:stop][slct_halo_central],  self.core_y[start:stop][slct_halo_central], 'x',mfc='none',mec='b', mew=2, alpha=1.0)
+        slct = self.core_htag[start:stop] == self.htag[i]
+        ax1.plot(self.core_x[start:stop][slct],  self.core_y[start:stop][slct], '.',mfc='g',mec='none', mew=1, alpha=0.3)
         circle = Circle((self.x[i],self.y[i]), self.rad[i], fc='none', ec='k')
+        ax1.plot(self.x[i], self.y[i], 'xk', mew=2)
         ax1.add_artist(circle)
         ax1.grid()
         ax1.set_title("cluster[{}]".format(i))
         ax2.plot(self.core_z[start:stop], self.core_y[start:stop], 'go',mfc='none',mec='g')
+        ax2.plot(self.core_z[start:stop][slct_central],  self.core_y[start:stop][slct_central], '+r',mfc='none',mec='r', mew=2)
+
+        ax2.plot(self.core_z[start:stop][slct_halo_central],  self.core_y[start:stop][slct_halo_central], 'x',mfc='none',mec='b', mew=2, alpha=1.0)
+        ax2.plot(self.core_z[start:stop][slct],  self.core_y[start:stop][slct], '.',mfc='g',mec='none', mew=1, alpha=0.3)
         circle = Circle((self.z[i],self.y[i]), self.rad[i], fc='none', ec='k')
+        ax2.plot(self.z[i], self.y[i], 'xk', mew=2)
         ax2.add_artist(circle)
         ax2.grid()
         ax2.set_title("cores[{}]".format(self.core_size[i]))
         ax1.set_aspect('equal')
         ax2.set_aspect('equal')
+        plt.close()
 
+    def plot_find_central(self, i):
+        start = self.core_offset[i]
+        stop = start + self.core_size[i]
+        core_x, core_y, core_z  = self.core_x[start:stop], self.core_y[start:stop], self.core_z[start:stop]
+        core_r = self.core_r[start:stop]
+        core_m = self.core_m[start:stop]
+        slct = core_m > m_infall
+        slct_compact = core_r < r_disrupt
+        
     def plot_fit_cluster(self, i , m_infall,  r_disrupt, r_merger = 0.0):
         if self.mass[i] > 2e14:
             return
@@ -66,6 +114,14 @@ class ClusterData:
         core_m = self.core_m[start:stop]
         slct = core_m > m_infall
         slct_compact = core_r < r_disrupt
+        
+        dx = core_x - self.x[i]
+        dy = core_y - self.y[i]
+        dz = core_y - self.z[i]
+        dr = dx*dx + dy*dy + dz*dz
+        
+        srt = np.argsort(dr)
+        print("{:.2e}".format(np.max(core_m[srt][:100])))
         # f, (ax1, ax2) = plt.subplots(1,2,figsize=(25,10))
         # ax1.plot(core_x[slct & ~slct_compact], core_y[slct & ~slct_compact], 'go',mfc='none',mec='g')
         # ax1.plot(core_x[slct &  slct_compact], core_y[slct &  slct_compact], 'go',mfc='g',mec='g')
@@ -138,7 +194,9 @@ class SODData:
             self.rad = dtk.gio_read(sod_loc, 'sod_halo_radius')
             self.mass = dtk.gio_read(sod_loc, 'sod_halo_mass')
         
+
 n2merger= None
+
 def plot_saved_clusters(param_filename):
     global n2merger
     param = dtk.Param(param_filename)
@@ -150,7 +208,8 @@ def plot_saved_clusters(param_filename):
     print(n2lib_loc)
     cluster_data.load_file(cluster_loc)
     for i in range(0,cluster_data.num):
-        cluster_data.plot_fit_cluster(i, 12.2, 0.02)
+        # cluster_data.plot_fit_cluster(i, 12.2, 0.02)
+        cluster_data.plot_cluster(i)
         plt.show()
 
 def plot_hist(data, bins, style='-', label=None, ):
