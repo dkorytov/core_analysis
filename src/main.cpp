@@ -495,6 +495,8 @@ struct Cluster{
     delete [] cp_color;
   }
   void move_cores_together();
+  void set_central_core_on_center();
+  void set_central_as_compact();
 };
 
 struct FunctionParam{
@@ -1532,6 +1534,9 @@ void bcast_clusters(std::vector<Cluster>& clusters, int root, MPI_Comm comm){
     std::cout<<"\tdone bcasting clusters. time: "<<t<<std::endl;
 }
 void write_core_params(CoreParam cp, std::string file_loc);
+void adjust_clusters(bool force_centrals_as_galaxy, 
+		     bool force_center_on_central, 
+		     std::vector<Cluster>& clusters);
 float get_locked_r_disrupt(float m_infall,Cores cores);
 int core_fit(char* param_fname);
 
@@ -1580,6 +1585,8 @@ int core_fit(char* param_fname){
 	write_clusters_fast(cluster_loc,all_clusters);
     }
   }
+  if(rank==0) // Adjust clusters to be centered on centrals and/or compact centrals
+    adjust_clusters(force_central_as_galaxy, force_center_on_central, all_clusters);
   bcast_clusters(all_clusters,0,MPI_COMM_WORLD);
   CoreParam fit_cp;
   fit_cp.m_infall = m_infall;
@@ -1680,8 +1687,8 @@ void load_param(char* file_name){
   use_central_infall = param.get<bool>("use_central_infall");
   force_central_as_galaxy = param.get<bool>("force_central_as_galaxy");
   force_center_on_central = param.get<bool>("force_center_on_central");
-  if(use_central_infall || force_central_as_galaxy || force_center_on_central){
-    std::cout<<"The use of use_central_infall, force_central_as_galaxy, force_center_on_central is not allowed"<<std::endl;
+  if(use_central_infall){
+    std::cout<<"The use of use_central_infall is not allowed"<<std::endl;
     std::cout<<"Maybe force_center_on_central may work, but needs to be looked into"<<std::endl;
     throw;
   }
@@ -2031,15 +2038,24 @@ void make_clusters(){
 	std::cout<<"\tcluster["<<j<<"]/"<<all_halocats.at(steps[i]).size<<std::endl;
 	std::cout<<"\t"<<dtk::fraction(j,all_halocats.at(steps[i]).size)<<std::endl;
 	std::cout<<"\ttime: "<<t<<std::endl;
+	std::cout<<"\t"<<all_clusters.size()<<"/"<<5000<<std::endl;
       }
       if(all_clusters.size() > 5000){
-	break;
+      	break;
       }
     }
   }
   dv.sort();
   t.stop();
   std::cout<<"done making clusters. Time: "<<t<<std::endl;
+}
+void adjust_clusters(bool force_centrals_as_galaxy, bool force_center_on_central, std::vector<Cluster>& clusters){
+  for(int i=0;i<clusters.size();++i){
+    if(force_centrals_as_galaxy)
+      clusters[i].set_central_as_compact();
+    if(force_center_on_central)
+      clusters[i].set_centeral_core_on_center();
+  }
 }
 void defrag_halos(int64_t *htags, int64_t size){
   for(int64_t i =0;i<size;++i){
@@ -2596,29 +2612,29 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
     // std::cout<<dr<<std::endl;
     // std::cout<<core_x[i]<<" "<<core_y[i]<<" "<<core_z[i]<<std::endl;
     // std::cout<<x<<" "<<y<<" "<<z<<std::endl;
-    if(force_center_on_central){
-      if(corecat.is_central[my_cores[i]]==1 && corecat.host_htag[my_cores[i]] == htag &&
-	 corecat.central_mass[my_cores[i]] > central_mass){
-	central_mass = corecat.central_mass[my_cores[i]];
-	center_replaced = true;
-	std::cout<<"Central found!"<<std::endl;
-	std::cout<<"\ncore id: "<<core_id[i]<<std::endl;
-	std::cout<<"host htag: "<<corecat.host_htag[my_cores[i]]<<std::endl;
-	std::cout<<"step: "<<core_step[i]<<std::endl;
-	std::cout<<"pos: "<<core_x[i]<<" "<<core_y[i]<<" "<<core_z[i]<<std::endl;
-	std::cout<<"mass: "<<std::log10(core_m[i])<<std::endl;
-	std::cout<<"central: "<<core_is_central[i]<<std::endl;
-	std::cout<<corecat.host_htag[my_cores[i]]<<"=="<<htag<<std::endl;
-	x = core_x[i];
-	y = core_y[i];
-	z = core_z[i];
-      }
-    }
+    // if(force_center_on_central){
+    //   if(corecat.is_central[my_cores[i]]==1 && corecat.host_htag[my_cores[i]] == htag &&
+    // 	 corecat.central_mass[my_cores[i]] > central_mass){
+    // 	central_mass = corecat.central_mass[my_cores[i]];
+    // 	center_replaced = true;
+    // 	std::cout<<"Central found!"<<std::endl;
+    // 	std::cout<<"\ncore id: "<<core_id[i]<<std::endl;
+    // 	std::cout<<"host htag: "<<corecat.host_htag[my_cores[i]]<<std::endl;
+    // 	std::cout<<"step: "<<core_step[i]<<std::endl;
+    // 	std::cout<<"pos: "<<core_x[i]<<" "<<core_y[i]<<" "<<core_z[i]<<std::endl;
+    // 	std::cout<<"mass: "<<std::log10(core_m[i])<<std::endl;
+    // 	std::cout<<"central: "<<core_is_central[i]<<std::endl;
+    // 	std::cout<<corecat.host_htag[my_cores[i]]<<"=="<<htag<<std::endl;
+    // 	x = core_x[i];
+    // 	y = core_y[i];
+    // 	z = core_z[i];
+    //   }
+    // }
   }
-  if(force_center_on_central && !center_replaced){
-    std::cout<<"A central core wasn't found for this halo?!"<<std::endl;
-    dtk::pause();
-  }
+  // if(force_center_on_central && !center_replaced){
+  //   std::cout<<"A central core wasn't found for this halo?!"<<std::endl;
+  //   dtk::pause();
+  // }
   //Moving all the core particles across period boundary conditions to
   //be in one area
   move_together(x,rL,core_x,core_size);
@@ -3054,6 +3070,55 @@ void Cluster::move_cores_together(){
   move_together(y,rL,core_y,core_size);
   move_together(z,rL,core_z,core_size);
 }
+int Cluster::find_central(){
+  int central = -1;
+  float central_distance = 1e9;
+  for(int i =0; i<core_size; ++i){
+    if(core_step[i] == step){
+      float dx = x - core_x[i];
+      float dy = y - core_y[i];
+      float dz = z - core_z[i];
+      float dr = dx*dx + dy*dy + dz*dz;
+      if(dr< central_distance){
+	central = i;
+	central_distance = dr;
+      }
+    }
+  }
+  return central;
+}
+void Cluster::set_central_core_on_center(){
+  // std::cout<<"Halo: "<<htag<<std::endl;
+  // for(int i=0;i<core_size;++i){
+  //   bool host_halo_central_core = (core_htag[i] == htag) || (core_is_central[i]);
+  //   if(host_halo_central_core){
+  //     std::cout<<"\tNew central found!"<<std::endl;
+  //     x = core_x[i];
+  //     y = core_x[i];
+  //     z = core_x[i];
+  //   }
+  // }
+  int central_index = find_central();
+  core_x[central_index] = x;
+  core_y[central_index] = y;
+  core_z[central_index] = z;
+}
+void Cluster::set_central_as_compact(){
+  // std::cout<<"Setting centrals radius to r=0"<<std::endl;
+  // int count = 0;
+  // for(int i =0;i<core_size;++i){
+  //   if(core_is_central[i] || core_step[i] == step){
+  //     core_r[i] = 0;
+  //     ++count;
+  //   }
+  // }
+  // std::cout<<"\tnum reset:"<<count<<std::endl;
+  // if (count == 0)
+  //   dtk::pause();
+  int central_index = find_central();
+  core_r[central_index] = 0
+}
+
 void ZMR::write_txt(std::string file_loc){
   std::ofstream file(file_loc.c_str());
   write_array(file,"z_bins",z_bins);
