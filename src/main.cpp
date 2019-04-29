@@ -1807,68 +1807,15 @@ void load_cores(){
       load_cores_gio(file, cores);
     cores.is_central = new int[cores.size];
     cores.compact = new int[cores.size];
-    if(use_central_infall || force_central_as_galaxy || force_center_on_central){
-      int64_t central_size;
-      int64_t* core_central_id;
-      int64_t* srt;
-      file = dtk::rep_str(core_central_loc,"${step}",steps[i]);
-      dtk::read_gio_quick(file,"core_tag",core_central_id,central_size);
-      dtk::read_gio_quick(file,"core_central_htag",cores.central_htag,central_size);
-      dtk::read_gio_quick(file,"core_central_step",cores.central_step,central_size);
-      dtk::read_gio_quick(file,"core_central_mass",cores.central_mass,central_size);
-      dtk::read_gio_quick(file,"core_is_central",cores.is_central,central_size);
-      srt = dtk::arg_sort(core_central_id,central_size);
-      for(int j =0;j<cores.size;++j){
-	int64_t indx = dtk::search_sorted(core_central_id,cores.ctag[j],srt,static_cast<size_t>(central_size));
-	if(indx != -1 && core_central_id[indx] == cores.ctag[j]){
-	  if(core_central_id[indx] == 287418457){
-	    std::cout<<"\nreplacing "<<cores.infall_mass[j]<<" with "<<cores.central_mass[indx]<<std::endl;
-	    std::cout<<cores.infall_htag[j]<<" -> "<<cores.central_htag[indx]<<std::endl;
-	    std::cout<<cores.infall_step[j]<<" -> "<<cores.central_step[indx]<<std::endl;
-	    std::cout<<cores.ctag[j]<<" =?= "<<core_central_id[indx]<<std::endl;
-	    std::cout<<cores.is_central[indx]<<std::endl;
-	  }
-	  if(use_central_infall)
-	    cores.infall_mass[j]=cores.central_mass[indx];
-	  //cores.infall_htag[j]=core_central_htag[indx];
-	  //cores.infall_step[j]=core_central_step[indx];
-	}
-	else{
-	  std::cout<<"Hmmm? core not found in central core catalog?!"<<std::endl;
-	  dtk::pause();
-	}
-      }
-
-      delete [] core_central_id;
-      delete [] srt;
-    }
     // New cores now have the correct infall mass for centrals
     // else{
     //   cores.central_mass = new float[cores.size];
     //   std::cout<<"Do not use core central infall. "<<std::endl;
     // }
     //TODO: Deal with the fragments correctly/test the effect. 
-    defrag_halos(cores.host_htag,cores.size);
-    defrag_halos(cores.infall_htag,cores.size);
+    defrag_halos(cores.host_htag,   cores.size);
+    defrag_halos(cores.infall_htag, cores.size);
     std::cout<<"defrag is fine"<<std::endl;    
-    //Note: Do we need to reorder by htag?!
-    // int64_t* srt = dtk::new_sort_array<int64_t>(cores.size);
-    // std::sort(srt,srt+cores.size,dtk::Sorter<int64_t>(cores.host_htag));
-    // dtk::reorder(cores.host_htag,cores.size,srt);
-    // dtk::reorder(cores.ctag,cores.size,srt);
-    // dtk::reorder(cores.x,cores.size,srt);
-    // dtk::reorder(cores.y,cores.size,srt);
-    // dtk::reorder(cores.z,cores.size,srt);
-    // dtk::reorder(cores.radius,cores.size,srt);
-    // dtk::reorder(cores.infall_mass,cores.size,srt);
-    // dtk::reorder(cores.infall_htag,cores.size,srt);
-    // dtk::reorder(cores.infall_step,cores.size,srt);
-    // if(use_central_infall || force_central_as_galaxy || force_center_on_central){
-    //   dtk::reorder(cores.central_mass,cores.size,srt);
-    //   dtk::reorder(cores.central_htag,cores.size,srt);
-    //   dtk::reorder(cores.central_step,cores.size,srt);
-    // }
-    // dtk::reorder(cores.is_central,cores.size,srt);
 
     float  len_xyz[3] = {rL, rL, rL};
     size_t len_ijk[3] = {chaining_mesh_grid_size, chaining_mesh_grid_size, chaining_mesh_grid_size};
