@@ -1,0 +1,11 @@
+**/figs
+**/obj
+**/lib
+**/tmp*
+*.pyc
+**/dtk
+**/genericio
+**/output
+**/old
+core_fit
+**/processed_catalog
