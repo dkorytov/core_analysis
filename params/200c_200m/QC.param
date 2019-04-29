@@ -1,0 +1,6 @@
+sod_location /media/luna1/dkorytov/data/QContinuum/sod/m000.${step}.sodproperties
+sod_output /media/luna1/dkorytov/data/QContinuum/sod_200m/sod_m200m.${step}.hdf5
+steps 401
+input_h 0.7
+output_h 1.0
+write_catalog true
