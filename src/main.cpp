@@ -413,7 +413,7 @@ struct Cluster{
   int z_i,m_i; //the redshift and mass bin this cluster belongs in. 
   //the core catalog that belong to this cluster
   int64_t core_size;
-  int64_t* core_id,*core_htag;
+  int64_t* core_id,*core_htag, *core_infall_htag;
   float*  core_x,*core_y,*core_z,*core_r,*core_m;
   int*    core_is_central;
   int*    core_step;
@@ -1114,6 +1114,7 @@ void broadcast_clusters(Cluster& cluster){
   //broadcast cores
   MPI_Bcast(&cluster.core_id,cluster.core_size,MPI_INT64_T,0,MPI_COMM_WORLD);
   MPI_Bcast(&cluster.core_htag,cluster.core_size,MPI_INT64_T,0,MPI_COMM_WORLD);
+  MPI_Bcast(&cluster.core_infall_htag,cluster.core_size,MPI_INT64_T,0,MPI_COMM_WORLD);
   MPI_Bcast(&cluster.core_x,cluster.core_size,MPI_FLOAT,0,MPI_COMM_WORLD);
   MPI_Bcast(&cluster.core_y,cluster.core_size,MPI_FLOAT,0,MPI_COMM_WORLD);
   MPI_Bcast(&cluster.core_z,cluster.core_size,MPI_FLOAT,0,MPI_COMM_WORLD);
@@ -1181,6 +1182,7 @@ void write_cluster(H5::H5File& file, Cluster& cluster, int num){
   dtk::write_hdf5(file,dtk::make_str(ss,"cp_size"),cluster.cp_size);
   dtk::write_hdf5(file,dtk::make_str(ss,"core_id"),        cluster.core_id,        cluster.core_size);
   dtk::write_hdf5(file,dtk::make_str(ss,"core_htag"),      cluster.core_htag,      cluster.core_size);
+  dtk::write_hdf5(file,dtk::make_str(ss,"core_infall_htag"),cluster.core_infall_htag,cluster.core_size);
   dtk::write_hdf5(file,dtk::make_str(ss,"core_x"),         cluster.core_x,         cluster.core_size);
   dtk::write_hdf5(file,dtk::make_str(ss,"core_y"),         cluster.core_y,         cluster.core_size);
   dtk::write_hdf5(file,dtk::make_str(ss,"core_z"),         cluster.core_z,         cluster.core_size);
@@ -1221,6 +1223,7 @@ void read_cluster(H5::H5File& file, Cluster& cluster, int num){
  //true means allocate the array
  dtk::read_hdf5(file,dtk::make_str(ss,"core_id"),        cluster.core_id,        true);
  dtk::read_hdf5(file,dtk::make_str(ss,"core_htag"),      cluster.core_htag,      true);
+ dtk::read_hdf5(file,dtk::make_str(ss,"core_infall_htag"),cluster.core_infall_htag,true);
  dtk::read_hdf5(file,dtk::make_str(ss,"core_x"),         cluster.core_x,         true);
  dtk::read_hdf5(file,dtk::make_str(ss,"core_y"),         cluster.core_y,         true);
  dtk::read_hdf5(file,dtk::make_str(ss,"core_z"),         cluster.core_z,         true);
@@ -1302,7 +1305,7 @@ void write_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
 
   size_t total_core_size = current_core_offset;
   std::cout<<"allocing space for cores: "<<total_core_size<<std::endl;
-  std::vector<int64_t> core_id(total_core_size), core_htag(total_core_size);
+  std::vector<int64_t> core_id(total_core_size), core_htag(total_core_size), core_infall_htag(total_core_size);
   std::vector<float> core_x(total_core_size), core_y(total_core_size), core_z(total_core_size),
     core_r(total_core_size), core_m(total_core_size);
   std::vector<int> core_is_central(total_core_size), core_step(total_core_size);
@@ -1313,6 +1316,7 @@ void write_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     std::cout<<"\toffset: "<<offset<<"/"<<total_core_size<<" number of cores: "<<core_num<<std::endl;
     dtk::copy_n(clusters.at(i).core_id, core_num, &core_id[offset]); 
     dtk::copy_n(clusters.at(i).core_htag, core_num, &core_htag[offset]);
+    dtk::copy_n(clusters.at(i).core_infall_htag, core_num, &core_infall_htag[offset]);
     dtk::copy_n(clusters.at(i).core_x, core_num, &core_x[offset]); 
     dtk::copy_n(clusters.at(i).core_y, core_num, &core_y[offset]); 
     dtk::copy_n(clusters.at(i).core_z, core_num, &core_z[offset]); 
@@ -1343,6 +1347,7 @@ void write_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
   std::cout<<"writing out cores"<<std::endl;
   dtk::write_hdf5(hfile,"/cores/core_id",  core_id);
   dtk::write_hdf5(hfile,"/cores/core_htag",  core_htag);
+  dtk::write_hdf5(hfile,"/cores/core_infall_htag",core_infall_htag);
   dtk::write_hdf5(hfile,"/cores/core_x",  core_x);
   dtk::write_hdf5(hfile,"/cores/core_y",  core_y);
   dtk::write_hdf5(hfile,"/cores/core_z",  core_z);
@@ -1355,7 +1360,7 @@ void write_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
 void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
   std::cout<<"Reading clusters quickly via new method: ..."<<std::endl;
   dtk::AutoTimer t;
-  std::vector<int64_t> htag, core_id, core_htag;
+  std::vector<int64_t> htag, core_id, core_htag, core_infall_htag;
   std::vector<size_t> core_offset, core_size;
   std::vector<int>  step, core_is_central, core_step, z_i, m_i;
   std::vector<float> sod_mass, sod_radius, x, y, z, redshift,
@@ -1379,6 +1384,7 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
   // core info
   dtk::read_hdf5(hfile, "/cores/core_id", core_id);
   dtk::read_hdf5(hfile, "/cores/core_htag", core_htag);
+  dtk::read_hdf5(hfile, "/cores/core_infall_htag", core_infall_htag);
   dtk::read_hdf5(hfile, "/cores/core_x", core_x);
   dtk::read_hdf5(hfile, "/cores/core_y", core_y);
   dtk::read_hdf5(hfile, "/cores/core_z", core_z);
@@ -1406,6 +1412,7 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     // core data
     clstr.core_id = new int64_t[clstr.core_size];
     clstr.core_htag = new int64_t[clstr.core_size];
+    clstr.core_infall_htag = new int64_t[clstr.core_size];
     clstr.core_x = new float[clstr.core_size];
     clstr.core_y = new float[clstr.core_size];
     clstr.core_z = new float[clstr.core_size];
@@ -1416,6 +1423,7 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     // load in core data
     dtk::copy_n(&core_id[clstr_core_offset], clstr.core_size, clstr.core_id);
     dtk::copy_n(&core_htag[clstr_core_offset], clstr.core_size, clstr.core_htag);
+    dtk::copy_n(&core_infall_htag[clstr_core_offset], clstr.core_size, clstr.core_infall_htag);
     dtk::copy_n(&core_x[clstr_core_offset], clstr.core_size, clstr.core_x);
     dtk::copy_n(&core_y[clstr_core_offset], clstr.core_size, clstr.core_y);
     dtk::copy_n(&core_z[clstr_core_offset], clstr.core_size, clstr.core_z);
@@ -1440,6 +1448,7 @@ void bcast_cluster(Cluster& cluster, MPI_Datatype mpi_cluster_type,int root, MPI
   if(myrank != root){
     cluster.core_id =   new int64_t[cluster.core_size];
     cluster.core_htag = new int64_t[cluster.core_size];
+    cluster.core_infall_htag = new int64_t[cluster.core_size];
     cluster.core_x = new float[cluster.core_size];
     cluster.core_y = new float[cluster.core_size];
     cluster.core_z = new float[cluster.core_size];
@@ -1451,6 +1460,7 @@ void bcast_cluster(Cluster& cluster, MPI_Datatype mpi_cluster_type,int root, MPI
   }
   MPI_Bcast(cluster.core_id,        cluster.core_size, MPI_INT64_T, root,comm);
   MPI_Bcast(cluster.core_htag,      cluster.core_size, MPI_INT64_T, root,comm);
+  MPI_Bcast(cluster.core_infall_htag,cluster.core_size, MPI_INT64_T, root,comm);
   MPI_Bcast(cluster.core_x,         cluster.core_size, MPI_FLOAT,   root,comm);
   MPI_Bcast(cluster.core_y,         cluster.core_size, MPI_FLOAT,   root,comm);
   MPI_Bcast(cluster.core_z,         cluster.core_size, MPI_FLOAT,   root,comm);
@@ -2567,7 +2577,8 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
   float central_mass = 0;
   for(int i =0;i<my_cores.size();++i){
     core_id[i]=corecat.ctag[my_cores[i]];
-    core_htag[i]=corecat.infall_htag[my_cores[i]];
+    core_htag[i]=corecat.host_htag[my_cores[i]];
+    core_infall_htag[i]=corecat.infall_htag[my_cores[i]];
     core_step[i]=corecat.infall_step[my_cores[i]];
     core_x[i] =corecat.x[my_cores[i]];
     core_y[i] =corecat.y[my_cores[i]];
@@ -2672,6 +2683,7 @@ void Cluster::alloc_cores(int size){
   core_size = size;
   core_id = new int64_t[size];
   core_htag = new int64_t[size];
+  core_infall_htag = new int64_t[size];
   core_step = new int[size];
   core_x = new float[size];
   core_y = new float[size];
