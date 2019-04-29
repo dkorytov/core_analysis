@@ -1888,7 +1888,12 @@ void load_halo_cats(){
     //std::string fof_file = dtk::rep_str(fof_loc,"${step}",step[i]);
     HaloCat hc;
     std::string sod_file = dtk::rep_str(sod_loc,"${step}",steps[i]);
-    // If 
+    // The read in mass, radius has h=0.7, but the queried data has
+    // mass, radius with h=1.0. Since profiles are scaled with radius,
+    // the difference in h convention is okay. Furthermore, the core
+    // data is stored with h=0.7, so it makes sense to leave it with
+    // h=0.7.  The masses are not okay as different clusters may fall into 
+    // different mass bins. 
     if(sod_hdf5){
       std::cout<<sod_file<<std::endl;
       std::cout<<hc.htag<<" "<<hc.size<<std::endl;
@@ -1906,6 +1911,10 @@ void load_halo_cats(){
       dtk::read_gio_quick(sod_file,"fof_halo_center_z", hc.z,          hc.size);
       dtk::read_gio_quick(sod_file,"sod_halo_mass",     hc.sod_mass,   hc.size);
       dtk::read_gio_quick(sod_file,"sod_halo_radius",   hc.sod_radius, hc.size);
+    }
+    // adjusting the masses to have h=1.0
+    for(int i=0;i<hc.size;++i){
+      hc.sod_mass[i] = hc.sod_mass[i]/0.7;
     }
     all_halocats[steps[i]]=hc;
   }

@@ -12,7 +12,7 @@ import halotools.empirical_models
 from astropy.cosmology import WMAP7
 from colossus.halo import mass_adv
 from colossus.cosmology import cosmology
-
+import colossus
 
 def load_halo_cat(sod_location, h_scaling):
     print("loading the catalog")
@@ -36,24 +36,26 @@ def load_halo_cat(sod_location, h_scaling):
 
 
 def write_halo_cat(sod_output, cat, h_scaling):
-    """We convert the radii back to h=0.7 to it will work with GIO hacc
-    data.
-    """
+    # """We convert the radii back to h=0.7 to it will work with GIO ha cc
+    # data.
+    # """
+    """ It looks like everything was already with h=0.7. So we need to convert mass
+    instead"""
     print("trying to write to ", sod_output)
+    print("h_scaling: ", h_scaling)
     hfile = h5py.File(sod_output, 'w')
     hfile['fof_halo_tag'] = cat['fof_halo_tag']
     hfile['fof_halo_center_x'] = cat['fof_halo_center_x']
     hfile['fof_halo_center_y'] = cat['fof_halo_center_y']
     hfile['fof_halo_center_z'] = cat['fof_halo_center_z']
     # M_200m, R_200m
-    hfile['sod_halo_mass_m200m']   = cat['sod_halo_mass_m200m']
-    hfile['sod_halo_radius_r200m'] = cat['sod_halo_radius_r200m']*h_scaling
+    hfile['sod_halo_mass_m200m']   = cat['sod_halo_mass_m200m']*h_scaling
+    hfile['sod_halo_radius_r200m'] = cat['sod_halo_radius_r200m']
     hfile['sod_halo_cdelta_200m']  = cat['sod_halo_cdelta_200m']
     # M_200c, R_200c
-    # hfile['sod_halo_mass_m200c']   = cat['sod_halo_mass_m200c']
-    # hfile['sod_halo_radius_r200c'] = cat['sod_halo_radius_r200c']*h_scaling
-    # hfile['sod_halo_cdelta_200c']  = cat['sod_halo_cdelta']
-
+    hfile['sod_halo_mass_m200c']   = cat['sod_halo_mass_m200c']*h_scaling
+    hfile['sod_halo_radius_r200c'] = cat['sod_halo_radius_r200c']
+    hfile['sod_halo_cdelta_200c']  = cat['sod_halo_cdelta']
     hfile.close()
 
 
@@ -66,45 +68,29 @@ def get_rho_mean_over_rho_crit(redshift):
 
 def convert_halo_m200c_to_m200m( sod_location, sod_output, time_step, redshift , h_scaling, write_catalog=False):
     a = 1.0/(1.0+redshift)
-    rho_mean = get_rho_mean_over_rho_crit(redshift)
+    # rho_mean = get_rho_mean_over_rho_crit(redshift)
+    
+    # This catalog has h=0.7
     cat = load_halo_cat(sod_location.replace("${step}", str(time_step)), h_scaling)
-    # nfw_converter = dtk.NFWConverter(lower_limit = 0.0001, upper_limit = 50)
-    # starting_delta = 200.0 #
-    # target_delta = starting_delta*rho_mean
-    # Rs = cat['sod_halo_radius']/cat['sod_halo_cdelta']
-    # R_200m = nfw_converter.get_target_overdensity_radius(starting_delta, 
-    #                                                      cat['sod_halo_radius'], 
-    #                                                      cat['sod_halo_cdelta'],
-    #                                                      target_delta,)
-    # a = 1.0/(1.0+redshift)
-    # cat['sod_halo_radius_r200m'] = R_200m*0.75
-    # cat['sod_halo_mass_m200m'] = 4.0/3.0 * np.pi * (R_200m**3) * halotools.empirical_models.density_threshold(WMAP7, redshift, '200m') * 0.7**2 / a**3 
-    # cat['sod_halo_cdelta_200m'] = R_200m/Rs
-    # R_200c = cat['sod_halo_radius']
-    # cat['sod_halo_mass_m200c'] = 4.0/3.0 * np.pi * (R_200c**3) * halotools.empirical_models.density_threshold(WMAP7, redshift, '200c') * 0.7**2 / a**3
-    # cat['sod_halo_radius_r200c'] = R_200c*0.75
-    # cat['sod_halo_cdelta_200c'] = R_200c/Rs
-    # M_200c = cat['sod_halo_mass_m200c']
-    # M_200m = cat['sod_halo_mass_m200m']
 
     M200m_col, R200m_col, c200m_col = mass_adv.changeMassDefinitionCModel(cat['sod_halo_mass']/0.7, redshift,
                                                                           "200c","200m", c_model='child18')#cat['sod_cdelta']
     M200c_col, R200c_col, c200c_col = mass_adv.changeMassDefinitionCModel(cat['sod_halo_mass']/0.7, redshift,
                                                                           "200c","200c", c_model='child18')#cat['sod_cdelta']
+    R_200m = R200m_col/1000.0/0.7
+    M_200m = M200m_col*0.7
 
-    cat['sod_halo_radius_r200m'] = R200m_col/1000.0/0.7*a
-    cat['sod_halo_mass_m200m']   = M200m_col*0.7
+    R_200c = R200c_col/1000.0/0.7
+    M_200c = M200c_col*0.7
+
+    cat['sod_halo_radius_r200m'] = R_200m*a
+    cat['sod_halo_mass_m200m']   = M_200m
     cat['sod_halo_cdelta_200m']  = c200m_col
 
-    cat['sod_halo_radius_r200c'] = R200c_col/1000.0/0.7*a
-    cat['sod_halo_mass_m200c']   = M200c_col*0.7
+    cat['sod_halo_radius_r200c'] = R_200c*a
+    cat['sod_halo_mass_m200c']   = M_200c
     cat['sod_halo_cdelta_200c']  = c200c_col
 
-    M_200c = M200c_col*0.7
-    R_200c = R200c_col/1000.0/0.7
-
-    M_200m = M200m_col*0.7
-    R_200m = R200m_col/1000.0/0.7
 
     if( write_catalog):
         print("writing catalog")
@@ -113,14 +99,15 @@ def convert_halo_m200c_to_m200m( sod_location, sod_output, time_step, redshift ,
     else:
         print("plotting tests")
 
-    h, xbins, ybins = np.histogram2d(np.log10(cat['sod_halo_mass']), np.log10(M_200c*0.7), bins = 250)
+    h, xbins, ybins = np.histogram2d(np.log10(cat['sod_halo_mass']), np.log10(M_200c), bins = 250)
     plt.figure()
     plt.pcolor(xbins, ybins, h.T, cmap = 'Blues', norm = clr.LogNorm())
     plt.plot([np.min(xbins), np.max(xbins)], [np.min(xbins), np.max(xbins)], '--k')
     plt.ylabel('Col M200c')
     plt.xlabel('SOD M200c')
 
-    h, xbins, ybins = np.histogram2d(cat['sod_halo_radius'],R_200m, bins = 250)
+    print(np.mean(R_200c*a/cat['sod_halo_radius']), np.mean(cat['sod_halo_radius']/R_200c/a), a)
+    h, xbins, ybins = np.histogram2d(cat['sod_halo_radius'],R_200c*a, bins = 250)
     plt.figure()
     plt.pcolor(xbins, ybins, h.T, cmap = 'Blues', norm = clr.LogNorm())
     plt.plot([np.min(xbins), np.max(xbins)], [np.min(xbins), np.max(xbins)], '--k')
@@ -129,7 +116,7 @@ def convert_halo_m200c_to_m200m( sod_location, sod_output, time_step, redshift ,
 
 
     plt.show()
-    exit()
+
     h, xbins, ybins = np.histogram2d(np.log10(M_200c), R_200m/R_200c, bins = 250)
     plt.figure()
     plt.pcolor(xbins, ybins, h.T, cmap = 'Blues', norm = clr.LogNorm())
@@ -234,9 +221,10 @@ if __name__ == "__main__":
     write_catalog = param.get_bool("write_catalog")
     h_scaling = input_h/output_h
     stepz = dtk.StepZ(sim_name = 'AlphaQ')
+    print(colossus.__file__)
     for step in steps:
         redshift = stepz.get_z(step)
         convert_halo_m200c_to_m200m(sod_location, sod_output, step,
                                     redshift, h_scaling,
                                     write_catalog=write_catalog)
-        # check_halo_conversion(sod_location, step, redshift)
+        check_halo_conversion(sod_location, step, redshift)
