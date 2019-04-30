@@ -497,6 +497,7 @@ struct Cluster{
   void move_cores_together();
   void set_central_core_on_center();
   void set_central_as_compact();
+  int find_central();
 };
 
 struct FunctionParam{
@@ -1913,8 +1914,8 @@ void load_halo_cats(){
       dtk::read_gio_quick(sod_file,"sod_halo_radius",   hc.sod_radius, hc.size);
     }
     // adjusting the masses to have h=1.0
-    for(int i=0;i<hc.size;++i){
-      hc.sod_mass[i] = hc.sod_mass[i]/0.7;
+    for(int j=0;j<hc.size;++j){
+      hc.sod_mass[j] = hc.sod_mass[j]/0.7;
     }
     all_halocats[steps[i]]=hc;
   }
@@ -2010,21 +2011,13 @@ void adjust_clusters(bool force_centrals_as_galaxy, bool force_center_on_central
     if(force_centrals_as_galaxy)
       clusters[i].set_central_as_compact();
     if(force_center_on_central)
-      clusters[i].set_centeral_core_on_center();
+      clusters[i].set_central_core_on_center();
   }
 }
 void defrag_halos(int64_t *htags, int64_t size){
   for(int64_t i =0;i<size;++i){
-    //    bool print = htags[i]<0;
-    //if(print)
-    //  std::cout<<htags[i]<<" -> ";
-    
     int64_t htag = std::abs(htags[i]); //get rid of negative sign
-    htags[i] = htag & 0x0000FFFFffffFFFF;
-    //if(htags[i] == 535735191)
-    //std::cout<<"it's fucking here!!!"<<std::endl;
-    //if(print)
-    //  std::cout<<htag<<std::endl;
+    // htags[i] = htag & 0x0000FFFFffffFFFF;
   }
 }
 void move_together(float x0,float rL, float* x, int64_t size){
@@ -3063,17 +3056,17 @@ void Cluster::set_central_core_on_center(){
 void Cluster::set_central_as_compact(){
   // std::cout<<"Setting centrals radius to r=0"<<std::endl;
   // int count = 0;
-  // for(int i =0;i<core_size;++i){
-  //   if(core_is_central[i] || core_step[i] == step){
-  //     core_r[i] = 0;
-  //     ++count;
-  //   }
-  // }
+  for(int i =0;i<core_size;++i){
+    if(core_is_central[i] || core_step[i] == step){
+      core_r[i] = 0;
+      //++count;
+    }
+  }
   // std::cout<<"\tnum reset:"<<count<<std::endl;
   // if (count == 0)
   //   dtk::pause();
-  int central_index = find_central();
-  core_r[central_index] = 0
+  // int central_index = find_central();
+  // core_r[central_index] = 0
 }
 
 void ZMR::write_txt(std::string file_loc){
