@@ -35,7 +35,7 @@ class ClusterData:
         self.core_offset = hfile['cluster/core_offset'].value
         self.core_size = hfile['cluster/core_size'].value
         self.core_htag = hfile['cores/core_htag'].value
-        self.core_infall_htag = hfile['cores/core_infall_htag'].value
+        # self.core_infall_htag = hfile['cores/core_infall_htag'].value
         print(hfile['cores'].keys())
         self.core_x = hfile['cores/core_x'].value
         self.core_y = hfile['cores/core_y'].value
@@ -93,7 +93,7 @@ class ClusterData:
         ax2.set_title("cores[{}]".format(self.core_size[i]))
         ax1.set_aspect('equal')
         ax2.set_aspect('equal')
-        plt.close()
+        # plt.close()
 
     def plot_find_central(self, i):
         start = self.core_offset[i]
@@ -197,6 +197,36 @@ class SODData:
 
 n2merger= None
 
+def test_core_catalog(core_loc, rank_num):
+    print(core_loc)
+    dtk.gio_inspect(core_loc)
+    print("loading host htag")
+    host_htag = dtk.gio_read(core_loc, 'fof_halo_tag', rank_num)
+    print("loading infall step")
+    infall_step  = dtk.gio_read(core_loc, 'infall_step', rank_num)
+    print("loading infall htag")
+    infall_htag  = dtk.gio_read(core_loc, 'infall_fof_halo_tag', rank_num)
+    print("loading infall mass")
+    infall_mass  = dtk.gio_read(core_loc, 'infall_mass', rank_num)
+    print("loading central")
+    core_central  = dtk.gio_read(core_loc, 'central', rank_num)
+    
+    mi = np.argmax(infall_mass)
+    print(infall_mass[mi], np.log10(infall_mass[mi]))
+    htag = host_htag[mi]
+    slct = host_htag == htag
+    host_htag = host_htag[slct]
+    infall_htag = infall_htag[slct]
+    infall_step = infall_step[slct]
+    infall_mass = infall_mass[slct]
+    core_central = core_central[slct]
+    for i in range(0, np.sum(slct)):
+        if infall_step[i] == 401:
+            print(host_htag[i], infall_step[i], core_central[i])
+
+
+
+    
 def plot_saved_clusters(param_filename):
     global n2merger
     param = dtk.Param(param_filename)
@@ -204,7 +234,10 @@ def plot_saved_clusters(param_filename):
     cluster_data = ClusterData();
     n2lib_loc = "lib/libn2merg.so"
     n2merger = N2Merger(n2lib_loc)
-
+    core_loc = param.get_string('core_loc').replace("${step}", str(401)).replace("_500L", "")
+    test_core_catalog(core_loc, 1)
+    
+    exit()
     print(n2lib_loc)
     cluster_data.load_file(cluster_loc)
     for i in range(0,cluster_data.num):
