@@ -27,11 +27,23 @@ def load_core_cat(core_loc):
         hfile = h5py.File(core_loc, 'r')
         cat['infall_mass'] = hfile['m_peak'].value
         cat['radius']      = hfile['r_peak'].value
+        cat['infall_step'] = hfile['infall_step'].value
     else:
         dtk.gio_inspect(core_loc)
         cat['infall_mass'] = dtk.gio_read(core_loc, 'infall_mass')
         cat['radius']      = dtk.gio_read(core_loc, 'radius')
+        cat['infall_step'] = dtk.gio_read(core_loc, 'infall_step')
     print(t1-time.time())
+    plt.figure()
+    slct = cat['infall_step'] == 401
+    h, xbins, ybins = np.histogram2d(cat['infall_mass'][slct], cat['radius'][slct], bins=[np.logspace(10,15,100), np.logspace(-4, 0.0, 100)])
+    plt.pcolor(xbins, ybins, h.T, cmap='Blues', norm=clr.LogNorm())
+    plt.xlabel('Core M_infall [Msun/h]')
+    plt.ylabel('Core Radius [Mpc/h]')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.show()
+    exit()
     return cat
 
 def sort_cat(cat, key):
