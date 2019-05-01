@@ -575,6 +575,7 @@ bool no_core_particles = true;
 bool read_clusters_from_file;
 bool write_clusters_to_file;
 bool write_core_clusters_to_file;
+int  cluster_load_num;
 float rL;
 size_t chaining_mesh_grid_size;
 float cluster_radial_volume;
@@ -1395,10 +1396,12 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
   dtk::read_hdf5(hfile, "/cores/core_m", core_m);
   dtk::read_hdf5(hfile, "/cores/core_is_central", core_is_central);
   dtk::read_hdf5(hfile, "/cores/core_step", core_step);
-
-  clusters.resize(cluster_num);
+  if(cluster_load_num == -1)
+    clusters.resize(cluster_num);
+  else
+    clusters.resize(cluster_load_num);
   std::cout<<"Cluster number: "<<cluster_num<<std::endl;
-  for(int i =0;i<cluster_num;++i){
+  for(int i =0;(i<cluster_num) && ((i<cluster_load_num) || (cluster_load_num == -1)) ;++i){
     Cluster& clstr = clusters[i];
     clstr.htag = htag[i];
     clstr.sod_mass = sod_mass[i];
@@ -1410,8 +1413,8 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     clstr.core_size = core_size[i];
     clstr.step = step[i];
     size_t clstr_core_offset = core_offset[i];
-    // std::cout<<"cluster["<<i<<"] pos: "<<clstr.x<<" "<<clstr.y<<" "<<clstr.z<<std::endl;
-    // std::cout<<"\t num cores: "<<clstr.core_size<<std::endl;
+    std::cout<<"cluster["<<i<<"] pos: "<<clstr.x<<" "<<clstr.y<<" "<<clstr.z<<std::endl;
+    std::cout<<"\t num cores: "<<clstr.core_size<<std::endl;
     // core data
     clstr.core_id = new int64_t[clstr.core_size];
     clstr.core_htag = new int64_t[clstr.core_size];
@@ -1696,6 +1699,10 @@ void load_param(char* file_name){
   read_clusters_from_file = param.get<bool>("read_clusters_from_file");
   write_clusters_to_file = param.get<bool>("write_clusters_to_file");
   write_core_clusters_to_file = param.get<bool>("write_core_clusters_to_file");
+  if(param.has("cluster_load_num"))
+    cluster_load_num = param.get<int>("cluster_load_num");
+  else
+    cluster_load_num = -1;
 
   rL = param.get<float>("rL");
   chaining_mesh_grid_size = param.get<int>("chaining_mesh_grid_size");
@@ -1793,7 +1800,7 @@ void load_cores_hdf5(std::string fname, Cores& cores){
   dtk::read_hdf5(fname, "m_peak",             cores.infall_mass, cores.size, true);
   dtk::read_hdf5(fname, "infall_step",        cores.infall_step, cores.size, true);
   // dtk::read_hdf5(file, "infall_fof_halo_tag",cores.infall_htag, cores.size);
-  cores.infall_htag = new int64_t[cores.size];  std::cout<<__LINE__<<std::endl;
+  cores.infall_htag = new int64_t[cores.size];  
 }
 void load_cores(){
   dtk::Timer t;t.start();
@@ -1806,6 +1813,7 @@ void load_cores(){
       load_cores_hdf5(file, cores);
     else
       load_cores_gio(file, cores);
+    std::cout<<"Core catalog size: "<<cores.size<<std::endl;
     cores.is_central = new int[cores.size];
     cores.compact = new int[cores.size];
     // New cores now have the correct infall mass for centrals
@@ -1996,6 +2004,7 @@ void make_clusters(){
 	std::cout<<"\t"<<dtk::fraction(j,all_halocats.at(steps[i]).size)<<std::endl;
 	std::cout<<"\ttime: "<<t<<std::endl;
 	std::cout<<"\t"<<all_clusters.size()<<"/"<<5000<<std::endl;
+
       }
       if(all_clusters.size() > 5000){
       	break;
@@ -2529,10 +2538,6 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
   }
   else{
     // Fastest & correct method of getting cores
-    // std::cout<<__LINE__<<std::endl;
-    // std::cout<<cluster_radial_volume<<std::endl;
-    // std::cout<<halo_pos<<std::endl;
-    // std::cout<<halo_pos[0]<<std::endl;
     my_cores  = cmi.query_elements_within(halo_pos, cluster_radial_volume);
   }
   // std::cout<<"\tfound cores:"<<my_cores.size()<<std::endl;
