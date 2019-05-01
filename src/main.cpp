@@ -1437,7 +1437,7 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     dtk::copy_n(&core_r[clstr_core_offset], clstr.core_size, clstr.core_r);
     dtk::copy_n(&core_is_central[clstr_core_offset], clstr.core_size, clstr.core_is_central);
     dtk::copy_n(&core_step[clstr_core_offset], clstr.core_size, clstr.core_step);
-    clstr.move_cores_together();
+    // clstr.move_cores_together();
     // for(int j = 0;j<clstr.core_size;++j){
     //   // std::cout<<"\t\t["<<j<<"]: "<<clstr.core_x[j]<<" "<<clstr.core_y[j]<<" "<<clstr.core_z[j]<<std::endl;
     //   // std::cout<<"\t\t\t"<<clstr.core_m[j]<<" "<<clstr.core_r[j]<<std::endl;
