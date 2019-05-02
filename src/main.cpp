@@ -1396,11 +1396,12 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
   dtk::read_hdf5(hfile, "/cores/core_m", core_m);
   dtk::read_hdf5(hfile, "/cores/core_is_central", core_is_central);
   dtk::read_hdf5(hfile, "/cores/core_step", core_step);
-  if(cluster_load_num == -1)
+  if(cluster_load_num == -1 || cluster_num < cluster_load_num)
     clusters.resize(cluster_num);
   else
     clusters.resize(cluster_load_num);
-  std::cout<<"Cluster number: "<<cluster_num<<std::endl;
+
+  std::cout<<"Cluster number: "<<clusters.size()<<std::endl;
   for(int i =0;(i<cluster_num) && ((i<cluster_load_num) || (cluster_load_num == -1)) ;++i){
     Cluster& clstr = clusters[i];
     clstr.htag = htag[i];
@@ -1413,8 +1414,8 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     clstr.core_size = core_size[i];
     clstr.step = step[i];
     size_t clstr_core_offset = core_offset[i];
-    std::cout<<"cluster["<<i<<"] pos: "<<clstr.x<<" "<<clstr.y<<" "<<clstr.z<<std::endl;
-    std::cout<<"\t num cores: "<<clstr.core_size<<std::endl;
+    // std::cout<<"cluster["<<i<<"] pos: "<<clstr.x<<" "<<clstr.y<<" "<<clstr.z<<std::endl;
+    // std::cout<<"\t num cores: "<<clstr.core_size<<std::endl;
     // core data
     clstr.core_id = new int64_t[clstr.core_size];
     clstr.core_htag = new int64_t[clstr.core_size];
@@ -2006,9 +2007,9 @@ void make_clusters(){
 	std::cout<<"\t"<<all_clusters.size()<<"/"<<5000<<std::endl;
 
       }
-      if(all_clusters.size() > 5000){
-      	break;
-      }
+      // if(all_clusters.size() > 5000){
+      // 	break;
+      // }
     }
   }
   dv.sort();
