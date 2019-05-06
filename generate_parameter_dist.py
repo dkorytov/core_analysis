@@ -152,6 +152,30 @@ def plot_mstar05b():
     data_mfc = ['b', 'none', 'r','none']
     load_all2(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title="Mstar+0.5 (b)")
 
+def plot_mstar0_pc():
+    file_patern = "figs/params/cfn/simet/mstar0/${mass_def}/pc_${model}${cent}${peak}.param/calc_likelihood_bounds.py/grid_fit_param.txt"
+    mass_defs = {'mean', 'crit'}
+    model_defs = {'rd', 'rm', 'rd_rm'}
+    cent_defs = {'', '_cen'}
+    peak_defs = {'', '_peak'}
+    load_pc(file_patern, mass_defs, model_defs, cent_defs, peak_defs)
+
+def plot_mstar05_pc():
+    file_patern = "figs/params/cfn/simet/mstar0.5/${mass_def}/pc_${model}${cent}${peak}.param/calc_likelihood_bounds.py/grid_fit_param.txt"
+    mass_defs = {'mean', 'crit'}
+    model_defs = {'rd', 'rm', 'rd_rm'}
+    cent_defs = {'', '_cen'}
+    peak_defs = {'', '_peak'}
+    load_pc(file_patern, mass_defs, model_defs, cent_defs, peak_defs)
+
+def plot_mstar1_pc():
+    file_patern = "figs/params/cfn/simet/mstar1/${mass_def}/pc_${model}${cent}${peak}.param/calc_likelihood_bounds.py/grid_fit_param.txt"
+    mass_defs = {'mean', 'crit'}
+    model_defs = {'rd', 'rm', 'rd_rm'}
+    cent_defs = {'', '_cen'}
+    peak_defs = {'', '_peak'}
+    load_pc(file_patern, mass_defs, model_defs, cent_defs, peak_defs)
+
 def load_all2(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None):
     plt.figure()
     if title is not None:
@@ -209,14 +233,84 @@ def load_all2(pattern, models, data_inputs, data_input_labels, data_clr, data_mf
     
     dtk.save_figs("figs/"+__file__+"/")
 
-                    
+
+def load_pc(pattern, mass_defs, model_defs, cent_defs, peak_defs, title=None):
+    plt.figure()
+    if title is not None:
+        plt.suptitle(title)
+    gs = gridspec.GridSpec(5,4, hspace=0.1)
+    model_params_ax = {'mi':plt.subplot(gs[1:,0]),
+                       'rd':plt.subplot(gs[1:,1]),
+                       'rm':plt.subplot(gs[1:,2]),
+                       'x2':plt.subplot(gs[1:,3])}
+    total_num = 2*3*2*2
+    model_params = ['mi', 'rd', 'rm']
+
+    for mass_i, mass in enumerate(mass_defs):
+        data_mfc = [None, 'none'][mass_i]
+        for model_i, model in enumerate(model_defs):
+            for cent_i, cent in enumerate(cent_defs):
+                for peak_i, peak in enumerate(peak_defs):
+                    fname = pattern.replace("${mass_def}", mass).replace("${model}", model).replace("${cent}", cent).replace("${peak}", peak)
+                    print(fname)
+                    model_param_fit = load_fit_limits(fname)
+                    index = peak_i + 2*cent_i + 4*mass_i
+                    index_max = 8
+                    y = 3-model_i - 0.3*(index/index_max-0.5)
+                    color = ['b', 'r', 'g', 'm'][cent_i + 2*peak_i]
+                    for model_param in model_params:
+                        if model_param in model_param_fit:
+                            print(model_param)
+                            ax = model_params_ax[model_param]
+                            x = model_param_fit[model_param]
+                            xerr = [[model_param_fit[model_param+"_lower_err"]], [model_param_fit[model_param+"_upper_err"]]]
+                            ax.errorbar(x, y, xerr=xerr, fmt='o', mfc=data_mfc, mec = color, color = color)
+                    model_params_ax['x2'].errorbar(model_param_fit['x2'], y, fmt='o',mfc=data_mfc, mec = color, color=color)
+    model_params_ax['rd'].set_ylim(model_params_ax['mi'].set_ylim())
+    model_params_ax['rm'].set_ylim(model_params_ax['mi'].set_ylim())
+    model_params_ax['x2'].set_ylim(model_params_ax['mi'].set_ylim())
+    model_params_ax['mi'].set_xlabel('$M_{infall}$')
+    model_params_ax['rd'].set_xlabel('$R_{disrupt}$')
+    model_params_ax['rm'].set_xlabel('$M_{merge}$')
+    model_params_ax['x2'].set_xlabel(r'$\chi^{2}_{reduced}$')
+    for (key, ax) in model_params_ax.iteritems():
+        # if key != 'x2':
+        #     ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
+        # else:
+        ax.xaxis.set_major_locator(plt.MaxNLocator(4))
+        ax.yaxis.set_ticks([3,2,1])
+        ax.yaxis.set_ticklabels(["Only\nDisruption", "Only\nMerging", "Disruption\n+\nMerging"])
+        for tick in ax.xaxis.get_ticklabels():
+            tick.set_rotation(45)
+
+
+    model_params_ax['rd'].yaxis.set_ticklabels([])
+    model_params_ax['rm'].yaxis.set_ticklabels([])
+    model_params_ax['x2'].yaxis.set_ticklabels([])
+    # model_params_ax['rd'].xaxis.set_major_locator(ticker.MultipleLocator(5))
+    ax = model_params_ax['rd']
+    ax.errorbar([], [], fmt='o', color='k', mfc='k', label='M200m')
+    ax.errorbar([], [], fmt='o', color='k', mfc='none', label='M200c')
+    ax.plot([],[], 'ob', label='Default')
+    ax.plot([],[], 'or', label='central')
+    ax.plot([],[], 'og', label='peak')
+    ax.plot([],[], 'om', label='central+peak')
+    ax.legend(bbox_to_anchor=(-1., 1.02, 4, .102), loc='lower center',
+           ncol=2, mode="expand", borderaxespad=0.)
+    
+
+   
+
     
 if __name__ == "__main__":
     # load_all()
-    plot_mstar_minus1()
-    plot_mstar0()
-    plot_mstar05()
-    plot_mstar1()
+    # plot_mstar_minus1()
+    # plot_mstar0()
+    # plot_mstar05()
+    # plot_mstar1()
+    plot_mstar0_pc()
+    plot_mstar05_pc()
+    plot_mstar1_pc()
     plt.show()
     exit()
     a = [("D", [12.2, 12.1, 12.3]),
