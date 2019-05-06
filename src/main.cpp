@@ -2001,10 +2001,10 @@ void make_clusters(){
 				       steps.at(i)));
 			       //all_clusters.push_back(clstr);
 	//break; //only one cluster
-	std::cout<<"\tcluster["<<j<<"]/"<<all_halocats.at(steps[i]).size<<std::endl;
-	std::cout<<"\t"<<dtk::fraction(j,all_halocats.at(steps[i]).size)<<std::endl;
-	std::cout<<"\ttime: "<<t<<std::endl;
-	std::cout<<"\t"<<all_clusters.size()<<"/"<<5000<<std::endl;
+	// std::cout<<"\tcluster["<<j<<"]/"<<all_halocats.at(steps[i]).size<<std::endl;
+	std::cout<<"\r\t"<<dtk::fraction(j,all_halocats.at(steps[i]).size)<<"\ttime: "<<t;
+
+	// std::cout<<"\t"<<all_clusters.size()<<"/"<<5000<<std::endl;
 
       }
       // if(all_clusters.size() > 5000){
@@ -2494,8 +2494,8 @@ Cluster::Cluster(int64_t htag,float sod_mass,float sod_radius,float x,float y, f
   //A2: It probably was overwriting the saved SOD radius
   // sod_radius = sod_radius/(1.0/(redshift+1.0));
   //find the cores that belong to this halo/clusters
-  std::cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<std::endl;
-  std::cout<<"halo "<<htag<<" mass: "<<sod_mass<<std::endl;
+  // std::cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<std::endl;
+  // std::cout<<"halo "<<htag<<" mass: "<<sod_mass<<std::endl;
   Cores corecat = all_cores[step]; // std::cout<<__LINE__<<std::endl;
   dtk::ChainingMeshIndex& cmi = all_core_cms.at(step);// std::cout<<__LINE__<<std::endl;
   std::vector<size_t> my_cores;// std::cout<<__LINE__<<std::endl;
