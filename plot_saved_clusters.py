@@ -21,8 +21,7 @@ from core_fit2_util import *
 
 
 class ClusterData:
-
-    def load_file(self, filename):
+    def load_file(self, filename, treat_centrals=False, step=None):
         hfile = h5py.File(filename, 'r')
         self.num = hfile['cluster_num'].value
         self.x =    hfile['cluster/x'].value
@@ -31,10 +30,11 @@ class ClusterData:
         self.rad =  hfile['cluster/sod_radius'].value
         self.mass = hfile['cluster/sod_mass'].value
         self.htag = hfile['cluster/htag'].value
-
+        self.step = hfile['cluster/step'].value
         self.core_offset = hfile['cluster/core_offset'].value
         self.core_size = hfile['cluster/core_size'].value
         self.core_htag = hfile['cores/core_htag'].value
+
         # self.core_infall_htag = hfile['cores/core_infall_htag'].value
         print(hfile['cores'].keys())
         self.core_x = hfile['cores/core_x'].value
@@ -45,7 +45,9 @@ class ClusterData:
         self.core_step = hfile['cores/core_step'].value
         #self.core_infall_htag= hfile['cores/infall_htag'].value
         self.core_is_central = hfile['cores/core_is_central'].value
-        
+        if treat_centrals:
+            slct_central = self.core_step == step
+            self.core_r[slct_central] = 0
 
     def plot_cluster(self, i):
         f, (ax1, ax2) = plt.subplots(1,2,figsize=(25,10))
@@ -93,8 +95,17 @@ class ClusterData:
         ax2.set_title("cores[{}]".format(self.core_size[i]))
         ax1.set_aspect('equal')
         ax2.set_aspect('equal')
-        # plt.close()
-
+        
+        print(self.core_m[start:stop])
+        print(self.core_r[start:stop])
+        plt.figure()
+        h, xbins, ybins = np.histogram2d(self.core_m[start:stop], self.core_r[start:stop], bins = (np.logspace(10,15,32), np.logspace(-3,0,32)))
+        plt.pcolor(xbins, ybins, h.T+0.1, cmap='Blues', norm=clr.LogNorm())
+        plt.xlabel('Core Mass')
+        plt.ylabel('Core Radius')
+        plt.yscale('log')
+        plt.xscale('log')
+       
     def plot_find_central(self, i):
         start = self.core_offset[i]
         stop = start + self.core_size[i]
@@ -181,6 +192,39 @@ class ClusterData:
         ax2.set_title("cores[{}]".format(self.core_size[i]))
         ax1.set_title("cluster[{}] \n Mass {:.2e}, R200: {:.2f}".format(i, self.mass[i], self.rad[i]))
 
+    def get_ngal(self, i, mass_cut, radius_cut, compact_central=False):
+        start = self.core_offset[i]
+        stop = start + self.core_size[i]
+        core_x, core_y, core_z  = self.core_x[start:stop], self.core_y[start:stop], self.core_z[start:stop]
+        core_r = self.core_r[start:stop]
+        core_m = self.core_m[start:stop]
+        core_step = self.core_step[start:stop]
+        slct = (core_r<radius_cut) & (core_m>mass_cut)
+        if compact_central:
+            slct_central = core_step == self.step
+            slct[slct_central] = True
+        dx = core_x[slct]-self.x[i]
+        dy = core_y[slct]-self.y[i]
+        dz = core_z[slct]-self.z[i]
+        dr2 = dx*dx + dy*dy + dz*dz
+        dr = np.sqrt(dr2)
+        slct_ngal = dr2<self.rad[i]**2
+        ngal = np.sum(slct_ngal)
+        # plt.figure()
+        # plt.plot(core_x,  core_y, 'og',mfc='none',mec='g', mew=1, alpha=0.3)
+        # plt.plot(core_x[slct],  core_y[slct], 'og',mfc='g',mec='g', mew=2)
+        # plt.plot(core_x[slct][slct_ngal], core_y[slct][slct_ngal], 'bx',mfc='b',mec='b', mew=2)
+        # circle = Circle((self.x[i],self.y[i]), self.rad[i], fc='none', ec='k')
+        # plt.gca().add_artist(circle)
+        # plt.gca().set_aspect('equal')
+        # plt.show()
+        # See notes in src/main.cpp or test/radial_binning_test.py
+        dr_out = dr[~slct_ngal]
+        start_angle = 0
+        end_angle = np.arcsin(self.rad[i]/dr_out)
+        weight = -np.cos(end_angle) + np.cos(start_angle)
+        sum_weight = np.sum(weight)
+        return ngal, ngal+sum_weight
 
 class SODData:
     def load_sod(self, sod_loc, sod_hdf5):
@@ -235,14 +279,14 @@ def plot_saved_clusters(param_filename):
     n2lib_loc = "lib/libn2merg.so"
     n2merger = N2Merger(n2lib_loc)
     core_loc = param.get_string('core_loc').replace("${step}", str(401)).replace("_500L", "")
-    test_core_catalog(core_loc, 1)
+    # test_core_catalog(core_loc, 1)
     
-    exit()
+
     print(n2lib_loc)
     cluster_data.load_file(cluster_loc)
     for i in range(0,cluster_data.num):
         # cluster_data.plot_fit_cluster(i, 12.2, 0.02)
-        cluster_data.plot_cluster(i)
+        cluster_data.plot_cluster(4000-i)
         plt.show()
 
 def plot_hist(data, bins, style='-', label=None, ):
