@@ -1314,10 +1314,10 @@ void write_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     core_r(total_core_size), core_m(total_core_size);
   std::vector<int> core_is_central(total_core_size), core_step(total_core_size);
   for(size_t i=0;i<cluster_num;++i){
-    std::cout<<"cores for "<<i<<"/"<<cluster_num<<std::endl;    
+    // std::cout<<"cores for "<<i<<"/"<<cluster_num<<std::endl;    
     size_t offset = core_offset.at(i);
     size_t core_num = core_size.at(i);
-    std::cout<<"\toffset: "<<offset<<"/"<<total_core_size<<" number of cores: "<<core_num<<std::endl;
+    // std::cout<<"\toffset: "<<offset<<"/"<<total_core_size<<" number of cores: "<<core_num<<std::endl;
     dtk::copy_n(clusters.at(i).core_id, core_num, &core_id[offset]); 
     dtk::copy_n(clusters.at(i).core_htag, core_num, &core_htag[offset]);
     dtk::copy_n(clusters.at(i).core_infall_htag, core_num, &core_infall_htag[offset]);
@@ -1351,7 +1351,9 @@ void write_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
   std::cout<<"writing out cores"<<std::endl;
   dtk::write_hdf5(hfile,"/cores/core_id",  core_id);
   dtk::write_hdf5(hfile,"/cores/core_htag",  core_htag);
+  std::cout<<"Writing out core_infall_htag?!!!"<<std::endl;
   dtk::write_hdf5(hfile,"/cores/core_infall_htag",core_infall_htag);
+  std::cout<<"Done core_infall_htag?!!!"<<std::endl;
   dtk::write_hdf5(hfile,"/cores/core_x",  core_x);
   dtk::write_hdf5(hfile,"/cores/core_y",  core_y);
   dtk::write_hdf5(hfile,"/cores/core_z",  core_z);
@@ -1388,7 +1390,8 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
   // core info
   dtk::read_hdf5(hfile, "/cores/core_id", core_id);
   dtk::read_hdf5(hfile, "/cores/core_htag", core_htag);
-  dtk::read_hdf5(hfile, "/cores/core_infall_htag", core_infall_htag);
+  // dtk::read_hdf5(hfile, "/cores/core_infall_htag", core_infall_htag);
+  core_infall_htag.resize(core_id.size());
   dtk::read_hdf5(hfile, "/cores/core_x", core_x);
   dtk::read_hdf5(hfile, "/cores/core_y", core_y);
   dtk::read_hdf5(hfile, "/cores/core_z", core_z);
