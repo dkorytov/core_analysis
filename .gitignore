@@ -11,4 +11,4 @@ core_fit
 **/processed_catalog
 params/cfn/*.param
 params/cfn/simet/simet*.param
-params/simet_old
+params/cfn/simet_old/
