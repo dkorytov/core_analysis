@@ -42,8 +42,6 @@ def load_core_cat(core_loc):
     plt.ylabel('Core Radius [Mpc/h]')
     plt.xscale('log')
     plt.yscale('log')
-    plt.show()
-    exit()
     return cat
 
 def sort_cat(cat, key):
@@ -91,6 +89,10 @@ def calc_abundance_line(param_fname, plot = False):
     expected_comov_abundance = param.get_float('expected_comov_abundance')
     step = param.get_int('step')
     core_loc = param.get_string('core_loc')
+    if "qcontinuum" in param:
+        qcontinuum = param.get_bool("qcontinuum")
+    else:
+        qcontinuum = False
     cat = load_core_cat(core_loc.replace('${step}', str(step)))
     expected_num = int(rL*rL*rL*expected_comov_abundance)
     x = np.logspace(11,12.6,50)
@@ -129,6 +131,7 @@ def calc_abundance_line(param_fname, plot = False):
     slct = np.isfinite(abund_infall_mass[srt]) & np.isfinite(abund_radius[srt])    
     out_fname = 'tmp_hdf5/{}/abundance={}.hdf5'.format(core_loc, expected_comov_abundance)
     dtk.ensure_dir(out_fname)
+    print(out_fname)
     hfile = h5py.File(out_fname, 'w')
     hfile['abund_infall_mass'] = abund_infall_mass[srt][slct]
     hfile['abund_radius']=abund_radius[srt][slct]

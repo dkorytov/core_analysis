@@ -149,7 +149,8 @@ def get_1d_axis_sum(dim, dims):
         pass
 
 
-def corner_plot(labels, grid_dic = None, mcmc_dic = None, expected_comov_abundance = None, core_loc=None):
+def corner_plot(labels, grid_dic = None, mcmc_dic = None,
+                expected_comov_abundance = None, core_loc=None):
     """Plot a corner plot for either from the likelihood calculated on a
     grid and/or from an MCMC.
 
