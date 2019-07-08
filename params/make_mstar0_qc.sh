@@ -5,8 +5,8 @@
 expected_comov_abundance=0.00241674353851
 
 # Two elements for m200c and m200m
-zmrh5_locs=("/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_simet_mean3/result/type1_weight1_mag1_clr1_result.hdf5" "/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_simet_crit4/result/type1_weight1_mag1_clr1_result.hdf5")
-cluster_locs=("tmp_hdf5/clusters_OR_M200m.tmp.hdf5" "tmp_hdf5/clusters_OR.crit.r10.hdf5")
+zmrh5_locs=("/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_simet_mean3/result/type1_weight1_mag1_clr1_result.hdf5" "/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_simet_crit3/result/type1_weight1_mag1_clr1_result.hdf5")
+cluster_locs=("tmp_hdf5/clusters_QC_M200m.hdf5" "tmp_hdf5/clusters_QC_M200c.hdf5")
 cluster_types=("mean" "crit")
 
 # model flavors
@@ -21,13 +21,15 @@ model_types=("rd" "rm" "rd_rm")
 cost_abundances=("false" "true")
 cost_types=("" "abund/")
 
-for cluster_i in 1;do
+template_fname="params/templates/template.qc.param"
+
+for cluster_i in 0 1;do
     for model_i in 0 1 2; do 
-	for cost_i in 0 1; do
-	    param_fname="params/cfn/simet/mstar0/${cluster_types[$cluster_i]}/${cost_types[$cost_i]}a_${model_types[$model_i]}.param"
+	for cost_i in 0 1;   do
+	    param_fname="params/cfn/simet/mstar0/${cluster_types[$cluster_i]}/${cost_types[$cost_i]}qc_${model_types[$model_i]}.param"
 	    # echo ${cluster_i} ${model_i} ${cost_i}
 	    echo $param_fname
-	    cp params/templates/template.param $param_fname
+	    cp $template_fname $param_fname
 	    sed -i "s%@zmrh5_loc@%${zmrh5_locs[$cluster_i]}%g"         $param_fname
 	    sed -i "s%@cluster_loc@%${cluster_locs[$cluster_i]}%g"     $param_fname
 	    sed -i "s/@fit_r_merger@/${fit_r_mergers[$model_i]}/g"     $param_fname
