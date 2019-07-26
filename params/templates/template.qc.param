@@ -2,7 +2,7 @@
 
 sod_loc NULL
 sod_hdf5 false
-core_loc /media/luna1/dkorytov/data/OuterRim/cores_500L/03_31_2018.OR.${step}.coreproperties   
+core_loc /media/luna1/dkorytov/data/QContinuum/cores_500L/03_29_17.Qcontinuum.${step}.coreproperties
 
 
 
@@ -12,7 +12,6 @@ zmrh5_loc   @zmrh5_loc@
 core_prtcl_loc NULL
 accum_prtcl_loc NULL
 cluster_loc     @cluster_loc@
-cluster_load_num 10000
 
 use_central_infall	false
 force_central_as_galaxy false
@@ -22,9 +21,11 @@ read_clusters_from_file true
 write_clusters_to_file	false
 write_core_clusters_to_file false
 
+cluster_load_num 5000
+
 step 401
 steps  401
-old_steps 453 401 
+
 
 rL 500
 chaining_mesh_grid_size 32
@@ -57,9 +58,9 @@ expected_comov_abundance @expected_comov_abundance@
 
 #For the likelihood grid 
 calc_likelihood true
-mi_bins_info 12.5    14.0    @mi_binds_info_num@
-rd_bins_info 0.001   0.3     @rd_binds_info_num@
-rm_bins_info 0.001   0.4     @rm_binds_info_num@
+mi_bins_info 11.0    12.5    @mi_binds_info_num@
+rd_bins_info 0.001   0.1     @rd_binds_info_num@
+rm_bins_info 0.001   0.3     @rm_binds_info_num@
 rf_bins_info 0.001   0.3     1
 
 

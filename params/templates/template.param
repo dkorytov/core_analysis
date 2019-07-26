@@ -12,6 +12,7 @@ zmrh5_loc   @zmrh5_loc@
 core_prtcl_loc NULL
 accum_prtcl_loc NULL
 cluster_loc     @cluster_loc@
+cluster_load_num 10000
 
 use_central_infall	false
 force_central_as_galaxy false
