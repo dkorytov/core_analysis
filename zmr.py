@@ -1,7 +1,7 @@
 
 import numpy as np
 import dtk
-
+import h5py
 
 class ZMR:
     def load_param(self,file_loc):
@@ -45,3 +45,27 @@ class ZMR:
                     cost += diff/err
         return cost
 
+    def save_as_hdf5(self, file_loc):
+        hfile = h5py.File(file_loc, 'w')
+        hfile['z_bins'] = self.z_bins
+        hfile['m_bins'] = self.m_bins
+        hfile['r_bins'] = self.r_bins
+        hfile['z_size'] = self.z_size
+        hfile['m_size'] = self.m_size
+        hfile['r_size'] = self.r_size
+        hfile['zm_Ngal'] = self.zm_Ngal
+        hfile['zm_Ngal_err'] = self.zm_Ngal_err
+        hfile['zm_Ngal_var'] = self.zm_Ngal_var
+        hfile['zmr_gal_counts'] = self.zmr_gal_counts
+        hfile['zmr_gal_density'] = self.zmr_gal_density
+        hfile['zmr_gal_density_err'] = self.zmr_gal_density_err
+        hfile['zmr_gal_density_var'] = self.zmr_gal_density_var
+        hfile['zmr_dgal_dr'] = self.zmr_dgal_dr
+        hfile['zmr_dgal_dr_err'] = self.zmr_dgal_dr_err
+        hfile['zmr_dgal_dr_var'] = self.zmr_dgal_dr_var
+        hfile['zmr_gal_accum'] = self.zmr_gal_accum
+        hfile['zmr_gal_accum_err'] = self.zmr_gal_accum_err
+        hfile['zmr_gal_accum_var'] = self.zmr_gal_accum_var
+        hfile['zm_counts'] = self.zm_counts
+        hfile['zmr_counts'] = self.zmr_counts
+        hfile.close()

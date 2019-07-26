@@ -88,7 +88,7 @@ def calc_abundance_line(param_fname, plot = False):
     rL = param.get_float('rL')
     expected_comov_abundance = param.get_float('expected_comov_abundance')
     step = param.get_int('step')
-    core_loc = param.get_string('core_loc')
+    core_loc = core_loc.replace("${step}", str(step))
     if "qcontinuum" in param:
         qcontinuum = param.get_bool("qcontinuum")
     else:

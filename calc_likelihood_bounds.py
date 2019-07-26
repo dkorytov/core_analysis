@@ -21,21 +21,29 @@ from scipy.optimize import minimize
 
 
 def plot_1d_likelihood(label, data_bins, lkhd_data, fit_data, data_bds, log = False):
+    data_bins = 10**data_bins
     plt.figure()
-    plt.plot(data_bins, lkhd_data, 'x-', label='likelihood: {:.3f}->{:.3f}'.format(data_bins[data_bds[0]], data_bins[data_bds[1]]))
+    plt.plot(data_bins, lkhd_data, '-')#, label='likelihood: {:.3f}->{:.3f}'.format(data_bins[data_bds[0]], data_bins[data_bds[1]]))
     ylim = plt.ylim()
     plt.ylim([0, ylim[1]])
     b1,b2 = data_bds[0], data_bds[1]+1
     plt.fill_between(data_bins[b1:b2], 0, lkhd_data[b1:b2], lw=0.0, alpha=0.3)
-    plt.axvline(fit_data,c='k', ls='--')
-    plt.plot([],[],'k--',label='grad descn: {:.3f}'.format(fit_data))
+    # plt.plot([],[],'k--',label='grad descn: {:.3f}'.format(fit_data))
     max_val = np.argmax(lkhd_data)
     plt.axvline(data_bins[max_val],c='r', ls='--')
-    plt.plot([],[],'r--',label='max lkhd: {:.3f}'.format(data_bins[max_val]))
+    # plt.plot([],[],'r--',label='max lkhd: {:.3f}'.format(data_bins[max_val]))
+    central_value = np.log10(data_bins[max_val])
+    upper_lim = np.log10(data_bins[data_bds[1]])
+    lower_lim = np.log10(data_bins[data_bds[0]])
+    title_str ="{} = ${:.3f}^{{+{:.3f}}}_{{-{:.3f}}}$".format(label, central_value, upper_lim-central_value, central_value-lower_lim,)
+    print(title_str)
+    plt.title(title_str)
     plt.grid()
     plt.legend(loc='best', framealpha=0.3)
     plt.xlabel(label)
     plt.ylabel('~ Likelihood ')
+    # plt.xscale('log')
+    
     if log:
         plt.yscale('log')
 
@@ -87,12 +95,12 @@ def get_bounds_limits(vals, bins, fit, limit=0.67, fine_grain=None, fit_index=No
         vals = vals_new
     tot = np.sum(vals)
     vals = vals/tot
-    # fit_indx = np.searchsorted(bins,fit)
+    fit_indx = np.searchsorted(bins,fit)
     if fit_index is None:
         fit_indx = np.argmax(vals)
     else:
         fit_indx= fit_index
-        # print("fit index: ", fit_indx, np.argmax(vals))
+        print("fit index: ", fit_indx, np.argmax(vals))
     r_indx = fit_indx 
     l_indx = fit_indx 
     current_sum = vals[fit_indx]
@@ -361,6 +369,8 @@ def calc_likelihood_bounds(param_file_name):
     param = dtk.Param(param_file_name)
     expected_comov_abundance = param.get_float('expected_comov_abundance')
     core_loc = param.get_string('core_loc')
+    step = param.get_int('step')
+    core_loc = core_loc.replace("${step}", str(step))
     lgrid_param = dtk.Param("output/"+param_file_name+"/lgrid.param")
     has_rm = param.get_bool("fit_r_merger")
     has_rd = param.get_float_list("rd_bins_info")[2]>2
@@ -391,7 +401,7 @@ def calc_likelihood_bounds(param_file_name):
     #print(np.shape(lkhd_mi))
     max_lkhd = np.unravel_index(np.argmax(lkhd, axis=None), lkhd.shape)
     fit_mi = hfile_fit['m_infall'].value[0]
-    fit_mi_bds_lwr, fit_mi_bds_upr, _, fit_mi_bins = get_bounds_limits(lkhd_mi, np.log10(mi_bins), np.log10(fit_mi),fine_grain=5000, fit_index = max_lkhd[0])
+    fit_mi_bds_lwr, fit_mi_bds_upr, fit_lkhd_mi, fit_mi_bins = get_bounds_limits(lkhd_mi, np.log10(mi_bins), np.log10(fit_mi),fine_grain=5000, fit_index = max_lkhd[0])
     if has_rd:
         fit_rd = hfile_fit['r_disrupt'].value[0]
         fit_rd_bds_lwr, fit_rd_bds_upr, _, fit_rd_bins = get_bounds_limits(lkhd_rd, rd_bins, fit_rd,fine_grain=5000, fit_index=max_lkhd[1])
@@ -428,9 +438,12 @@ def calc_likelihood_bounds(param_file_name):
         corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':result2}, expected_comov_abundance=expected_comov_abundance)
         #corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], [np.log10(mi_bins), rd_bins, rm_bins], lkhd, cost = result2)
     if not has_rm and not has_rd:
-        plot_1d_likelihood("M$_{infall}$", mi_bins, lkhd_mi, fit_mi, mi_bds, log=True);
+        # plot_1d_likelihood("M$_{infall}$", mi_bins, lkhd_mi, fit_mi, mi_bds, log=True);
+        plot_1d_likelihood("M$_{infall}$", fit_mi_bins, fit_lkhd_mi, fit_mi, [fit_mi_bds_lwr, fit_mi_bds_upr], log=False);
         # corner_plot([r'M$_{\mathrm{infall}}$'], grid_dic = {'bins':[np.log10(mi_bins)]]
-    txt_file = file("figs/"+param_file_name+"/"+__file__+"/grid_fit_param.txt", 'w')
+    grid_fit_fname = "figs/"+param_file_name+"/"+__file__+"/grid_fit_param.txt"
+    dtk.ensure_dir(grid_fit_fname)
+    txt_file = file(grid_fit_fname, 'w')
     txt_file.write("mi\t{}\n".format(np.log10(mi_bins[np.argmax(lkhd_mi)])))
     txt_file.write("mi_limits\t{}\t{}\n".format(fit_mi_bins[fit_mi_bds_lwr], fit_mi_bins[fit_mi_bds_upr]))
     param_num = 1
@@ -462,7 +475,7 @@ def write_fit_param(param_file):
 
 if __name__ == "__main__":
     param_file_name = sys.argv[1]
-    write_fit_param(param_file_name)
+    # write_fit_param(param_file_name)
     calc_likelihood_bounds(sys.argv[1])
     dtk.save_figs('figs/'+param_file_name+'/'+__file__+'/')
     plt.show()    

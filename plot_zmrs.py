@@ -21,11 +21,16 @@ param_file = sys.argv[1]
 
 zmr_sdss = ZMR(file_loc="output/"+param_file+"/zmr_sdss.param")
 if dtk.file_exists("output/"+param_file+"/zmr_lkhd_cores.param"):
-    zmr_cores = ZMR(file_loc="output/"+param_file+"/zmr_lkhd_cores.param")
+    fname = "output/"+param_file+"/zmr_lkhd_cores.param"
+    zmr_cores = ZMR(file_loc=fname)
     print "likelihood zmrs"
 else:
-    zmr_cores = ZMR(file_loc="output/"+param_file+"/zmr_cores.param")
+    fname = "output/"+param_file+"/zmr_cores.param"
+    zmr_cores = ZMR(file_loc=fname)
     print "fit zmrs"
+
+zmr_sdss.save_as_hdf5("tmp_zmrs/zmr_redmapper.hdf5")
+zmr_cores.save_as_hdf5("tmp_zmrs/zmr_cores.hdf5")
 #zmr_sdss_npz = np.load("/home/dkorytov/phys/Ngal_sdss/data/normal_mask4/result/type1_weight1_mag1_clr1_result.npz")
 #print zmr_sdss_npz.keys()
 

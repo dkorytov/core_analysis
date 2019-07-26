@@ -365,7 +365,9 @@ def get_clusters(param_fname, core_host_mass = False):
     return clusters, central
 
 def get_fit_param(param_fname):
+
     fit_fname = get_fit_limits_fname(param_fname)
+    print(fit_fname)
     fit_param = load_fit_limits(fit_fname)
     fit_mi = 10**fit_param['mi']
     fit_rd = fit_param['rd']*1e-3
@@ -440,23 +442,52 @@ def calc_log_mean(data1, data2):
     a = np.sqrt(data1*data2)
     return a
 
-def calc_disruption(param_fname):
+def calc_disruption(param_fname, mass_bins = None, cluster_count=None):
     clusters, central = get_clusters(param_fname)
     fit_mi, fit_rd = get_fit_param(param_fname)
     survival_rates = []
+    cluster_mi = []
     t0 = time.time()
-    cluster_limit = clusters.num[0]
-    cluster_limit = 50000
+    if cluster_count is None:
+        cluster_limit = clusters.num[0]
+        # cluster_limit = 50000
+    else:
+        cluster_limit = cluster_count
     for i in range(0, cluster_limit):
         ngal_surv, _ = clusters.get_ngal(i, fit_mi, fit_rd, compact_central = central)
         ngal_init, _ = clusters.get_ngal(i, fit_mi, 1e10, compact_central = central)
-        survival_rates += [ngal_surv/ngal_init]
+        survival_rates += [(ngal_surv)/(ngal_init)]
+        if mass_bins is not None:
+            mi = np.digitize(clusters.mass[i], mass_bins)+1
+            cluster_mi.append(mi)
         if i % 1000 == 1:
             done_amount = i/cluster_limit
             t1 = time.time()
             time_left = (t1-t0)/done_amount *(1-done_amount)
             print("{:.3f} ETA: {:.1f}".format(done_amount, time_left))
-    print("total survival rate: ", np.average(survival_rates))
+            
+    survival_rates = np.array(survival_rates)
+    print("total survival rate: ", np.average(survival_rates[np.isfinite(survival_rates)]))
+    if mass_bins is not None:
+        mass_bins_cen = dtk.log_bins_avg(mass_bins)
+        rate_mean = np.zeros_like(mass_bins_cen)
+        rate_err  = np.zeros_like(mass_bins_cen)
+        for i in range(0, len(mass_bins)-1):
+            # print(cluster_mi)
+            slct = np.array(cluster_mi) == i
+            rates = survival_rates[slct][np.isfinite(survival_rates[slct])]
+            rate_mean[i] = np.average(rates)
+            rate_err[i]  = np.std(rates)/np.sqrt(len(rates))
+            print("{:.2e} < M200 < {:.2e}: {:.3f}+/-{:.3f}".format(mass_bins[i], mass_bins[i+1], rate_mean[i], rate_err[i])) 
+        plt.figure()
+        plt.plot(mass_bins_cen, rate_mean)
+        plt.fill_between(mass_bins_cen, rate_mean-rate_err, rate_mean+rate_err, alpha=0.3)
+        plt.xscale('log')
+        plt.xlabel('Host Halo M200m [Msun/h]')
+        plt.ylabel('Core Survival Rate within R200m')
+        plt.ylim([0,1])
+        plt.title(param_fname.replace("_", "\_"))
+        plt.show()
 
 def wetzel09_disruption_time(Cdyn, M_infall, M_host, z):
     a = 1.0/(1.0+z)
