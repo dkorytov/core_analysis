@@ -3,10 +3,14 @@
 from __future__ import print_function, division
 
 from matplotlib import rc
-rc('font',**{'family': 'serif',
-             'serif':  ['Palatino'],
-             'size':   15})
 rc('text', usetex=True)
+rc('font', **{'family':'serif', 
+              'serif':['Computer Modern Roman'], 
+              'size':32})
+import matplotlib.pyplot as plt
+# rc('font', size=32)
+
+
 
 import dtk
 import sys
@@ -100,10 +104,10 @@ def plot_multiple_model_profiles():
 def init_luminosity_dependence_plot():
     plots_axies = {}
     gs = gridspec.GridSpec(4, 1, hspace=0.1)
-    fig = plt.figure(figsize=(10,8))
-    parameter_labels = {'mi': r"M$_{infall}$",
-                        'rd': r"R$_{disrupt}$",
-                        'rm': r"R$_{merge}$",
+    fig = plt.figure()
+    parameter_labels = {'mi': r"M$_{in fall}$"+"\n"+r"[h$^{-1}$M$_{\odot}$]",
+                        'rd': r"R$_{disrupt}$"+"\n"+r"[h$^{-1}$kpc]",
+                        'rm': r"R$_{merge}$"+"\n"+r"[h$^{-1}$Mpc]",
                         'x2': r"$\chi^2_{reduced}$",}
     shared_x = None
     ax_dict = {}
@@ -111,33 +115,56 @@ def init_luminosity_dependence_plot():
         ax = plt.subplot(gs[i,0], sharex=shared_x)
         ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=3))
         ax.set_ylabel(parameter_labels[model_param])
-        if model_param != "mi":
-            ylim = ax.get_ylim()
-            ax.set_ylim([0,ylim[1]])
         if i == 3:
             ax.set_xlabel("Galaxy Mstar Offset")
         else:
             ax.xaxis.set_ticklabels([])
+        if model_param == 'x2' or model_param == 'mi':
+            ax.set_yscale('log')
+
+        if i == 0:
+            ax.plot([], [], 'r', lw=3, label='Mi')
+        elif i == 1:
+            ax.plot([], [], 'b', lw=3, label='Rd')
+        elif i == 2:
+            ax.plot([], [], 'g', lw=3, label='Rm')
+        elif i == 3:
+            ax.plot([], [], 'c', lw=3, label='RdRm')
+        ax.legend(loc='best', framealpha=0)
         ax_dict[model_param] = ax
-    return fig, ax_dict
+        
+    return fig, ax_dict, gs
     
 
 def plot_luminosity_dependence_single(fig, ax_dict, mstars, param_base, color, param_list):
     param_fnames = [param_base.replace("@val@", str(mstar)) for mstar in mstars]
     fits = load_fit_limits_set(param_fnames)
     for model_param in param_list:
-        values = [fits[i][model_param] for i in range(0, len(mstars))]
-        ax_dict[model_param].plot(mstars, values, color=color)
-        
+        values = np.array([fits[i][model_param] for i in range(0, len(mstars))])
+        if model_param == 'mi':
+            ax_dict[model_param].plot(mstars, 10**(values), color=color)
+        else:
+            ax_dict[model_param].plot(mstars, values, color=color)
+        if model_param is not "x2":
+            values_upper_err = np.array([fits[i][model_param+"_upper_err"] for i in range(0, len(mstars))])
+            values_lower_err = np.array([fits[i][model_param+"_lower_err"] for i in range(0, len(mstars))])
+            if model_param == 'mi':
+                ax_dict[model_param].fill_between(mstars, 10**(values+values_upper_err), 10**(values-values_lower_err), color=color, alpha=0.3)
+            else:
+                ax_dict[model_param].fill_between(mstars, values+values_upper_err, values-values_lower_err, color=color, alpha=0.3)
+
+        print(model_param, values)
+
     
 def plot_luminosity_dependence_all():
-    fig, ax_dict = init_luminosity_dependence_plot()
+    fig, ax_dict, gs = init_luminosity_dependence_plot()
     mstars = [-1, 0, 0.5, 1]
-    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/a2_mi.param", 'r', ['mi', 'x2'])
-    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/a2_rd.param", 'b', ['mi', 'rd', 'x2'])
-    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/a2_rm.param", 'g', ['mi', 'rm', 'x2'])
-    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/a2_rd_rm.param", 'c', ['mi', 'rd', 'rm', 'x2'])
-    plt.show()
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/a3_mi.param", 'r', ['mi', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/a3_rd.param", 'b', ['mi', 'rd', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/a3_rm.param", 'g', ['mi', 'rm', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/a3_rd_rm.param", 'c', ['mi', 'rd', 'rm', 'x2'])
+    gs.tight_layout(fig)
+
 
 if __name__ == "__main__":
     mstars = [-1, 0, 0.5, 1]
