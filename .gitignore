@@ -12,3 +12,5 @@ core_fit
 params/cfn/*.param
 params/cfn/simet/simet*.param
 params/cfn/simet_old/
+dtk2
+params/cfn/simet/mstar0
