@@ -35,7 +35,7 @@ cost_types=("" "abund/")
 mstars=("-1" "0" "0.5" "1")
 
 for mstar in "${mstars[@]}"; do
-    for cluster_i in 0;do
+    for cluster_i in 1;do
 	for model_i in 0 1 2 3; do 
 	    for cost_i in 0; do
 		param_fname="params/cfn/simet/mstar${mstar}/${cluster_types[$cluster_i]}/${cost_types[$cost_i]}a3_${model_types[$model_i]}.param"
