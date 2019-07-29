@@ -2,10 +2,18 @@
 
 exe=$1
 make_script=$2
-
+if [ -z "$3"]; then
+    zoom="false"
+else
+    zoom=$3
+fi
 results=`bash ${make_script} false`
 
+
 for result in ${results}; do
+    if [ $zoom == "zoom" ]; then
+	result="${result/.param/_zoom.param}"
+    fi
     echo ${result}
     ${exe} ${result}
 done
