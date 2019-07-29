@@ -1993,7 +1993,7 @@ void make_clusters(){
     std::cout<<"\tstep="<<steps[i]<<std::endl;
     for(int j =0;j< all_halocats.at(steps[i]).size;++j){
       //std::cout<<all_halocats.at(i).htag[j]<<" "<<all_halocats.at(i).sod_mass[j]<<" "<<all_halocats.at(i).sod_radius[j]<<" " <<all_halocats.at(i).x[j]<<" " <<all_halocats.at(i).y[j]<<" "<<all_halocats.at(i).z[j]<<" "<<steps.at(i)<<std::endl;
-      if(all_halocats.at(steps[i]).sod_mass[j] >5e13){
+      if(all_halocats.at(steps[i]).sod_mass[j] >1e14){
 	dtk::AutoTimer t;
 	all_clusters.push_back(Cluster(all_halocats.at(steps[i]).htag[j],
 				       all_halocats.at(steps[i]).sod_mass[j],
