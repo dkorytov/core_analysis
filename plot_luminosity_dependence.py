@@ -2,18 +2,10 @@
 
 from __future__ import print_function, division
 
-from matplotlib import rc
-rc('text', usetex=True)
-rc('font', **{'family':'serif', 
-              'serif':['Computer Modern Roman'], 
-              'size':32})
-import matplotlib.pyplot as plt
-# rc('font', size=32)
-
-
 
 import dtk
 import sys
+import h5py
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker as ticker
@@ -23,6 +15,12 @@ import numpy as np
 
 from zmr import ZMR
 from generate_parameter_dist import load_fit_limits
+
+from matplotlib import rc
+rc('text', usetex=True)
+rc('font', **{'family':'serif', 
+              'serif':['Computer Modern Roman'], 
+              'size':18})
 
 # def load_zmr(param_fname, sdss=False):
 #     if not sdss:
@@ -104,7 +102,7 @@ def plot_multiple_model_profiles():
 def init_luminosity_dependence_plot():
     plots_axies = {}
     gs = gridspec.GridSpec(4, 1, hspace=0.1)
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8,8))
     parameter_labels = {'mi': r"M$_{in fall}$"+"\n"+r"[h$^{-1}$M$_{\odot}$]",
                         'rd': r"R$_{disrupt}$"+"\n"+r"[h$^{-1}$kpc]",
                         'rm': r"R$_{merge}$"+"\n"+r"[h$^{-1}$Mpc]",
@@ -135,10 +133,10 @@ def init_luminosity_dependence_plot():
         
     return fig, ax_dict, gs
     
-
 def plot_luminosity_dependence_single(fig, ax_dict, mstars, param_base, color, param_list):
     param_fnames = [param_base.replace("@val@", str(mstar)) for mstar in mstars]
     fits = load_fit_limits_set(param_fnames)
+    [ print(param_fname, fit) for param_fname, fit in zip(param_fnames, fits) ] 
     for model_param in param_list:
         values = np.array([fits[i][model_param] for i in range(0, len(mstars))])
         if model_param == 'mi':
@@ -155,8 +153,7 @@ def plot_luminosity_dependence_single(fig, ax_dict, mstars, param_base, color, p
 
         print(model_param, values)
 
-    
-def plot_luminosity_dependence_all():
+def plot_luminosity_dependence_parameters_all():
     fig, ax_dict, gs = init_luminosity_dependence_plot()
     mstars = [-1, 0, 0.5, 1]
     plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/a3_mi.param", 'r', ['mi', 'x2'])
@@ -165,6 +162,35 @@ def plot_luminosity_dependence_all():
     plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/a3_rd_rm.param", 'c', ['mi', 'rd', 'rm', 'x2'])
     gs.tight_layout(fig)
 
+    # fig, ax_dict, gs = init_luminosity_dependence_plot()
+    # mstars = [-1, 0, 0.5, 1]
+    # plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/crit/a4_mi.param", 'r', ['mi', 'x2'])
+    # plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/crit/a4_rd.param", 'b', ['mi', 'rd', 'x2'])
+    # plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/crit/a4_rm.param", 'g', ['mi', 'rm', 'x2'])
+    # plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/crit/a4_rd_rm.param", 'c', ['mi', 'rd', 'rm', 'x2'])
+    # gs.tight_layout(fig)
+
+def plot_luminosity_dependent_ngal_all(param_file):
+    param = dtk.Param(param_file)
+    sdss_zmr_loc = param.get_string('zmrh5_loc')
+    hfile = h5py.File(sdss_zmr_loc)
+    zmr_sdss = ZMR(file_loc="output/"+param_file+"/zmr_sdss.param")
+    if dtk.file_exists("output/"+param_file+"/zmr_lkhd_cores.param"):
+        fname = "output/"+param_file+"/zmr_lkhd_cores.param"
+        zmr_cores = ZMR(file_loc=fname)
+        print("likelihood zmrs")
+    else:
+        fname = "output/"+param_file+"/zmr_cores.param"
+        zmr_cores = ZMR(file_loc=fname)
+        print("fit zmrs")
+    plt.figure()
+    mass_bins = zmr_cores.m_bins 
+    mass_bins_centers = dtk.bins_avg(mass_bins)
+    zmr_Ngal = zmr_cores.zmr_gal_counts[0].sum(axis=1)/zmr_cores.zm_counts[0]
+    
+    plt.show()
+    exit()
+
 
 if __name__ == "__main__":
     mstars = [-1, 0, 0.5, 1]
@@ -172,6 +198,7 @@ if __name__ == "__main__":
     # plot_luminosity_dependence("params/cfn/simet/mstar@val@/mean/a_rd.param", mstars, ['mi', 'rd', 'x2'])
     # plot_luminosity_dependence("params/cfn/simet/mstar@val@/mean/a_rm.param", mstars, ['mi', 'rm', 'x2'])
     # plot_luminosity_dependence("params/cfn/simet/mstar@val@/mean/a_rd_rm.param", mstars, ['mi', 'rd', 'rm', 'x2'])
-    plot_luminosity_dependence_all()
+    plot_luminosity_dependence_parameters_all()
+    # plot_luminosity_dependent_ngal_all("params/cfn/simet/mstar0/mean/a3_rd.param")
     dtk.save_figs("figs/"+__file__+"/", extension=".pdf")
     plt.show()

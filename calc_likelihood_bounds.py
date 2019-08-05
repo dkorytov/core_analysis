@@ -19,6 +19,11 @@ import numpy.random
 from matplotlib.colors import LogNorm
 from scipy.optimize import minimize
 
+from matplotlib import rc
+rc('text', usetex=True)
+rc('font', **{'family':'serif', 'serif':['Computer Modern Roman'], })
+rc('font', size=18)
+
 
 def plot_1d_likelihood(label, data_bins, lkhd_data, fit_data, data_bds, log = False):
     data_bins = 10**data_bins
@@ -170,9 +175,9 @@ def corner_plot(labels, grid_dic = None, mcmc_dic = None,
     #Make sure the plotting options are compatible 
     if grid_dic is not None and mcmc_dic is not None:
         assert grid_dic['cost'] == None, "cost fucntion plotting cannot work with mcmc plotting"
-    
+     
     # Create the figure
-    fig, axs = plt.subplots(size, size,  sharex = 'col', figsize=(10,8))
+    fig, axs = plt.subplots(size, size,  sharex = 'col', figsize=(10,8), squeeze=True)
     #Plotting
     if grid_dic is not None and mcmc_dic is not None:
         corner_plot_mcmc(labels, mcmc_dic['mcmc_loc'], fig, axs, colors = ['r', 'r', 'r'], plot_hist = False, alpha = 0.1)
@@ -192,11 +197,30 @@ def corner_plot(labels, grid_dic = None, mcmc_dic = None,
     #Formatting
     fig.tight_layout()
     fig.subplots_adjust(hspace=0,wspace=0)
+    plt.ticklabel_format(useOffset=False, style='plain')
     # Get rid of upper right corner of subplots
     for i in range(size):
         for j in range(size):
             if i < j: 
                 axs[i][j].set_visible(False)
+            if i == j and grid_dic:
+                if grid_dic['cost'] is not None:
+                    ylim = axs[i][j].get_ylim()
+                    
+                    print("here we are")
+                    print(ylim)
+                    axs[i][j].set_ylim([50,1e4])
+                    print("we reset it")
+                # ylim=[0.8*ylim[0], ylim[1]]
+                # axs[i][j].set_ylim(ylim)
+                # yticks = axs[i][j].get_yticklabels()
+                # if len(yticks) > 0:
+                #     # plt.setp(axs[i][j].get_yticklabels()[-1], visible=False)
+                #     plt.setp(yticks[-1], visible=False)
+                    # print(help(yticks[-1]))
+                    # yticks[-1] = ""
+                    # axs[i][j].set_yticklabels(yticks)
+                
     # Add the abundance line to rd/disrupt plot
     if expected_comov_abundance is not None:
         disrupt_index = -1
@@ -278,10 +302,11 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
         assert len(bins[i]) == np.shape(lkhd)[i], "Likelihood matrix length [{}] on dim [{}, {}] doesn't match bin length [{}]. Lkhd matrix: {}".format(np.shape(lkhd[i])[i], i, labels[i], len(bins[i]), np.shape(lkhd))
     size = len(labels)
     if cost is None:
-        fig.suptitle("Likelihood")
+        # fig.suptitle("Likelihood")
+        pass
     else:
         min_cost = np.min(cost)
-        fig.suptitle("           Fit Cost = {:.1f} X^2_red={:.2f}".format(min_cost, min_cost/(5*15-len(labels))))
+        # fig.suptitle("           Fit Cost = {:.1f} X^2_red={:.2f}".format(min_cost, min_cost/(5*15-len(labels))))
     axs_list = np.arange(0,size)
     limits = []
     max_lkhd = [] #Maximum likelihood value
@@ -321,17 +346,25 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
         plt.xticks(rotation=45)
         lim_plus = bbins[b2] - max_lkhd[i]
         lim_minus = max_lkhd[i] -bbins[b1]
-        test = "{} = $\mathrm{{ {:.3f}^{{ +{:.3f} }}_{{ -{:.3f} }} }}$".format(labels[i],
-                                                                               max_lkhd[i], 
-                                                                               lim_plus, 
-                                                                               lim_minus)
+        if "disrupt" not in labels[i]:
+            if cost is None:
+                test = "{} = $\mathrm{{ {:.3f}^{{ +{:.3f} }}_{{ -{:.3f} }} }}$".format(labels[i], max_lkhd[i], lim_plus, lim_minus)
+            else:
+                test = "{} $\sim$ $\mathrm{{ {:.2f} }}$".format(labels[i], max_lkhd[i])
+        else: #R_disrupt variable
+            if cost is None:
+                test = "{} = $\mathrm{{ {:.2f}^{{ +{:.2f} }}_{{ -{:.2f} }} }}$ [h$^{{-1}}$kpc]".format("R$_{\rm{disrupt}}$", max_lkhd[i], lim_plus, lim_minus)
+            else:
+                test = "{} $\sim$ $\mathrm{{ {:.0f} }}$ [h$^{{-1}}$kpc]".format("R$_{\rm{disrupt}}$", max_lkhd[i])
+
+
         ax.set_title(test)
         ax.set_yticks([])
         if i == 0:
             if cost is None:
                 ax.set_ylabel('Likelihood')
             else:
-                ax.set_ylabel('Cost')
+                ax.set_ylabel('-Log Likelihood')
         if cost is not None:
             ax.set_yscale('log')
         ax.yaxis.tick_right()
@@ -382,7 +415,7 @@ def calc_likelihood_bounds(param_file_name):
     nan_slct = np.isnan(result)
     result[nan_slct] = np.ones(np.sum(nan_slct))*1000000
     mi_bins = np.array(lgrid_param.get_float_list("mi_bins"))
-    rd_bins = np.array(lgrid_param.get_float_list("rd_bins"))
+    rd_bins = np.array(lgrid_param.get_float_list("rd_bins"))*1000
     rm_bins = np.array(lgrid_param.get_float_list("rm_bins"))
 
     result2 = result.reshape((mi_bins.size,rd_bins.size,rm_bins.size))
@@ -409,12 +442,12 @@ def calc_likelihood_bounds(param_file_name):
         fit_rm = hfile_fit['r_merger'].value[0]
         fit_rm_bds_lwr, fit_rm_bds_upr, _, fit_rm_bins = get_bounds_limits(lkhd_rm, rm_bins, fit_rm,fine_grain=5000, fit_index=max_lkhd[2])
     if has_rd and not has_rm:
-        corner_plot([r'M$_{\mathrm{infall}}$',
-                     'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins':
+        corner_plot([r'log$_{10}$M$_{\mathrm{infall}}$/h$^{-1}$M$_\odot$',
+                     'R$_{\mathrm{disrupt}}$ [h$^{-1}$kpc]'], grid_dic = {'bins':
                                                             [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2),
                                                             'cost': None},
                     expected_comov_abundance=expected_comov_abundance, core_loc=core_loc)
-        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'],
+        corner_plot([r'log$_{10}$M$_{\mathrm{infall}}$/h$^{-1}$M$_\odot$', 'R$_{\mathrm{disrupt}}$ [h$^{-1}$kpc]'],
                     grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 
                                 'lkhd': np.sum(lkhd, axis=2),
                                 'cost': np.sum(result2, axis=2)},
@@ -422,24 +455,24 @@ def calc_likelihood_bounds(param_file_name):
         # corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], mcmc_dic = {'mcmc_loc': "output/{}/mcmc.gio".format(param_file_name)})
         # corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$'], grid_dic = {'bins': [np.log10(mi_bins), rd_bins], 'lkhd': np.sum(lkhd, axis=2), 'cost': None}, mcmc_dic = {'mcmc_loc': "output/{}/mcmc.gio".format(param_file_name)})
     if has_rm and not has_rd:
-        corner_plot([r'M$_{\mathrm{infall}}$',
-                     'R$_{\mathrm{merger}}$'], grid_dic = {'bins':
+        corner_plot([r'log$_{10}$M$_{\mathrm{infall}}$/h$^{-1}$M$_\odot$',
+                     'R$_{\mathrm{merger}}$ [h$^{-1}$Mpc]'], grid_dic = {'bins':
                                                            [np.log10(mi_bins), rm_bins], 'lkhd': np.sum(lkhd, axis=1),
                                                            'cost': None},
                     expected_comov_abundance=expected_comov_abundance, core_loc=core_loc)
-        corner_plot([r'M$_{\mathrm{infall}}$',
-                     'R$_{\mathrm{merger}}$'], grid_dic = {'bins':
+        corner_plot([r'log$_{10}$M$_{\mathrm{infall}}$/h$^{-1}$M$_\odot$',
+                     'R$_{\mathrm{merger}}$ [h$^{-1}$Mpc]'], grid_dic = {'bins':
                                                            [np.log10(mi_bins), rm_bins], 'lkhd': np.sum(lkhd, axis=1),
                                                            'cost': np.sum(result2,
                                                                           axis=1)},expected_comov_abundance=expected_comov_abundance, core_loc=core_loc)
     if has_rm and has_rd:
         
-        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':None}, expected_comov_abundance=expected_comov_abundance)
-        corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':result2}, expected_comov_abundance=expected_comov_abundance)
+        corner_plot([r'log$_{10}$M$_{\mathrm{infall}}$/h$^{-1}$M$_\odot$', 'R$_{\mathrm{disrupt}}$ [h$^{-1}$kpc]', 'R$_{\mathrm{merge}}$ [h$^{-1}$Mpc]', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':None}, expected_comov_abundance=expected_comov_abundance)
+        corner_plot([r'log$_{10}$M$_{\mathrm{infall}}$/h$^{-1}$M$_\odot$', 'R$_{\mathrm{disrupt}}$ [h$^{-1}$kpc]', 'R$_{\mathrm{merge}}$ [h$^{-1}$Mpc]', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':result2}, expected_comov_abundance=expected_comov_abundance)
         #corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], [np.log10(mi_bins), rd_bins, rm_bins], lkhd, cost = result2)
     if not has_rm and not has_rd:
         # plot_1d_likelihood("M$_{infall}$", mi_bins, lkhd_mi, fit_mi, mi_bds, log=True);
-        plot_1d_likelihood("M$_{infall}$", fit_mi_bins, fit_lkhd_mi, fit_mi, [fit_mi_bds_lwr, fit_mi_bds_upr], log=False);
+        plot_1d_likelihood("M$_{infall}$  [h$^{-1}$M$_\odot$]", fit_mi_bins, fit_lkhd_mi, fit_mi, [fit_mi_bds_lwr, fit_mi_bds_upr], log=False);
         # corner_plot([r'M$_{\mathrm{infall}}$'], grid_dic = {'bins':[np.log10(mi_bins)]]
     grid_fit_fname = "figs/"+param_file_name+"/"+__file__+"/grid_fit_param.txt"
     dtk.ensure_dir(grid_fit_fname)

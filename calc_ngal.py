@@ -299,6 +299,14 @@ class ClusterData:
         core_m = np.concatenate(core_ms)
         core_r = np.concatenate(core_rs)
         return core_m, core_r
+    
+    def get_cluster_mass_bin(self, i, mass_bins):
+        mass_index = np.digitize(self.mass[i], mass_bins)
+        # print("mass: {:.2e}, bin: {}".format(self.mass[i], mass_index))
+        if mass_index  == 0 or mass_index == len(mass_bins):
+            return -1
+        else:
+            return mass_index-1
 
 class SODData:
     def load_sod(self, sod_loc, sod_hdf5):
@@ -543,7 +551,6 @@ def calc_wetzel09_disruption(param_fname):
     
     plt.legend(loc='best')
 
-    
 def get_hubble_time(z):
     a = 1.0/(1.0+z)
     H0 = 70*(0.30/a**3 + 0.7) #km/s /MPC
@@ -557,6 +564,7 @@ def test_wetzel09():
     plt.figure()
     plt.loglog(X, t_dyn, '-')
     
+
 
 if __name__ == "__main__":
 

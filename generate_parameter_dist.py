@@ -43,12 +43,8 @@ def load_fit_limits(fname):
     result = {}
     for p in ['mi', 'rd', 'rm']:
         if p in pfile:
-            if p == 'rd': #rescale rd into kpc
-                f =1000
-            else:
-                f =1
-            result[p] = pfile.get_float(p)*f
-            result[p+'_limits'] = np.array(pfile.get_float_list(p+'_limits'))*f
+            result[p] = pfile.get_float(p)
+            result[p+'_limits'] = np.array(pfile.get_float_list(p+'_limits'))
             result[p+'_lower_err'] = result[p] - result[p+'_limits'][0]
             result[p+'_upper_err'] = result[p+'_limits'][1] - result[p]
     if 'X_red' in pfile:
