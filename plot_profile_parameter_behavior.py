@@ -29,4 +29,4 @@ rc('font', size=18)
 
 
 if __name__ == "__main__":
-    plot_profile_parameter_behavior.py
+    plot_profile_parameter_behavior()

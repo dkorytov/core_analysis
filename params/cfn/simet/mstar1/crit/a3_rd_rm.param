@@ -8,7 +8,7 @@ core_loc /media/luna1/dkorytov/data/OuterRim/cores_500L/03_31_2018.OR.${step}.co
 
 core_central_loc  NULL
 zmr_loc     NULL
-zmrh5_loc   /home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar1_wmap7_simet_crit4/result/type1_weight1_mag1_clr1_result.hdf5
+zmrh5_loc   /home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar1_wmap7_simet_crit3/result/type1_weight1_mag1_clr1_result.hdf5
 core_prtcl_loc NULL
 accum_prtcl_loc NULL
 cluster_loc     tmp_hdf5/clusters_OR_M200c.hdf5

@@ -67,6 +67,7 @@ class ClusterData:
         self.core_r = hfile['cores/core_r'].value
         self.core_m = hfile['cores/core_m'].value
         self.core_step = hfile['cores/core_step'].value
+        self.core_htag = hfile['cores/core_htag'].value
         #self.core_infall_htag= hfile['cores/infall_htag'].value
         self.core_is_central = hfile['cores/core_is_central'].value
         if treat_centrals:
@@ -234,32 +235,65 @@ class ClusterData:
         # ax2.set_aspect('equal')
         return 
 
-    def get_ngal(self, i, mass_cut, radius_cut, compact_central=False):
+    def get_ngal(self, i, mass_cut, radius_cut, compact_central=True, verbose=False, exclude_center=None, ngal_type='R200'):
         start = self.core_offset[i]
         stop = start + self.core_size[i]
         core_x, core_y, core_z  = self.core_x[start:stop], self.core_y[start:stop], self.core_z[start:stop]
         core_r = self.core_r[start:stop]
         core_m = self.core_m[start:stop]
         core_step = self.core_step[start:stop]
-        slct = (core_r<radius_cut) & (core_m>mass_cut)
+        core_htag = self.core_htag[start:stop]
+        step = np.max(core_step)
+        htag = self.htag[i]
         if compact_central:
-            slct_central = core_step == self.step
-            slct[slct_central] = True
+            slct_central = core_step == step
+            core_r[slct_central] = 0.0
+        slct = (core_r<radius_cut) & (core_m>mass_cut)
         dx = core_x[slct]-self.x[i]
         dy = core_y[slct]-self.y[i]
         dz = core_z[slct]-self.z[i]
         dr2 = dx*dx + dy*dy + dz*dz
         dr = np.sqrt(dr2)
-        slct_ngal = dr2<self.rad[i]**2
+        if ngal_type == 'R200' or ngal_type == 'R_200' or ngal_type == 'r200':
+            slct_ngal = dr2<self.rad[i]**2
+        elif ngal_type == 'FoF' or ngal_type == 'fof':
+            # Assuming that the halo might be a main body fragment
+            # Take the absolute value of core htag to convert main
+            # body fragment -> FoF catalog halo tag
+            slct_ngal = np.abs(core_htag[slct]) == self.htag[i] 
+            slct_tmp = np.abs(core_htag) == self.htag[i]
+            # print(np.unique(core_htag).size)
+            # print(self.htag[i])
+            # print(core_htag.dtype)
+            # print(self.htag[i].dtype)
+            # print(np.sum(slct_tmp),'/', slct_tmp.size)
+        else:
+            raise KeyError("ngal_type={} is not a valid value".format(ngal_type))
+        if exclude_center is not None:
+            limit = exclude_center
+            slct_central  = dr < limit*self.rad[i]
+            slct_ngal[slct_central] = False
         ngal = np.sum(slct_ngal)
-        # plt.figure()
-        # plt.plot(core_x,  core_y, 'og',mfc='none',mec='g', mew=1, alpha=0.3)
-        # plt.plot(core_x[slct],  core_y[slct], 'og',mfc='g',mec='g', mew=2)
-        # plt.plot(core_x[slct][slct_ngal], core_y[slct][slct_ngal], 'bx',mfc='b',mec='b', mew=2)
-        # circle = Circle((self.x[i],self.y[i]), self.rad[i], fc='none', ec='k')
-        # plt.gca().add_artist(circle)
-        # plt.gca().set_aspect('equal')
-        # plt.show()
+        if verbose:
+            print("Minfall: {:.2e}, Rdisrupt: {:.3f}".format(mass_cut, radius_cut))
+            print("Total num: {:<25}".format(stop-start))
+            print("Pass fit: {:<25}".format(np.sum(slct)))
+            print("Pass radius: {:<25}".format(np.sum(slct_ngal)))
+            plt.figure()
+            plt.plot(core_x,  core_y, 'og',mfc='none',mec='g', mew=1, alpha=0.3)
+            plt.plot(core_x[slct],  core_y[slct], 'or',mfc='r',mec='r', mew=2)
+            plt.plot(core_x[slct][slct_ngal], core_y[slct][slct_ngal], 'bx',mfc='b',mec='b', mew=2)
+            slct_massive = core_m > mass_cut
+            print("compact_central: ", compact_central)
+            print("massive cores")
+            print(core_step[slct_massive])
+            print(core_r[slct_massive])
+            print(slct[slct_massive])
+            plt.plot(core_x[slct_massive],  core_y[slct_massive], 'oc',mfc='none',mec='c', mew=1, alpha=0.3)
+            circle = Circle((self.x[i],self.y[i]), self.rad[i], fc='none', ec='k')
+            plt.gca().add_artist(circle)
+            plt.gca().set_aspect('equal')
+            plt.show()
         # See notes in src/main.cpp or test/radial_binning_test.py
         dr_out = dr[~slct_ngal]
         start_angle = 0
@@ -282,7 +316,7 @@ class ClusterData:
             core_step = self.core_step[start:stop]
             slct = (core_r<radius_cut) & (core_m>mass_cut)
             if compact_central:
-                slct_central = core_step == self.step
+                slct_central = core_step == np.max(core_step)
                 slct[slct_central] = True
             dx = core_x[slct]-self.x[i]
             dy = core_y[slct]-self.y[i]

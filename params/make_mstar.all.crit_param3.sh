@@ -16,7 +16,7 @@ fi
 expected_comov_abundance=0.00241674353851
 
 # Two elements for m200c and m200m
-zmrh5_locs=("/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar@mstarval@_wmap7_simet_mean3/result/type1_weight1_mag1_clr1_result.hdf5" "/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar@mstarval@_wmap7_simet_crit4/result/type1_weight1_mag1_clr1_result.hdf5")
+zmrh5_locs=("/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar@mstarval@_wmap7_simet_mean3/result/type1_weight1_mag1_clr1_result.hdf5" "/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar@mstarval@_wmap7_simet_crit3/result/type1_weight1_mag1_clr1_result.hdf5")
 cluster_locs=("tmp_hdf5/clusters_OR_M200m.hdf5" "tmp_hdf5/clusters_OR_M200c.hdf5")
 cluster_types=("mean" "crit")
 
@@ -32,10 +32,10 @@ model_types=("mi" "rd" "rm" "rd_rm")
 cost_abundances=("false" "true")
 cost_types=("" "abund/")
 
-mstars=("-1" "0" "0.5" "1")
-
+# mstars=("-1" "0" "0.5" "1")
+mstars=("0.5" "1")
 for mstar in "${mstars[@]}"; do
-    for cluster_i in 1;do
+    for cluster_i in 1; do
 	for model_i in 0 1 2 3; do 
 	    for cost_i in 0; do
 		param_fname="params/cfn/simet/mstar${mstar}/${cluster_types[$cluster_i]}/${cost_types[$cost_i]}a3_${model_types[$model_i]}.param"

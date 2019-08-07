@@ -10,9 +10,13 @@ import sys
 import h5py
 import dtk 
 
+from matplotlib import rc
+rc('text', usetex=True)
+rc('font', **{'family':'serif', 'serif':['Computer Modern Roman'], })
+rc('font', size=18)
 
 output_loc = "tmp_hdf5/clusters.hdf5"
-
+# output_loc = "clusters_OR_M200m.hdf5"
 hfile = h5py.File(output_loc,'r')
 cluster_num = hfile["cluster_num"][0]
 core_m_host_list = []
@@ -479,7 +483,7 @@ plt.xlabel('r/r200')
 plt.ylabel('normalized core surface density')
 
 plt.figure()
-m_infall_cut = 2e11
+m_infall_cut = 10**12
 r_disrupt_cuts = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1,0.2]
 for i in range(0,len(r_disrupt_cuts)):
     slct_rdist = core_r < r_disrupt_cuts[i]
@@ -490,14 +494,14 @@ for i in range(0,len(r_disrupt_cuts)):
     H,_ = np.histogram(core_radial[slct],bins=radial_bins,normed=True)
     if(np.sum(H) > 0):
         plt.plot(radial_bins_avg,H/radial_bins_area,label='R_disrupt=%.3f fract[%.2f]'%(r_disrupt_cuts[i],num/tot))
-plt.title("%.1e < Mfof < %.1e\nM_infall=%.1e"%(min_mass,max_mass,m_infall_cut))
+plt.title("%.1e < Mfof < %.1e\nM$_{infall}$=%.1e"%(min_mass,max_mass,m_infall_cut))
 plt.legend(loc='best')
 plt.yscale('log')
 plt.xlabel('r/r200')
 plt.ylabel('normalized core surface density')
 
 plt.figure()
-r_disrupt_cut = 0.01
+r_disrupt_cut = 0.02
 slct_r = core_r < r_disrupt_cut
 tot = float(np.sum(slct_r))
 for i in range(0,len(m_infall_cuts)):
@@ -506,10 +510,10 @@ for i in range(0,len(m_infall_cuts)):
     num = float(np.sum(slct))
     H,_ = np.histogram(core_radial[slct],bins=radial_bins,normed=True)
     if(np.sum(H)>0):
-        plt.plot(radial_bins_avg,H/radial_bins_area,label='M_infall=%.e fract[%.2f]'%(m_infall_cuts[i],num/tot))
-plt.title("%.1e < Mfof < %.1e\nR_disrupt=%.3f"%(min_mass,max_mass,r_disrupt_cut))
+        plt.plot(radial_bins_avg,H/radial_bins_area,label='M$_{infall}$=%.e fract[%.2f]'%(m_infall_cuts[i],num/tot))
+# plt.title("%.1e < Mfof < %.1e\nR_disrupt=%.3f"%(min_mass,max_mass,r_disrupt_cut))
 plt.yscale('log')
-plt.legend(loc='best')
+plt.legend(loc='best', framealpha=0.0)
 plt.xlabel('r/r200')
 plt.ylabel('normalized core surface density')
 
