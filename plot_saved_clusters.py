@@ -59,6 +59,7 @@ def plot_saved_clusters(param_filename):
     n2merger = N2Merger(n2lib_loc)
     core_loc = param.get_string('core_loc').replace("${step}", str(401)).replace("_500L", "")
     fit_mi, fit_rd = get_fit_param(param_filename)
+    print("Infall mass: {:.2e}\nR disrupt: {:.4f}".format(fit_mi, fit_rd))
     # test_core_catalog(core_loc, 1)
     
 

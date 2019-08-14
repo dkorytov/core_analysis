@@ -273,7 +273,7 @@ def load_all2(pattern, models, data_inputs, data_input_labels, data_clr, data_mf
     dtk.save_figs("figs/"+__file__+"/")
 
 def load_all3(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None):
-    plt.figure(figsize=(5,3))
+    fig = plt.figure(figsize=(5,3))
     if title is not None:
         plt.suptitle(title)
     gs = gridspec.GridSpec(1,4, hspace=0.1)
@@ -332,6 +332,8 @@ def load_all3(pattern, models, data_inputs, data_input_labels, data_clr, data_mf
     # ax.legend(bbox_to_anchor=(-1., 1.02, 4, .102), loc='lower center',
     #        ncol=2, mode="expand", borderaxespad=0.)
     # plt.tight_layout()
+    # gs.tight_layout(fig)
+
     plt.gcf().subplots_adjust(bottom=0.3,left=0.15)
 
 
@@ -413,7 +415,7 @@ if __name__ == "__main__":
     # plot_mstar0_pc()
     # plot_mstar05_pc()
     # plot_mstar1_pc()
-    # plot_mstar0_QC()
+    plot_mstar0_QC()
     # plot_mstar05_QC()
     # plot_mstar1_QC()
     plot_mstar0_OR()

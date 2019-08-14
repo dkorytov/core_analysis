@@ -160,19 +160,29 @@ def plot_luminosity_dependence_parameters_all():
                                       "params/cfn/simet/mstar@val@/mean/a3_rd_rm.param", 'c', ['mi',
                                                                                                'rd', 'rm', 'x2'])
     gs.tight_layout(fig)
+    
+    fig, ax_dict, gs = init_luminosity_dependence_plot()
+    mstars = [0, 0.5, 1]
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/crit/a3_mi.param", 'r', ['mi', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/crit/a3_rd.param", 'b', ['mi', 'rd', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/crit/a3_rm.param", 'g', ['mi', 'rm', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/crit/a3_rd_rm.param", 'c', ['mi', 'rd', 'rm', 'x2'])
+    gs.tight_layout(fig)
 
     fig, ax_dict, gs = init_luminosity_dependence_plot()
-    mstars = [-1, 0, 0.5, 1]
-    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/crit/a4_mi.param", 'r', ['mi', 'x2'])
-    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/crit/a4_rd.param", 'b', ['mi', 'rd', 'x2'])
-    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/crit/a4_rm.param", 'g', ['mi', 'rm', 'x2'])
-    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/crit/a4_rd_rm.param", 'c', ['mi', 'rd', 'rm', 'x2'])
+    mstars = [0, 0.5, 1]
+    # plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/qc_mi.param", 'r', ['mi', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/qc_rd.param", 'b', ['mi', 'rd', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/qc_rm.param", 'g', ['mi', 'rm', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/simet/mstar@val@/mean/qc_rd_rm.param", 'c', ['mi', 'rd', 'rm', 'x2'])
     gs.tight_layout(fig)
+
 
 def plot_luminosity_dependent_ngal_all(param_file):
     param = dtk.Param(param_file)
     sdss_zmr_loc = param.get_string('zmrh5_loc')
-    hfile = h5py.File(sdss_zmr_loc)
+    print(sdss_zmr_loc)
+    hfile = h5py.File(sdss_zmr_loc, 'r')
     zmr_sdss = ZMR(file_loc="output/"+param_file+"/zmr_sdss.param")
     if dtk.file_exists("output/"+param_file+"/zmr_lkhd_cores.param"):
         fname = "output/"+param_file+"/zmr_lkhd_cores.param"
@@ -182,13 +192,11 @@ def plot_luminosity_dependent_ngal_all(param_file):
         fname = "output/"+param_file+"/zmr_cores.param"
         zmr_cores = ZMR(file_loc=fname)
         print("fit zmrs")
-    plt.figure()
+
     mass_bins = zmr_cores.m_bins 
     mass_bins_centers = dtk.bins_avg(mass_bins)
     zmr_Ngal = zmr_cores.zmr_gal_counts[0].sum(axis=1)/zmr_cores.zm_counts[0]
     
-    plt.show()
-    exit()
 
 def get_survival_rate_cluster(cluster_data, cluster_num, mass_bins, model_fit, ):
     m_infall = 10**model_fit['mi']
@@ -242,11 +250,21 @@ def plot_luminosity_dependence_survival_single(mstars, param_base, color):
     mass_bins_list = [ ZMR('output/'+param_fname+'/zmr_lkhd_cores.param').m_bins for param_fname in param_fnames]
     survival_infos = [ get_survival_rate(param_fname, fit, mass_bins) for param_fname, fit, mass_bins in zip(param_fnames, fits, mass_bins_list)]
     colors = ['r', 'b', 'g', 'c']
-    labels = ["2.50~L$_*$", "1.00~L$_*$", "0.63~L$_*$", "0.40~L$_*$"]
+    labels_dict = {-1: "2.50~L$_*$", 
+              0: "1.00~L$_*$", 
+              0.5: "0.63~L$_*$", 
+              1: "0.40~L$_*$"}
+    labels = [ labels_dict[mstar] for mstar in mstars ]
+    x_centers = dtk.bins_avg(mass_bins)
+    survival_rate = []
+    survival_rate_err = []
     for survival_info, mass_bins, label, color in zip(survival_infos, mass_bins_list, labels, colors):
         print(label, survival_info[0])
         plt.plot(dtk.bins_avg(mass_bins), survival_info[0],  label=label, color=color)
         plt.fill_between(dtk.bins_avg(mass_bins), survival_info[0]+survival_info[1], survival_info[0]-survival_info[1], color=color, alpha=0.3)
+        survival_rate.append(survival_info[0])
+        survival_rate_err.append(survival_info[1])
+    return x_centers, survival_rate, survival_rate_err
 
 def finalize_luminosity_dependence_survival_plot():
     plt.xscale('log')
@@ -257,21 +275,32 @@ def finalize_luminosity_dependence_survival_plot():
     plt.legend(loc='best', framealpha=0.0)
     plt.tight_layout()
     
+def plot_survival_ratio(OR,  QC):
+    centers_or, survival_or, survival_err_or = OR
+    centers_qc, survival_qc, survival_err_qc = QC
+    plt.figure()
+    colors = ['b', 'r', 'g', 'c']
+    labels = ['2.5L*', 'L*', '0.63L*', '0.4L*']
+    for i in range(0, 2):
+        plt.plot(cneters_or, (survival_qc[i]-survival_or[i+1])/survival_or[i+1], label=labels[i+1])
+    plt.axhline(0, '--k')
+
 def plot_luminosity_dependence_survival():
     
     mstars = [-1, 0, 0.5, 1]
-    
     # Outer Rim
-    # plt.figure()
-    # plot_luminosity_dependence_survival_single(mstars, "params/cfn/simet/mstar@val@/mean/a3_rd.param", 'r')
-    # finalize_luminosity_dependence_survival_plot()
-    # QContinuum
+    plt.figure()
+    centers_or, survival_or, survival_err_or = plot_luminosity_dependence_survival_single(mstars, "params/cfn/simet/mstar@val@/mean/a3_rd.param", 'r')
+    finalize_luminosity_dependence_survival_plot()
+    # Continuum
     mstars = [0, 0.5, 1]
     plt.figure()
-    plot_luminosity_dependence_survival_single(mstars, "params/cfn/simet/mstar@val@/mean/qc_rd.param", 'r')
+    centers_qc, survival_qc, survival_err_qc = plot_luminosity_dependence_survival_single(mstars, "params/cfn/simet/mstar@val@/mean/qc_rd.param", 'r')
     finalize_luminosity_dependence_survival_plot()
 
-    # plot_luminosity_dependence_survival(mstars, "params/cfn/simet/mstar@val@/mean/a3_rd.param", 'b')
+    plot_survival_ratio([centers_or, survival_or, survival_err_or], 
+                        [centers_qc, survival_qc, survival_err_qc])
+   
 if __name__ == "__main__":
     mstars = [-1, 0, 0.5, 1]
     # plot_luminosity_dependence("params/cfn/simet/mstar@val@/mean/a2_mi.param", mstars, ['mi', 'rd', 'rm', 'x2'])
@@ -281,5 +310,7 @@ if __name__ == "__main__":
     # plot_luminosity_dependence_parameters_all()
     plot_luminosity_dependence_survival()
     # plot_luminosity_dependent_ngal_all("params/cfn/simet/mstar0/mean/a3_rd.param")
+    # plot_luminosity_dependent_ngal_all("params/cfn/simet/mstar0/crit/qc_rd.param")
+
     dtk.save_figs("figs/"+__file__+"/", extension=".pdf")
     plt.show()
