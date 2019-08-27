@@ -22,9 +22,9 @@ cost_abundances=("false" "true")
 cost_types=("" "abund/")
 
 radial_bin_starts=("0 1 2 3 4 5")
-for cluster_i in 0 1;do
-    for model_i in 0 1 2; do 
-	for cost_i in 0 1; do
+for cluster_i in 0;do
+    for model_i in 2; do 
+	for cost_i in 0; do
 	    for radial_bin_start in $radial_bin_starts; do
 		param_fname="params/cfn/simet/mstar0/${cluster_types[$cluster_i]}/${cost_types[$cost_i]}a_${model_types[$model_i]}_cen${radial_bin_start}.param"
 		# echo ${cluster_i} ${model_i} ${cost_i}
@@ -38,7 +38,7 @@ for cluster_i in 0 1;do
 		sed -i "s/@rm_binds_info_num@/${rm_bins_infos[$model_i]}/g"  $param_fname
 		sed -i "s/@cost_abundance@/${cost_abundances[$cost_i]}/g"    $param_fname
 		# Radial Bin Start
-		sed -i "s/@radial_bin_start@/${radial_bin_start}/g"          $param_fname
+		sed -ixxxx "s/@radial_bin_start@/${radial_bin_start}/g"          $param_fname
 		## global conversions not related to the for loop
 		sed -i "s/@expected_comov_abundance@/${expected_comov_abundance}/g" $param_fname
 	    done

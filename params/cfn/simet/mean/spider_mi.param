@@ -8,10 +8,10 @@ core_loc /media/luna1/dkorytov/data/OuterRim/cores_500L/03_31_2018.OR.${step}.co
 
 core_central_loc  NULL
 zmr_loc     NULL
-zmrh5_loc   /home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_simet_mean3/result/type1_weight1_mag1_clr1_result.hdf5
+zmrh5_loc   /home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_spider_mean/result/type1_weight1_mag1_clr1_result.hdf5
 core_prtcl_loc NULL
 accum_prtcl_loc NULL
-cluster_loc     tmp_hdf5/clusters_OR_M200m.tmp.hdf5
+cluster_loc     tmp_hdf5/clusters_OR_M200m.hdf5
 cluster_load_num 10000
 
 use_central_infall	false
@@ -38,7 +38,7 @@ r_fof  0.01
 r_merger 0.1
 
 fit_r_fof    false
-fit_r_merger true
+fit_r_merger false
 lock_r_disrupt false
 min_disrupt_fof 20
 
@@ -47,8 +47,8 @@ diff_projection_num 10
 cost_gal_density true
 cost_dgal_dr     false
 cost_accum_gal   false
-cost_abundance   true
-cost_min_cluster_num  0
+cost_abundance   false
+cost_min_cluster_num  15
 cost_missed_centrals  0
 radial_bin_start 2
 
@@ -57,9 +57,9 @@ expected_comov_abundance 0.00241674353851
 
 #For the likelihood grid 
 calc_likelihood true
-mi_bins_info 11.0    12.5    64
-rd_bins_info 0.001   0.1     64
-rm_bins_info 0.001   0.3     32
+mi_bins_info 12.5    14.0    1024
+rd_bins_info 0.001   0.3     1
+rm_bins_info 0.001   0.4     1
 rf_bins_info 0.001   0.3     1
 
 

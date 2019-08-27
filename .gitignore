@@ -9,7 +9,7 @@
 **/old
 core_fit
 **/processed_catalog
-params/cfn/*.param
+params/cfn/*
 params/cfn/simet/simet*.param
 params/cfn/simet_old/
 dtk2

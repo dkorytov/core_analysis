@@ -12,6 +12,7 @@ zmrh5_loc   /home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_simet_cr
 core_prtcl_loc NULL
 accum_prtcl_loc NULL
 cluster_loc     tmp_hdf5/clusters_OR.crit.r10.hdf5
+cluster_load_num 10000
 
 use_central_infall	false
 force_central_as_galaxy false
