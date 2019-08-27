@@ -206,11 +206,7 @@ def corner_plot(labels, grid_dic = None, mcmc_dic = None,
             if i == j and grid_dic:
                 if grid_dic['cost'] is not None:
                     ylim = axs[i][j].get_ylim()
-                    
-                    print("here we are")
-                    print(ylim)
                     axs[i][j].set_ylim([50,1e4])
-                    print("we reset it")
                 # ylim=[0.8*ylim[0], ylim[1]]
                 # axs[i][j].set_ylim(ylim)
                 # yticks = axs[i][j].get_yticklabels()
@@ -486,6 +482,7 @@ def calc_likelihood_bounds(param_file_name):
         param_num += 1
     if has_rm: 
         txt_file.write("rm\t{}\n".format(rm_bins[np.argmax(lkhd_rm)]))
+        # txt_file.write("rm\t{}\n".format(fit_rm))#rm_bins[np.argmax(lkhd_rm)]))
         txt_file.write("rm_limits\t{}\t{}\n".format(fit_rm_bins[fit_rm_bds_lwr], fit_rm_bins[fit_rm_bds_upr]))
         param_num += 1
     txt_file.write("cost\t{}\n".format(np.min(result2)))

@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 
 from __future__ import print_function, division 
+import inspect
 import numpy as np
 import matplotlib
 import os
@@ -21,6 +22,7 @@ from matplotlib.patches import Circle
 
 from scipy.optimize import minimize
 from generate_parameter_dist import load_fit_limits
+from core_fit2_util import N2Merger
 
 class HODModel:
     def __init__(self, log_M_min, sigma, log_M_0, log_M_1, alpha):
@@ -46,6 +48,7 @@ class HODModel:
                       
 class ClusterData:
     def load_file(self, filename, treat_centrals=False, step=None, core_host_mass=False):
+        self.filename = filename
         hfile = h5py.File(filename, 'r')
         self.num = hfile['cluster_num'].value
         self.x =    hfile['cluster/x'].value
@@ -75,18 +78,66 @@ class ClusterData:
             self.core_r[slct_central] = 0
         self.core_host_mass = np.zeros_like(self.core_m)
         if core_host_mass:
-            for i in range(0, self.num):
-                start = self.core_offset[i]
-                stop  = self.core_offset[i]+self.core_size[i]
-                self.core_host_mass[start:stop] = self.mass[i]
+            self.set_host_halo_mass()
 
-    def plot_cluster(self, i):
+    def set_host_halo_mass(self,):
+        for i in range(0, self.num):
+            start = self.core_offset[i]
+            stop  = self.core_offset[i]+self.core_size[i]
+            self.core_host_mass[start:stop] = self.mass[i]
+
+    def set_core_radial_distance(self, write_cache=False, force=True):
+        cache_fname = self.filename.replace(".hdf5", ".radial_cache.hdf5")
+        if write_cache or not os.path.exists(cache_fname) or force:
+            self.core_dx = np.zeros_like(self.core_x)
+            self.core_dy = np.zeros_like(self.core_y)
+            self.core_dz = np.zeros_like(self.core_z)
+            self.core_dr = np.zeros_like(self.core_x)
+            self.core_dr_2d = np.zeros_like(self.core_x)
+            self.core_dr_r200 = np.zeros_like(self.core_x)
+            self.core_dr_2d_r200 = np.zeros_like(self.core_x)
+            for i in range(0, self.num):
+                core_start = self.core_offset[i]
+                core_end   = self.core_offset[i] + self.core_size[i]
+                dx = self.core_x[core_start:core_end]-self.x[i]
+                dy = self.core_y[core_start:core_end]-self.y[i]
+                dz = self.core_z[core_start:core_end]-self.z[i]
+                dr = np.sqrt(dx*dx + dy*dy + dz*dz)
+                dr_2d = np.sqrt(dx*dx + dy*dy)
+                self.core_dx[core_start:core_end] = dx
+                self.core_dy[core_start:core_end] = dy
+                self.core_dz[core_start:core_end] = dz
+                self.core_dr[core_start:core_end] = dr
+                self.core_dr_2d[core_start:core_end] = dr_2d
+                self.core_dr_r200[core_start:core_end] = dr/self.rad[i]
+                self.core_dr_2d_r200[core_start:core_end] = dr_2d/self.rad[i]
+            if write_cache:
+                hfile = h5py.File(cache_fname, 'w')
+                hfile['core_dr'] = self.core_dr 
+                hfile['core_dr_2d'] = self.core_dr_2d 
+                hfile['core_dr_r200'] = self.core_dr_r200
+                hfile['core_dr_2d_r200'] = self.core_dr_2d_r200 
+                print("wrote file")
+            
+        else:
+            hfile = h5py.File(cache_fname, 'r')
+            self.core_dr = hfile['core_dr'].value
+            self.core_dr_2d = hfile['core_dr_2d'].value
+            self.core_dr_r200 = hfile['core_dr_r200'].value
+            self.core_dr_2d_r200 = hfile['core_dr_2d_r200'].value
+            print("read file")
+
+    def plot_cluster(self, i, plot_histogram=False):
         f, (ax1, ax2) = plt.subplots(1,2,figsize=(25,10))
         start = self.core_offset[i]
         stop = start + self.core_size[i]
         ax1.plot(self.core_x[start:stop], self.core_y[start:stop], 'go',mfc='none',mec='g')
         
         slct_central = self.core_step[start:stop] == 401
+        print(start, stop)
+        print(self.htag.size)
+        print(self.core_step.size)
+        print(self.core_htag.size)
         slct_halo_central = (self.core_step[start:stop]==401) & (self.core_htag[start:stop] == self.htag[i])
         print(np.sum(slct_halo_central))
         dx = self.x[i] - self.core_x[start:stop]
@@ -127,15 +178,14 @@ class ClusterData:
         ax1.set_aspect('equal')
         ax2.set_aspect('equal')
         
-        print(self.core_m[start:stop])
-        print(self.core_r[start:stop])
-        plt.figure()
-        h, xbins, ybins = np.histogram2d(self.core_m[start:stop], self.core_r[start:stop], bins = (np.logspace(10,15,32), np.logspace(-3,0,32)))
-        plt.pcolor(xbins, ybins, h.T+0.1, cmap='Blues', norm=clr.LogNorm())
-        plt.xlabel('Core Mass')
-        plt.ylabel('Core Radius')
-        plt.yscale('log')
-        plt.xscale('log')
+        if plot_histogram:
+            plt.figure()
+            h, xbins, ybins = np.histogram2d(self.core_m[start:stop], self.core_r[start:stop], bins = (np.logspace(10,15,32), np.logspace(-3,0,32)))
+            plt.pcolor(xbins, ybins, h.T+0.1, cmap='Blues', norm=clr.LogNorm())
+            plt.xlabel('Core Mass')
+            plt.ylabel('Core Radius')
+            plt.yscale('log')
+            plt.xscale('log')
 
     def plot_find_central(self, i):
         start = self.core_offset[i]
@@ -341,6 +391,57 @@ class ClusterData:
             return -1
         else:
             return mass_index-1
+
+    
+    def create_compute_r_merger(self, m_infall, r_disrupt, r_merger, clusters_number = -1):
+        clusters = ClusterData()
+        clusters.filename = self.filename
+
+        if clusters_number != -1:
+            clusters.num = clusters_number
+        else:
+            clusters.num = self.num-1
+        clusters.x = np.copy(self.x[0:clusters_number])
+        clusters.y = np.copy(self.y[0:clusters_number])
+        clusters.z = np.copy(self.z[0:clusters_number])
+        clusters.rad = np.copy(self.rad[0:clusters_number])
+        clusters.mass = np.copy(self.mass[0:clusters_number])
+        clusters.htag = np.copy(self.htag[0:clusters_number] )
+        clusters.core_offset = np.copy(self.core_offset[0:clusters_number])
+        clusters.core_size = np.copy(self.core_size[0:clusters_number])
+        clusters.core_htag = np.copy(self.core_htag[0:clusters_number])
+
+        n2m = N2Merger("lib/libn2merg.so")
+        core_xs, core_ys, core_zs, core_ms, core_rs = [], [], [], [], []
+
+        for i in range(0, clusters.num):
+            start, end = self.core_offset[i], self.core_offset[i]+self.core_size[i]
+            core_x = np.copy(self.core_x[start: end])
+            core_y = np.copy(self.core_y[start: end])
+            core_z = np.copy(self.core_z[start: end])
+            core_r = np.copy(self.core_r[start: end])
+            core_m = np.copy(self.core_m[start: end])
+            slct = (core_m > m_infall) & (core_r < r_disrupt)
+            # print(np.sum(slct), slct.size)
+            # print("Line num: b2 core_size[2]: ", self.core_size[2])
+            core_x, core_y, core_z, color_c = n2m.n2merger3d(core_x[slct], core_y[slct], core_z[slct], r_merger)
+            # print("Line num: b3 core_size[2]: ", self.core_size[2])
+            core_xs.append(core_x)
+            core_ys.append(core_y)
+            core_zs.append(core_z)
+            core_size = core_x.size
+            clusters.core_size[i] = core_size
+            if i != 0:
+                clusters.core_offset[i] = clusters.core_offset[i-1]+core_size
+            else:
+                clusters.core_offset[i] = 0
+        clusters.core_x = np.concatenate(core_xs)
+        clusters.core_y = np.concatenate(core_ys)
+        clusters.core_z = np.concatenate(core_zs)
+        clusters.core_step = np.zeros_like(clusters.core_x)
+        clusters.core_host_mass = np.zeros_like(clusters.core_x)
+        clusters.core_htag = np.zeros_like(clusters.core_x)
+        return clusters
 
 class SODData:
     def load_sod(self, sod_loc, sod_hdf5):

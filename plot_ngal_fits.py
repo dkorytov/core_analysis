@@ -35,7 +35,7 @@ def load_clusters(file_name):
 
 load_clusters._cache = {}
 
-def get_ngal_fit(param_fname, cluster_num, color):
+def get_ngal_fit(param_fname, cluster_num, color, plot_fit=True, spider=False, manual_calc=False):
     param = dtk.Param(param_fname)
     cluster_loc = param.get_string('cluster_loc')
     if cluster_num is None:
@@ -53,7 +53,7 @@ def get_ngal_fit(param_fname, cluster_num, color):
     zmr_sdss_ngal = zmr_sdss_ngal[0]
     zmr_sdss_ngal_err = zmr_sdss_ngal_err[0]
 
-    if False:
+    if manual_calc:
         model_fit_fname = "figs/"+param_fname+"/calc_likelihood_bounds.py/grid_fit_param.txt"
         model_fit = load_fit_limits(model_fit_fname)
         m_infall = 10**model_fit['mi']
@@ -84,15 +84,26 @@ def get_ngal_fit(param_fname, cluster_num, color):
             ngal_std[i]  = np.std(cluster_ngal[slct])
             ngal_err[i]  = ngal_std[i]/np.sqrt(np.sum(slct))
             print("{:.2e}->{:.2e}: {}".format(m_bins[i], m_bins[i+1], np.sum(slct)))
-    # plt.plot(dtk.bins_avg(m_bins), ngal_mean, '-x', color=color, label='Ngal recalc')
-    plt.plot(dtk.bins_avg(m_bins), zmr_core_ngal, '-', color=color)
-    plt.fill_between(dtk.bins_avg(m_bins), zmr_core_ngal-zmr_core_ngal_err, zmr_core_ngal+zmr_core_ngal_err, color=color, alpha=0.3)
-    plt.errorbar(dtk.bins_avg(m_bins), zmr_sdss_ngal, yerr=zmr_sdss_ngal_err, fmt='o', capsize=0, lw=2, color=color, markeredgecolor='None')
+        plt.plot(dtk.bins_avg(m_bins), ngal_mean, '-x', color=color, label='Ngal recalc')
+    if plot_fit:
+        plt.plot(dtk.bins_avg(m_bins), zmr_core_ngal, '-', color=color)
+        plt.fill_between(dtk.bins_avg(m_bins), zmr_core_ngal-zmr_core_ngal_err, zmr_core_ngal+zmr_core_ngal_err, color=color, alpha=0.3)
+    offset_amount = 1.05
+    if spider:
+        markerfacecolor='None'
+        markeredgecolor=color
+        offset=offset_amount
+    else:
+        markerfacecolor=color
+        markeredgecolor='None'
+        offset=1./offset_amount
+    plt.errorbar(dtk.bins_avg(m_bins)*offset, zmr_sdss_ngal,
+                 yerr=zmr_sdss_ngal_err, fmt='o', capsize=0, lw=2, color=color,
+                 markeredgecolor=markeredgecolor, markerfacecolor=markerfacecolor)
     # plt.fill_between(dtk.bins_avg(m_bins), ngal_mean-ngal_err, ngal_mean+ngal_err, color=color, alpha=0.3)
     plt.yscale('log')
     plt.xscale('log')
     # plt.legend(loc='best')
-
 def format_plot():
 
     p4 = plt.plot([],[], 'c', lw=5, label=r'{:1.2f}~L$_*$'.format(0.4))
@@ -111,6 +122,15 @@ def plot_ngal_fits():
     get_ngal_fit("params/cfn/simet/mstar0.5/mean/a3_rd.param", None, 'g')
     get_ngal_fit("params/cfn/simet/mstar0/mean/a3_rd.param", None, 'b')
     get_ngal_fit("params/cfn/simet/mstar-1/mean/a3_rd.param", None, 'r')
+
+    #just spider points
+    # get_ngal_fit("params/cfn/simet/mstar1/mean/spider_rd.param", None, 'c', plot_fit=False, spider=True)
+    # get_ngal_fit("params/cfn/simet/mstar0.5/mean/spider_rd.param", None, 'g', plot_fit=False, spider=True)
+    get_ngal_fit("params/cfn/simet/mstar0/mean/spider_rd.param", None, 'b', plot_fit=False, spider=True)
+    # get_ngal_fit("params/cfn/simet/mstar-1/mean/spider_rd.param", None, 'r', plot_fit=False, spider=True)
+
+    get_ngal_fit("params/cfn/spider/mstar0/mean/bcg.xray_mass.rd.param", None, 'm', plot_fit=False, spider=True)
+    get_ngal_fit("params/cfn/spider/mstar0/mean/bcg_rd.param", None, 'c', plot_fit=False, spider=True)
     format_plot()
 
 if __name__ == "__main__":

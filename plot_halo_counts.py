@@ -46,9 +46,9 @@ def plot_halo_counts():
     QC_clusters_m = "tmp_hdf5/clusters_QC_M200m.hdf5"
     QC_clusters_c = "tmp_hdf5/clusters_QC_M200c.hdf5"
 
-    RM_m = "/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_simet_mean3/result/type1_weight1_mag1_clr1_result.hdf5"
+    RM_m = "/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar1_wmap7_simet_mean3/result/type1_weight1_mag1_clr1_result.hdf5"
     RM_c = "/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_simet_crit4/result/type1_weight1_mag1_clr1_result.hdf5"
-    SP_m = "/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_spider/result/type1_weight1_mag1_clr1_result.hdf5"
+    SP_m = "/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_spider_mean/result/type1_weight1_mag1_clr1_result.hdf5"
     SP_c = "/home/dkorytov/phys/Ngal_sdss/data/rad_profile_mstar0_wmap7_spider/result/type1_weight1_mag1_clr1_result.hdf5"
 
     mass_bins = get_mass_bins(RM_m)

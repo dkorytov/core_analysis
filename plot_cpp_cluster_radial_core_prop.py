@@ -15,7 +15,7 @@ rc('text', usetex=True)
 rc('font', **{'family':'serif', 'serif':['Computer Modern Roman'], })
 rc('font', size=18)
 
-output_loc = "tmp_hdf5/clusters.hdf5"
+output_loc = "tmp_hdf5/clusters_OR_M200m.hdf5"
 # output_loc = "clusters_OR_M200m.hdf5"
 hfile = h5py.File(output_loc,'r')
 cluster_num = hfile["cluster_num"][0]
@@ -131,7 +131,7 @@ ax = ax1
 min_mass = 1e14
 max_mass = 2.5e14
 slct = (core_m_host >= min_mass) & (core_m_host < max_mass)
-ax.set_title('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+ax.set_title('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 H,_,_ = np.histogram2d(core_radial[slct],core_m[slct],bins=(radial_bins,m_bins_small))
 ax.pcolormesh(radial_bins,m_bins_small,H.T+1,cmap='PuBu',norm=clr.LogNorm())
 perct16 = dtk.binned_func(core_radial[slct],radial_bins,core_m[slct],np.percentile,16)
@@ -144,7 +144,7 @@ ax.set_yscale('log')
 ax.legend(loc='best')
 ax.grid()
 ax.set_ylabel('central infall mass [Msun/h]')
-labels.append('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+labels.append('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 p16.append(perct16)
 p50.append(median)
 p84.append(perct84)
@@ -153,7 +153,7 @@ ax = ax2
 min_mass = 2.5e14
 max_mass = 5e14
 slct = (core_m_host >= min_mass) & (core_m_host < max_mass)
-ax.set_title('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+ax.set_title('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 H,_,_ = np.histogram2d(core_radial[slct],core_m[slct],bins=(radial_bins,m_bins_small))
 ax.pcolormesh(radial_bins,m_bins_small,H.T+1,cmap='PuBu',norm=clr.LogNorm())
 perct16 = dtk.binned_func(core_radial[slct],radial_bins,core_m[slct],np.percentile,16)
@@ -165,7 +165,7 @@ ax.plot(radial_bins_avg,perct84,'--r',lw=2,label='68%')
 ax.set_yscale('log')
 ax.legend(loc='best')
 ax.grid()
-labels.append('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+labels.append('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 p16.append(perct16)
 p50.append(median)
 p84.append(perct84)
@@ -174,7 +174,7 @@ ax = ax3
 min_mass = 5e14
 max_mass = 7.5e14
 slct = (core_m_host >= min_mass) & (core_m_host < max_mass)
-ax.set_title('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+ax.set_title('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 H,_,_ = np.histogram2d(core_radial[slct],core_m[slct],bins=(radial_bins,m_bins_small))
 ax.pcolormesh(radial_bins,m_bins_small,H.T+1,cmap='PuBu',norm=clr.LogNorm())
 perct16 = dtk.binned_func(core_radial[slct],radial_bins,core_m[slct],np.percentile,16)
@@ -197,7 +197,7 @@ ax = ax4
 min_mass = 7.5e14
 max_mass = 10e14
 slct = (core_m_host >= min_mass) & (core_m_host < max_mass)
-ax.set_title('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+ax.set_title('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 H,_,_ = np.histogram2d(core_radial[slct],core_m[slct],bins=(radial_bins,m_bins_small))
 ax.pcolormesh(radial_bins,m_bins_small,H.T+1,cmap='PuBu',norm=clr.LogNorm())
 perct16 = dtk.binned_func(core_radial[slct],radial_bins,core_m[slct],np.percentile,16)
@@ -210,7 +210,7 @@ ax.set_yscale('log')
 ax.legend(loc='best')
 ax.grid()
 ax.set_xlabel('r/r200')
-labels.append('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+labels.append('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 p16.append(perct16)
 p50.append(median)
 p84.append(perct84)
@@ -241,7 +241,7 @@ ax = ax1
 min_mass = 1e14
 max_mass = 2.5e14
 slct = (core_m_host >= min_mass) & (core_m_host < max_mass)
-ax.set_title('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+ax.set_title('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 H,_,_ = np.histogram2d(core_radial[slct],core_r[slct],bins=(radial_bins,r_bins_small))
 ax.pcolormesh(radial_bins,r_bins_small,H.T+1,cmap='PuBu',norm=clr.LogNorm())
 perct16 = dtk.binned_func(core_radial[slct],radial_bins,core_r[slct],np.percentile,16)
@@ -254,7 +254,7 @@ ax.set_yscale('log')
 ax.legend(loc='best')
 ax.grid()
 ax.set_ylabel('core radius [Mpc/h]')
-labels.append('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+labels.append('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 p16.append(perct16)
 p50.append(median)
 p84.append(perct84)
@@ -277,7 +277,7 @@ ax.legend(loc='best')
 ax.grid()
 
 
-labels.append('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+labels.append('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 p16.append(perct16)
 p50.append(median)
 p84.append(perct84)
@@ -286,7 +286,7 @@ ax = ax3
 min_mass = 5e14
 max_mass = 7.5e14
 slct = (core_m_host >= min_mass) & (core_m_host < max_mass)
-ax.set_title('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+ax.set_title('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 H,_,_ = np.histogram2d(core_radial[slct],core_r[slct],bins=(radial_bins,r_bins_small))
 ax.pcolormesh(radial_bins,r_bins_small,H.T+1,cmap='PuBu',norm=clr.LogNorm())
 perct16 = dtk.binned_func(core_radial[slct],radial_bins,core_r[slct],np.percentile,16)
@@ -300,7 +300,7 @@ ax.legend(loc='best')
 ax.grid()
 ax.set_xlabel('r/r200')
 ax.set_ylabel('core radius [Mpc/h]')
-labels.append('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+labels.append('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 p16.append(perct16)
 p50.append(median)
 p84.append(perct84)
@@ -309,7 +309,7 @@ ax = ax4
 min_mass = 7.5e14
 max_mass = 10e14
 slct = (core_m_host >= min_mass) & (core_m_host < max_mass)
-ax.set_title('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+ax.set_title('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 H,_,_ = np.histogram2d(core_radial[slct],core_r[slct],bins=(radial_bins,r_bins_small))
 ax.pcolormesh(radial_bins,r_bins_small,H.T+1,cmap='PuBu',norm=clr.LogNorm())
 perct16 = dtk.binned_func(core_radial[slct],radial_bins,core_r[slct],np.percentile,16)
@@ -322,7 +322,7 @@ ax.set_yscale('log')
 ax.legend(loc='best')
 ax.grid()
 ax.set_xlabel('r/r200')
-labels.append('%.2e < Mfof < %.2e'%(min_mass,max_mass))
+labels.append('%.2e $<$ Mfof $<$ %.2e'%(min_mass,max_mass))
 p16.append(perct16)
 p50.append(median)
 p84.append(perct84)
@@ -350,7 +350,7 @@ f,((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,sharex=True,sharey=True,figsize=(10,8
 rad_min = 0
 rad_max = 0.25
 slct = (core_radial >= rad_min) & (core_radial<rad_max)
-ax1.set_title("%.2f< r/r200 < %.2f"%(rad_min,rad_max))
+ax1.set_title("%.2f $<$ r/r200 $<$ %.2f"%(rad_min,rad_max))
 H,_,_ = np.histogram2d(core_m[slct],core_r[slct],bins=(m_bins_small,r_bins_small))
 ax1.pcolormesh(m_bins_small,r_bins_small,H.T+1.0,cmap='PuBu',norm=clr.LogNorm())
 ax1.set_xscale('log')
@@ -361,7 +361,7 @@ ax1.set_ylabel('core radius [Mpc/h]')
 rad_min = 0.25
 rad_max = 0.50
 slct = (core_radial >= rad_min) & (core_radial<rad_max)
-ax2.set_title("%.2f< r/r200 < %.2f"%(rad_min,rad_max))
+ax2.set_title("%.2f$<$ r/r200 $<$ %.2f"%(rad_min,rad_max))
 H,_,_ = np.histogram2d(core_m[slct],core_r[slct],bins=(m_bins_small,r_bins_small))
 ax2.pcolormesh(m_bins_small,r_bins_small,H.T+1.0,cmap='PuBu',norm=clr.LogNorm())
 ax2.set_xscale('log')
@@ -371,7 +371,7 @@ ax2.grid()
 rad_min = 0.50
 rad_max = 0.75
 slct = (core_radial >= rad_min) & (core_radial<rad_max)
-ax3.set_title("%.2f< r/r200 < %.2f"%(rad_min,rad_max))
+ax3.set_title("%.2f$<$ r/r200 $<$ %.2f"%(rad_min,rad_max))
 H,_,_ = np.histogram2d(core_m[slct],core_r[slct],bins=(m_bins_small,r_bins_small))
 ax3.pcolormesh(m_bins_small,r_bins_small,H.T+1.0,cmap='PuBu',norm=clr.LogNorm())
 ax3.set_xscale('log')
@@ -383,7 +383,7 @@ ax3.set_xlabel('central infall mass [Msun/h]')
 rad_min = 0.75
 rad_max = 1.0
 slct = (core_radial >= rad_min) & (core_radial<rad_max)
-ax4.set_title("%.2f< r/r200 < %.2f"%(rad_min,rad_max))
+ax4.set_title("%.2f$<$ r/r200 $<$ %.2f"%(rad_min,rad_max))
 H,_,_ = np.histogram2d(core_m[slct],core_r[slct],bins=(m_bins_small,r_bins_small))
 ax4.pcolormesh(m_bins_small,r_bins_small,H.T+1.0,cmap='PuBu',norm=clr.LogNorm())
 ax4.set_xscale('log')
@@ -399,7 +399,7 @@ f,((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,sharex=True,sharey=True,figsize=(10,8
 rad_min = 1.00
 rad_max = 1.25
 slct = (core_radial >= rad_min) & (core_radial<rad_max)
-ax1.set_title("%.2f< r/r200 < %.2f"%(rad_min,rad_max))
+ax1.set_title("%.2f$<$ r/r200 $<$ %.2f"%(rad_min,rad_max))
 H,_,_ = np.histogram2d(core_m[slct],core_r[slct],bins=(m_bins_small,r_bins_small))
 ax1.pcolormesh(m_bins_small,r_bins_small,H.T+1.0,cmap='PuBu',norm=clr.LogNorm())
 ax1.set_xscale('log')
@@ -410,7 +410,7 @@ ax1.set_ylabel('core radius [Mpc/h]')
 rad_min = 1.25
 rad_max = 1.50
 slct = (core_radial >= rad_min) & (core_radial<rad_max)
-ax2.set_title("%.2f< r/r200 < %.2f"%(rad_min,rad_max))
+ax2.set_title("%.2f$<$ r/r200 $<$ %.2f"%(rad_min,rad_max))
 H,_,_ = np.histogram2d(core_m[slct],core_r[slct],bins=(m_bins_small,r_bins_small))
 ax2.pcolormesh(m_bins_small,r_bins_small,H.T+1.0,cmap='PuBu',norm=clr.LogNorm())
 ax2.set_xscale('log')
@@ -420,7 +420,7 @@ ax2.grid()
 rad_min = 1.50
 rad_max = 1.75
 slct = (core_radial >= rad_min) & (core_radial<rad_max)
-ax3.set_title("%.2f< r/r200 < %.2f"%(rad_min,rad_max))
+ax3.set_title("%.2f$<$ r/r200 $<$ %.2f"%(rad_min,rad_max))
 H,_,_ = np.histogram2d(core_m[slct],core_r[slct],bins=(m_bins_small,r_bins_small))
 ax3.pcolormesh(m_bins_small,r_bins_small,H.T+1.0,cmap='PuBu',norm=clr.LogNorm())
 ax3.set_xscale('log')
@@ -432,7 +432,7 @@ ax3.set_xlabel('central infall mass [Msun/h]')
 rad_min = 1.75
 rad_max = 2.0
 slct = (core_radial >= rad_min) & (core_radial<rad_max)
-ax4.set_title("%.2f< r/r200 < %.2f"%(rad_min,rad_max))
+ax4.set_title("%.2f$<$ r/r200 $<$ %.2f"%(rad_min,rad_max))
 H,_,_ = np.histogram2d(core_m[slct],core_r[slct],bins=(m_bins_small,r_bins_small))
 ax4.pcolormesh(m_bins_small,r_bins_small,H.T+1.0,cmap='PuBu',norm=clr.LogNorm())
 ax4.set_xscale('log')
@@ -451,7 +451,7 @@ mass_maxs = [2.5e14,5e14,7.5e14,10e14]
 
 plt.figure()
 for i in range(0,len(mass_mins)):
-    label = "%.1e < Mfof < %.1e"%(mass_mins[i],mass_maxs[i])
+    label = "%.1e $<$ Mfof $<$ %.1e"%(mass_mins[i],mass_maxs[i])
     slct = (core_m_host >= mass_mins[i]) & (core_m_host < mass_maxs[i])
     H, _ = np.histogram(core_radial[slct],bins=radial_bins,normed=True)
     plt.plot(radial_bins_avg,H,label=label)
@@ -476,7 +476,7 @@ for i in range(0,len(m_infall_cuts)):
     num = np.sum(slct)
     H,_ = np.histogram(core_radial[slct],bins = radial_bins,normed=True)
     plt.plot(radial_bins_avg,H/radial_bins_area,label='Mcut=%.1e fract=[%.3f]'%(m_infall_cuts[i],float(num)/float(np.sum(slct_m))))
-plt.title("%.1e < Mfof < %.1e"%(min_mass,max_mass))
+plt.title("%.1e $<$ Mfof $<$ %.1e"%(min_mass,max_mass))
 plt.legend(loc='best')
 plt.yscale('log')
 plt.xlabel('r/r200')
@@ -493,8 +493,8 @@ for i in range(0,len(r_disrupt_cuts)):
     tot = float(np.sum(slct_m & slct_minfall))
     H,_ = np.histogram(core_radial[slct],bins=radial_bins,normed=True)
     if(np.sum(H) > 0):
-        plt.plot(radial_bins_avg,H/radial_bins_area,label='R_disrupt=%.3f fract[%.2f]'%(r_disrupt_cuts[i],num/tot))
-plt.title("%.1e < Mfof < %.1e\nM$_{infall}$=%.1e"%(min_mass,max_mass,m_infall_cut))
+        plt.plot(radial_bins_avg,H/radial_bins_area,label=r'R$_disrupt$=%.3f fract[%.2f]'%(r_disrupt_cuts[i],num/tot))
+plt.title("%.1e $<$ Mfof $<$ %.1e\nM$_{infall}$=%.1e"%(min_mass,max_mass,m_infall_cut))
 plt.legend(loc='best')
 plt.yscale('log')
 plt.xlabel('r/r200')
@@ -511,7 +511,7 @@ for i in range(0,len(m_infall_cuts)):
     H,_ = np.histogram(core_radial[slct],bins=radial_bins,normed=True)
     if(np.sum(H)>0):
         plt.plot(radial_bins_avg,H/radial_bins_area,label='M$_{infall}$=%.e fract[%.2f]'%(m_infall_cuts[i],num/tot))
-# plt.title("%.1e < Mfof < %.1e\nR_disrupt=%.3f"%(min_mass,max_mass,r_disrupt_cut))
+# plt.title("%.1e $<$ Mfof $<$ %.1e\nR_disrupt=%.3f"%(min_mass,max_mass,r_disrupt_cut))
 plt.yscale('log')
 plt.legend(loc='best', framealpha=0.0)
 plt.xlabel('r/r200')

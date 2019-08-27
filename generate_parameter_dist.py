@@ -412,7 +412,7 @@ if __name__ == "__main__":
     # plot_mstar0()
     # plot_mstar05()
     # plot_mstar1()
-    # plot_mstar0_pc()
+    plot_mstar0_pc()
     # plot_mstar05_pc()
     # plot_mstar1_pc()
     plot_mstar0_QC()
