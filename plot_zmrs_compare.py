@@ -20,8 +20,8 @@ if(len(sys.argv) == 5):
 else:
     param_label1 = sys.argv[1]
     param_label2 = sys.argv[2]
-zmr_cores1 = ZMR(file_loc="output/"+param_file1+"/zmr_cores.param")
-zmr_cores2 = ZMR(file_loc="output/"+param_file2+"/zmr_cores.param")
+zmr_cores1 = ZMR(file_loc="output/"+param_file1+"/zmr_lkhd_cores.param")
+zmr_cores2 = ZMR(file_loc="output/"+param_file2+"/zmr_lkhd_cores.param")
 #zmr_sdss_npz = np.load("/home/dkorytov/phys/Ngal_sdss/data/normal_mask4/result/type1_weight1_mag1_clr1_result.npz")
 #print zmr_sdss_npz.keys()
 
@@ -41,7 +41,7 @@ for zi in range(0,zmr_cores2.z_bins.size-1):
     if(np.sum(zmr_cores2.zm_counts[zi,:])==0 or np.sum(zmr_cores1.zm_counts[zi,:])==0):
         continue #Both don't have data here
     plt.figure()
-    plt.title(r"Galaxy Density %.2f $<$ z $<$ %.2f"%(zmr_cores2.z_bins[zi],zmr_cores2.z_bins[zi+1]))
+    plt.title("Galaxy Density %.2f $<$ z $<$ %.2f"%(zmr_cores2.z_bins[zi],zmr_cores2.z_bins[zi+1]))
     c_i=0
     for mi in range(0,zmr_cores2.m_bins.size-1):
         if(zmr_cores2.zm_counts[zi,mi] > 0 and zmr_cores1.zm_counts[zi,mi] > 0):
@@ -60,8 +60,8 @@ for zi in range(0,zmr_cores2.z_bins.size-1):
             plt.plot(r_avg,zmr_gd,'o-',color=c)
             plt.fill_between(r_avg,min_err,zmr_gd+err,color=c,alpha=0.3)
             plt.plot([],[],label=r'%.2e$<$M200$<$%.2e'%(zmr_cores2.m_bins[mi],zmr_cores2.m_bins[mi+1]),color=c)
-    plt.plot([],[],'ks--',lw=2,label=param_label2,mfc='none',mew=1.5,ms=8)
-    plt.plot([],[],'ko-',label=param_label1)
+    plt.plot([],[],'ks--', lw=2, label=param_label2, mfc='none', mew=1.5, ms=8)
+    plt.plot([],[],'ko-', label=param_label1)
     plt.grid()
     plt.legend(loc='best',framealpha=0.5)
     plt.xlabel(r'$r/R_{200}$')

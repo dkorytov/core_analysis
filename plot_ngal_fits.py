@@ -44,7 +44,6 @@ def get_ngal_fit(param_fname, cluster_num, color, plot_fit=True, spider=False, m
     zmr_sdss  = ZMR(zmrh5_loc)
     zmr_fit = ZMR("output/"+param_fname+"/zmr_lkhd_cores.param")
     m_bins = zmr_fit.m_bins
-    print(m_bins)
     r_bins = zmr_fit.r_bins
     zmr_core_ngal, zmr_core_ngal_err = zmr_fit.get_ngal() # only one z-bin, so we don't select it out
     zmr_core_ngal = zmr_core_ngal[0]
@@ -58,13 +57,13 @@ def get_ngal_fit(param_fname, cluster_num, color, plot_fit=True, spider=False, m
         model_fit = load_fit_limits(model_fit_fname)
         m_infall = 10**model_fit['mi']
         if 'rd' in model_fit:
-            print(model_fit['rd'])
+            # print(model_fit['rd'])
             r_disrupt = model_fit['rd']/1000.0 #convert to mpc/h from kpc/h
         else:
             r_disrupt = np.inf
-        print("\ncalculating ngal for ", param_fname)
-        print("\tmodel_fit_fname:", model_fit_fname)
-        print("\tmodel params: {:.2e} {:.3f}".format(m_infall, r_disrupt))
+        # print("\ncalculating ngal for ", param_fname)
+        # print("\tmodel_fit_fname:", model_fit_fname)
+        # print("\tmodel params: {:.2e} {:.3f}".format(m_infall, r_disrupt))
         print(cluster_loc)
         cluster_data = load_clusters(cluster_loc)
         if cluster_num == -1:
@@ -83,22 +82,29 @@ def get_ngal_fit(param_fname, cluster_num, color, plot_fit=True, spider=False, m
             ngal_mean[i] = np.mean(cluster_ngal[slct])
             ngal_std[i]  = np.std(cluster_ngal[slct])
             ngal_err[i]  = ngal_std[i]/np.sqrt(np.sum(slct))
-            print("{:.2e}->{:.2e}: {}".format(m_bins[i], m_bins[i+1], np.sum(slct)))
+            # print("{:.2e}->{:.2e}: {}".format(m_bins[i], m_bins[i+1], np.sum(slct)))
         plt.plot(dtk.bins_avg(m_bins), ngal_mean, '-x', color=color, label='Ngal recalc')
     if plot_fit:
         plt.plot(dtk.bins_avg(m_bins), zmr_core_ngal, '-', color=color)
         plt.fill_between(dtk.bins_avg(m_bins), zmr_core_ngal-zmr_core_ngal_err, zmr_core_ngal+zmr_core_ngal_err, color=color, alpha=0.3)
-    offset_amount = 1.05
+    offset_amount = 1.025
     if spider:
         markerfacecolor='None'
         markeredgecolor=color
-        offset=offset_amount
+        xaxis_offset=offset_amount
+        lw = 1
     else:
         markerfacecolor=color
         markeredgecolor='None'
-        offset=1./offset_amount
-    plt.errorbar(dtk.bins_avg(m_bins)*offset, zmr_sdss_ngal,
-                 yerr=zmr_sdss_ngal_err, fmt='o', capsize=0, lw=2, color=color,
+        xaxis_offset=1./offset_amount
+        lw = 2
+    
+    # remove problematic 2.5 L* low mass cluster in the spider sample
+    if "mstar-1" in param_fname and "spider" in param_fname:
+        print("SPIDERSS!: ", zmr_sdss_ngal)
+        zmr_sdss_ngal[zmr_sdss_ngal < 0.1 ] = np.nan
+    plt.errorbar(dtk.bins_avg(m_bins)*xaxis_offset, zmr_sdss_ngal,
+                 yerr=zmr_sdss_ngal_err, fmt='o', capsize=0, lw=lw, color=color,
                  markeredgecolor=markeredgecolor, markerfacecolor=markerfacecolor)
     # plt.fill_between(dtk.bins_avg(m_bins), ngal_mean-ngal_err, ngal_mean+ngal_err, color=color, alpha=0.3)
     plt.yscale('log')
@@ -110,11 +116,14 @@ def format_plot():
     p3 = plt.plot([],[], 'g', lw=5, label=r'{:1.2f}~L$_*$'.format(0.63))
     p2 = plt.plot([],[], 'b', lw=5, label=r'{:1.2f}~L$_*$'.format(1.0))
     p1 = plt.plot([],[], 'r', lw=5, label=r'{:1.2f}~L$_*$'.format(2.5))
+    plt.errorbar([], [], yerr=[], fmt='o', lw=2, color='k', label="redMaPPer clusters", capsize=0)
+    plt.errorbar([], [], yerr=[], fmt='o', lw=1, color='k', markerfacecolor='none', label='SPIDERS clusters', capsize=0)
     plt.legend(ncol=2, loc='best', framealpha=0.0)
 
     plt.xlabel(r'M$_{200m}$ [h$^{-1}$ M$_\odot$]')
     plt.ylabel(r'Projected N$_{\rm{galaxy}}$ within R$_{200m}$')
-    
+    plt.ylim([1e-1, 3e3])
+    plt.xlim([1e14, 5e15])
     plt.tight_layout()
 
 def plot_ngal_fits():
@@ -124,13 +133,13 @@ def plot_ngal_fits():
     get_ngal_fit("params/cfn/simet/mstar-1/mean/a3_rd.param", None, 'r')
 
     #just spider points
-    # get_ngal_fit("params/cfn/simet/mstar1/mean/spider_rd.param", None, 'c', plot_fit=False, spider=True)
-    # get_ngal_fit("params/cfn/simet/mstar0.5/mean/spider_rd.param", None, 'g', plot_fit=False, spider=True)
-    get_ngal_fit("params/cfn/simet/mstar0/mean/spider_rd.param", None, 'b', plot_fit=False, spider=True)
-    # get_ngal_fit("params/cfn/simet/mstar-1/mean/spider_rd.param", None, 'r', plot_fit=False, spider=True)
+    get_ngal_fit("params/cfn/spider/mstar1/mean/spider_rd.param", None, 'c', plot_fit=False, spider=True)
+    get_ngal_fit("params/cfn/spider/mstar0.5/mean/spider_rd.param", None, 'g', plot_fit=False, spider=True)
+    get_ngal_fit("params/cfn/spider/mstar0/mean/spider_rd.param", None, 'b', plot_fit=False, spider=True)
+    get_ngal_fit("params/cfn/spider/mstar-1/mean/spider_rd.param", None, 'r', plot_fit=False, spider=True)
 
-    get_ngal_fit("params/cfn/spider/mstar0/mean/bcg.xray_mass.rd.param", None, 'm', plot_fit=False, spider=True)
-    get_ngal_fit("params/cfn/spider/mstar0/mean/bcg_rd.param", None, 'c', plot_fit=False, spider=True)
+    # get_ngal_fit("params/cfn/spider/mstar0/mean/spider_rd.param", None, 'm', plot_fit=False, spider=True)
+    # get_ngal_fit("params/cfn/spider/mstar0/mean/bcg_rd.param", None, 'c', plot_fit=False, spider=True)
     format_plot()
 
 if __name__ == "__main__":

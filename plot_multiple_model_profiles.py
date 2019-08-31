@@ -27,7 +27,6 @@ def load_zmr(param_fname, sdss=False):
     if sdss:
         fname = "output/"+param_fname+"/zmr_sdss.param"
     return ZMR(fname)
-
     
 def plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, mass_i, spider_zmr=None):
     plt.figure()
@@ -44,14 +43,15 @@ def plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, mas
     sdss_gal_err = sdss_zmr.zmr_gal_density_err[0, mass_i, :]
     # plt.plot(r_bins_cen, sdss_zmr.zmr_gal_density[0, mass_i, :], 'k', label='SDSS', lw=2)
     # plt.fill_between(r_bins_cen, sdss_gal-sdss_gal_err, sdss_gal+sdss_gal_err, color='k', alpha=0.2)
-    plt.errorbar(r_bins_cen, sdss_gal, yerr=+sdss_gal_err, fmt='o',
-                 label='redMaPPer Galaxies', lw=2, color='k', capsize=0,
+    offset = .005
+    plt.errorbar(r_bins_cen-offset, sdss_gal, yerr=+sdss_gal_err, fmt='o',
+                 label='redMaPPer clusters', lw=2, color='k', capsize=0,
                  )
     if spider_zmr is not None:
         spider_gal = spider_zmr.zmr_gal_density[0, mass_i, :]
         spider_gal_err = spider_zmr.zmr_gal_density_err[0, mass_i, :]
-        plt.errorbar(r_bins_cen, spider_gal, yerr=+spider_gal_err, fmt='o',
-                     label='SPIDER Galaxies', lw=2, color='k', capsize=0, markerfacecolor='None')
+        plt.errorbar(r_bins_cen+offset, spider_gal, yerr=+spider_gal_err, fmt='o',
+                     label='SPIDERS clusters', lw=1, color='k', capsize=0, markerfacecolor='None')
        
     plt.yscale('log')
     plt.legend(loc='best', framealpha=0.0, ncol=2)
@@ -68,14 +68,13 @@ def plot_mstar0():
     param_fnames = [param_base.replace("@model@", model) for model in models]
     model_zmrs = [load_zmr(param_fname) for param_fname in param_fnames]
     sdss_zmr = load_zmr(param_fnames[0], sdss=True) 
-    spider_zmr = load_zmr("params/cfn/simet/mstar0/mean/spider_rd.param", sdss=True)
+    spider_zmr = load_zmr("params/cfn/spider/mstar0/mean/bcg.xray_mass.rd.param", sdss=True)
     plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 0, spider_zmr=spider_zmr)
     plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 1, spider_zmr=spider_zmr)
     plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 2, spider_zmr=spider_zmr)
     plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 3, spider_zmr=spider_zmr)
     plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 4, spider_zmr=spider_zmr)
     plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 5, spider_zmr=spider_zmr)
-
 
 def plot_multiple_model_profiles():
     plot_mstar0()
@@ -84,4 +83,5 @@ def plot_multiple_model_profiles():
 if __name__ == "__main__":
     plot_multiple_model_profiles()    
     dtk.save_figs("figs/"+__file__+"/", extension=".pdf")
-    plt.show()
+    dtk.save_figs("figs/"+__file__+"/", extension=".png")
+    # plt.show()
