@@ -1554,6 +1554,7 @@ int main(int argc, char** argv){
   MPI_Init(&argc,&argv);
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   MPI_Comm_size(MPI_COMM_WORLD,&nproc);
+  std::cout<<"I'm rank: "<<rank<<" out of "<<nproc<<std::endl;
   dtk::AutoTimer t1;
   for(int i =1;i<argc;++i){
     std::cout<<"running: "<<argv[i]<<std::endl;
