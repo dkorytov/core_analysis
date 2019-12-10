@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 import numpy as np
 import scipy as sp
 import scipy.spatial
@@ -44,25 +44,25 @@ class Catalog:
 
     def read_gio(self,verbose=False):
         if(verbose):
-            print "from file",self.file_source_
+            print("from file",self.file_source_)
         for step in self.step_data.keys():
             if(verbose):
-                print "\treading in step: ",step
+                print("\treading in step: ",step)
             file_name = self.file_source_.replace(self.step_string_,"%d"%step)
             for name in self.data_names:
                 if(verbose):
-                    print "\treading in ",name
+                    print("\treading in ",name)
                 data = dtk.gio_read(file_name,name)
                 self.step_data[step][name] = data
 
     def read_hdf5(self,verbose=False):
-        print "from file",self.file_source_
+        print("from file",self.file_source_)
         for step in self.step_data.keys():
-            print "\treading in step: ",step
+            print("\treading in step: ",step)
             file_name = self.file_source_.replace(self.step_string_,"%d"%step)
             for name in self.data_names:
-                print "\treading in ",name
-                print "not implmented!!!!"
+                print("\treading in ",name)
+                print("not implmented!!!!")
     
     def __getitem__(self,key):
         return self.step_data[key]
@@ -70,18 +70,18 @@ class Catalog:
     def join(self,catalog1,catalog2,join_on='fof_halo_tag',verbose=False):
         #only merger if they are on the same timestep
         if(verbose):
-            print "merging catalogs"
+            print("merging catalogs")
 
         for step in catalog1.step_data.keys():
             if step in catalog2.step_data.keys():
                 if(verbose):
-                    print "Both have step: ",step
+                    print("Both have step: ",step)
                 self.step_data[step]= {}
                 srt1 = np.argsort(catalog1.step_data[step][join_on])
                 srt2 = np.argsort(catalog2.step_data[step][join_on])
                 if(verbose):
-                    print "cat1 size: ", srt1.size
-                    print "cat2 size: ", srt2.size
+                    print("cat1 size: ", srt1.size)
+                    print("cat2 size: ", srt2.size)
                 i1 = 0
                 i2 = 0
                 i1_max = srt1.size
@@ -91,7 +91,7 @@ class Catalog:
                 unmatched1 = []
                 unmatched2 = []
                 if(verbose):
-                    print "sorting"
+                    print("sorting")
                 while(i1<i1_max and i2<i2_max):
                     val1 = catalog1.step_data[step][join_on][srt1[i1]]
                     val2 = catalog2.step_data[step][join_on][srt2[i2]]
@@ -117,12 +117,11 @@ class Catalog:
                 unmatched1 = np.array(unmatched1)
                 unmatched2 = np.array(unmatched2)
                 if(verbose):
-                    print "match1: ", match1.size
-                    print "match2: ", match2.size
-                    print "unmatched1: ", unmatched1.size
-                    print "unmatched2: ", unmatched2.size
-
-                    print "making merged catalog"
+                    print( "match1: ", match1.size)
+                    print("match2: ", match2.size)
+                    print("unmatched1: ", unmatched1.size)
+                    print( "unmatched2: ", unmatched2.size)
+                    print( "making merged catalog")
 
                 #copy over the matched fields to this catalog
                 #and only leave the unmatched data rows in the
@@ -131,7 +130,7 @@ class Catalog:
                 for name in catalog1.data_names:
                     self.step_data[step][name] = catalog1[step][name][match1]
                     if(verbose):
-                        print step,name,"size:",self.step_data[step][name].size
+                        print( step,name,"size:",self.step_data[step][name].size)
                     names_this_step.append(name)
                     if(name not in self.data_names):
                         self.data_names.append(name)
@@ -140,7 +139,7 @@ class Catalog:
                     else:
                         catalog1[step][name]=np.zeros(0,dtype=catalog1[step][name].dtype)
                 for name in catalog2.data_names:
-                    print "name:",name
+                    print( "name:",name)
                     if(name not in names_this_step): #not to add the same column multiple times
                         self.step_data[step][name] = catalog2[step][name][match2]
                     if(name not in self.data_names):
@@ -150,11 +149,11 @@ class Catalog:
                     else:
                         catalog2[step][name]=np.zeros(0,dtype=catalog2[step][name].dtype)
                 if(verbose):
-                    print "step: ", step, "vars: ", self.step_data[step].keys()
+                    print( "step: ", step, "vars: ", self.step_data[step].keys())
         if(verbose):
-            print "\n\n"
+            print( "\n\n")
             for step in self.step_data.keys():
-                print "step: ",step,"vars: ", self.step_data[step].keys()
+                print( "step: ",step,"vars: ", self.step_data[step].keys())
 
     def apply_function(self,var_name,function,*args):
         for step in self.step_data.keys():
@@ -168,7 +167,7 @@ class Catalog:
         
     def find(self,step,val):
         if(self.srt==None):
-            print "Not sorted yet"
+            print( "Not sorted yet")
             raise Exception('Not Sorted yet!')
         srt_indx = np.searchsorted(self.step_data[step][self.srt_var],val,sorter=self.srt[step])
         if(srt_indx >=0 and srt_indx < self.srt[step].size):
@@ -182,7 +181,7 @@ class Catalog:
     
     def find_all(self,step,val):
         if(self.srt==None):
-            print "Not sorted yet"
+            print( "Not sorted yet")
             raise Exception('Not Sorted yet!')
         srt_indx_start = np.searchsorted(self.step_data[step][self.srt_var],val,sorter=self.srt[step],side='left')
         srt_indx_end = np.searchsorted(self.step_data[step][self.srt_var],val,sorter=self.srt[step],side='right')-1
@@ -287,20 +286,20 @@ if __name__=="__main__":
 
     fof_cat.read_gio()
     sod_cat.read_gio()
-    print "\n\n reading in core catalog"
+    print( "\n\n reading in core catalog")
     core_cat.read_gio()
-    print "sorting core_catalog"
+    print( "sorting core_catalog")
         
     val = 747856
     core_cat.apply_function('fof_halo_tag',frag_to_real)
     core_cat.sort("fof_halo_tag")
     core_indx = core_cat.find_all(step1,val)
     core_slct = core_cat[step1]['fof_halo_tag']==val
-    print np.sum(core_slct)
-    print core_cat[step1]['fof_halo_tag'][core_indx]
-    print core_cat[step1]['x'][core_indx]
-    print core_cat[step1]['y'][core_indx]
-    print core_cat[step1]['z'][core_indx]
+    print( np.sum(core_slct))
+    print( core_cat[step1]['fof_halo_tag'][core_indx])
+    print( core_cat[step1]['x'][core_indx])
+    print( core_cat[step1]['y'][core_indx])
+    print( core_cat[step1]['z'][core_indx])
     cx = 128.0
     cy = 128.0
     cz = 128.0
@@ -308,7 +307,7 @@ if __name__=="__main__":
     xs = core_cat[step1]['x'][slct_vol]
     ys = core_cat[step1]['y'][slct_vol]
     zs = core_cat[step1]['z'][slct_vol]
-    print np.sum(slct_vol)
+    print( np.sum(slct_vol))
     plt.figure()
     plt.plot(xs,ys,'x')
     plt.plot(cx,cy,'s')
@@ -326,45 +325,45 @@ if __name__=="__main__":
     zmr['z_bins'] = np.linspace(0,2,10)
     zmr['mass_bins'] = np.logspace(1e11,2e15,10)
     zmr['rad_bins']  = np.linspace(0,10,10)
-    print "Making zmr"
+    print( "Making zmr")
     zmr_validator = ZMRIndexValidator(zmr)
-    print "making cluster objct"
+    print("making cluster objct")
     clstr = Cluster(0.1,1e13,1,cx,cy,cz,zmr_validator)
-    print "setting cores"
+    print( "setting cores")
     clstr.set_cores(core_cat[step1]['x'][slct_vol],
                     core_cat[step1]['y'][slct_vol],
                     core_cat[step1]['z'][slct_vol],
                     core_cat[step1]['radius'][slct_vol])
-    print "done setting cores"
+    print( "done setting cores")
     res_x, res_y, res_weight = clstr.process_cores(1.0,1.101)
-    print clstr.core_x
-    print clstr.core_y
-    print res_x
-    print res_y
+    print( clstr.core_x)
+    print( clstr.core_y)
+    print( res_x)
+    print( res_y)
     plt.scatter(res_x,res_y,s=res_weight*20,c='c')
 
 
 
 
     merg_cat.join(fof_cat,sod_cat,verbose=False)
-    print merg_cat[step1].keys()
-    print "print catalog data var"
+    print( merg_cat[step1].keys())
+    print( "print catalog data var")
     for names in merg_cat.data_names:
-        print names,
-    print ""
+        print( names,)
+    print( "")
     for i in range(0,5):
         for name in merg_cat.data_names:
-            print merg_cat[step1][name][i],
-        print ""
+            print( merg_cat[step1][name][i],)
+        print( "")
     
-    print "sorting"
+    print( "sorting")
     merg_cat.sort("fof_halo_tag")
     val = 747856
     indx = merg_cat.find(step1,val)
-    print "finding val ", indx
-    print indx == np.nan
-    print np.isnan(indx)
-    print merg_cat[step1]['fof_halo_tag'][indx]
+    print( "finding val ", indx)
+    print( indx == np.nan)
+    print( np.isnan(indx))
+    print( merg_cat[step1]['fof_halo_tag'][indx])
     mass_bins = np.logspace(11,15,100)
     x_0 = 0.226259
     y_0 = 186.099 
@@ -372,10 +371,10 @@ if __name__=="__main__":
     exit()
     plt.figure()    
     merg_cat.apply_function("sod_halo_mass",lambda x:(x*100.0))
-    print "this is the result:"
-    print merg_cat[step1]["fof_halo_mass"][:10]
-    print merg_cat[step1]["sod_halo_mass"][:10]
-    print merg_cat[step1]["sod_halo_mass"][:10]/merg_cat[step1]["fof_halo_mass"][:10]
+    print( "this is the result:")
+    print( merg_cat[step1]["fof_halo_mass"][:10])
+    print( merg_cat[step1]["sod_halo_mass"][:10])
+    print( merg_cat[step1]["sod_halo_mass"][:10]/merg_cat[step1]["fof_halo_mass"][:10])
     H,_,_ = np.histogram2d(merg_cat[step1]["fof_halo_mass"],merg_cat[step1]["sod_halo_mass"],bins=(mass_bins,mass_bins))
     plt.pcolormesh(mass_bins,mass_bins,H.T,cmap='PuBu',norm=colors.LogNorm())
     plt.plot([min(mass_bins),max(mass_bins)],[min(mass_bins),max(mass_bins)],'r')

@@ -17,7 +17,7 @@ from halotools.mock_observables import return_xyz_formatted_array,tpcf
 #plt.rc('text', usetex=True)
 
 
-print "2nd fitting code"
+print("2nd fitting code")
 param = dtk.Param(sys.argv[1])
 
 n2lib_loc = param.get_string("n2lib_loc")
@@ -34,7 +34,7 @@ sod_cat = Catalog(sod_loc)
 core_cat= Catalog(core_loc)
 zmr_sdss = np.load(zmr_loc)
 zmr_sdss = npzfile_to_dic(zmr_sdss)
-print zmr_sdss.keys()
+print(zmr_sdss.keys())
 
 step1 = param.get_int("step")
 steps = param.get_int_list("steps")
@@ -73,7 +73,7 @@ core_cat.add_data_name("radius")
 core_cat.add_data_name("infall_mass")
 core_cat.add_data_name("infall_step")
 core_cat.add_data_name("core_tag")
-print "reading in files"
+print("reading in files")
 core_cat.read_gio()
 
 
@@ -83,12 +83,12 @@ merg_len =0.08
 #print "making processed core catalog"
 for step in steps:
     continue;
-    print "nans x? :",np.sum(np.isnan(core_cat[step]['x']))
-    print "nans radius? :",np.sum(np.isnan(core_cat[step]['radius']))
-    print "nans vx? :",np.sum(np.isnan(core_cat[step]['vx']))
-    print "nans x & radius: ",np.sum(np.isnan(core_cat[step]['radius']) & np.isnan(core_cat[step]['x']))
-    print np.nanmax(core_cat[step]['radius'])
-    print "starting n2 writeout"
+    print("nans x? :",np.sum(np.isnan(core_cat[step]['x'])))
+    print("nans radius? :",np.sum(np.isnan(core_cat[step]['radius'])))
+    print("nans vx? :",np.sum(np.isnan(core_cat[step]['vx'])))
+    print("nans x & radius: ",np.sum(np.isnan(core_cat[step]['radius']) & np.isnan(core_cat[step]['x'])))
+    print(np.nanmax(core_cat[step]['radius']))
+    print("starting n2 writeout")
     gal_r = core_cat[step]['radius']
     gal_m = core_cat[step]['infall_mass']
     slct = (gal_r < dis_len )& (gal_m > 10**infall_mass)
@@ -116,17 +116,17 @@ for step in steps:
     gal_x = core_cat[step]['x'][slct]
     gal_y = core_cat[step]['y'][slct]
     gal_z = core_cat[step]['z'][slct]
-    print "n2 start: ",gal_x.size
+    print("n2 start: ",gal_x.size)
     start = time.time()
     gal2_x, gal2_y, gal2_z, gal2_w, gal2_c= n2merger.n2merger3d(gal_x,gal_y,gal_z,merg_len,colors_out=True);
     end = time.time()
-    print "halo merger time: ",end-start
+    print("halo merger time: ",end-start)
     start = time.time()
     #save_processed_core_cat(processed_core_loc,core_cat,slct,gal2_c)
 
     end = time.time()
-    print "processed core catalog time: ",end-start
-    print "we got here"
+    print("processed core catalog time: ",end-start)
+    print("we got here")
     gal_xyz = return_xyz_formatted_array(gal2_x,gal2_y,gal2_z)
     r_bins = np.logspace(np.log10(0.001),np.log10(256.0/3.0),50)
     r_bins_avg = (r_bins[:1]+r_bins[:-1])/2.0
@@ -135,11 +135,11 @@ for step in steps:
     start = time.time()
     #dtk_val,dtk_rad = dtk.autocorr3D(gal_x,gal_y,gal_z,128,256.0)
     end = time.time()
-    print "dtk time: ",end-start
+    print("dtk time: ",end-start)
     start = time.time()
     #dtk_n2_val,_,_ = dtk.autocorr3D_N2(gal_x[::1000],gal_y[::1000],gal_z[::1000],box_length=256.0,bins=r_bins)
     end = time.time()
-    print "dtk time: ",end-start
+    print("dtk time: ",end-start)
     #print dtk_val
     #print dtk_rad
     plt.figure()
@@ -154,11 +154,11 @@ for step in steps:
     plt.legend()
     plt.show()
 
-print "reading in gio files"
+print("reading in gio files")
 fof_cat.read_gio()
 sod_cat.read_gio()
 
-print "merging catalogs"
+print("merging catalogs")
 halo_cat = Catalog()
 halo_cat.join(fof_cat,sod_cat,join_on='fof_halo_tag')
 halo_cat.sort('fof_halo_tag')
@@ -174,7 +174,7 @@ for step in steps:
     htags = halo_cat[step]['fof_halo_tag']
     for i in range(0,htags.size):
         if(i%10000==0):
-            print i,"/",htags.size
+            print(i,"/",htags.size)
         htag = halo_cat[step]['fof_halo_tag'][i]
         m200 = halo_cat[step]['sod_halo_mass'][i]
         r200 = halo_cat[step]['sod_halo_radius'][i]
@@ -237,9 +237,9 @@ for step in steps:
         clstrs.append(clstr)
 
 
-print "avg: ",np.average(avg)
-print "avg: ",np.average(avg2)
-print "done setting the damn things up"
+print("avg: ",np.average(avg))
+print("avg: ",np.average(avg2))
+print("done setting the damn things up")
 
 zmr_core = zmr_valid.make_empty_zmr()
 
@@ -247,7 +247,7 @@ start_total = time.time()
 
 start_time = time.time()
 
-print "starting to calculate new zmr"
+print("starting to calculate new zmr")
 for i in range(0,len(clstrs)):
 
     clstr = clstrs[i]
@@ -266,8 +266,8 @@ for i in range(0,len(clstrs)):
     #plotting individual 
     continue;
     res_x,res_y,res_z,res_w = clstr.process_cores_lib(dis_len,merg_len,infall_mass=infall_m,ndim_3d=True)
-    print 'before: ',clstr.core_x.size
-    print 'after: ',res_x.size
+    print('before: ',clstr.core_x.size)
+    print('after: ',res_x.size)
     rad_bin_area = zmr_valid.get_rad_bin_area()
     rad_bin_avg = zmr_valid.r_bin_avg
     rad_bin = zmr_valid.r_bins
@@ -330,13 +330,13 @@ def zmr_to_min2(param):
 #set_min_var(clstrs,zmr_valid,zmr_sdss)
 
 end_total = time.time()
-print "total process: ",end_total-start_total
+print("total process: ",end_total-start_total)
 start_total = time.time()
 x0 = [.1,.05,11.60]
 res = minimize(zmr_to_min2,x0,method='nelder-mead',
                options={'xtol':1e-5,'disp':True}) 
 
-print "result: ",res
+print("result: ",res)
 
 dis_len = res.x[0]
 merg_len = res.x[1]
@@ -356,11 +356,11 @@ write_out_gal_clusters(clstrs,infall_mass,dis_len,merg_len);
 end_total = time.time()
 zmr_core = zmr_from_clusters(dis_len,merg_len,clstrs,zmr_valid,infall_mass)
 
-print "fit time: ",end_total-start_total
+print("fit time: ",end_total-start_total)
 
 
 cost = calc_gal_density_cost2(zmr_core,zmr_sdss)
-print "this is the cost: ", cost
+print("this is the cost: ", cost)
 
 
 

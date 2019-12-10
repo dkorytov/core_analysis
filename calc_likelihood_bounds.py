@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 from __future__ import print_function, division 
 import numpy as np
@@ -472,7 +472,7 @@ def calc_likelihood_bounds(param_file_name):
         # corner_plot([r'M$_{\mathrm{infall}}$'], grid_dic = {'bins':[np.log10(mi_bins)]]
     grid_fit_fname = "figs/"+param_file_name+"/"+__file__+"/grid_fit_param.txt"
     dtk.ensure_dir(grid_fit_fname)
-    txt_file = file(grid_fit_fname, 'w')
+    txt_file = open(grid_fit_fname, 'w')
     txt_file.write("mi\t{}\n".format(np.log10(mi_bins[np.argmax(lkhd_mi)])))
     txt_file.write("mi_limits\t{}\t{}\n".format(fit_mi_bins[fit_mi_bds_lwr], fit_mi_bins[fit_mi_bds_upr]))
     param_num = 1

@@ -268,7 +268,7 @@ class Cluster:
         self.kdtree_xy = scipy.spatial.KDTree(self.cores_xy,3)
         if(self.m200 > 1e15):
             indx = np.argmax(self.core_m)
-            print "core_m/r", self.core_m[indx], self.core_r[indx]
+            print("core_m/r", self.core_m[indx], self.core_r[indx])
         return
        
     def compute_dist_mat(self,x,y):
@@ -385,7 +385,7 @@ class Cluster:
         gal_rad = np.sqrt((gal_x-self.x0)**2+(gal_y-self.y0)**2)/self.r200_comv
         r_bin_cnt = self.zmr_val.get_r_bin(bcg_rad)+self.zmr_val.get_r_bin(gal_rad)
         if(self.m200 > 5e16):
-            print bcg_x[bcg_slct],bcg_y[bcg_slct]
+            print(bcg_x[bcg_slct],bcg_y[bcg_slct])
             plt.figure()
             plt.scatter(gal_x,gal_y,'s',ec='blue',c='None')
             plt.scatter(self.core_x[sgal_slct2],self.core_y[gal_slct2],'s',ec='blue',fc='None')
@@ -517,18 +517,18 @@ def calc_gal_density_cost2(core_zmr,sdss_zmr):
                     cost[i,j,k]=0
 
     if(np.sum(cost>1e20)):
-        print "void this!!"
+        print("void this!!")
         for i in range(0,z_size):
             for j in range(0,m_size):
                 if(np.sum(cost[i,j,:]>1e20)):
-                   print i,j
-                   print core_zmr['zmr_gal_density'][i,j,:]
-                   print sdss_zmr['rad_prof'][i,j,:]
-                   print core_zmr['zmr_gal_density'][i,j,:]
-                   print sdss_zmr['rad_prof_err'][i,j,:]
-                   print diff[i,j,:]
-                   print err[i,j,:]
-                   print cost[i,j,:]
+                   print(i,j)
+                   print(core_zmr['zmr_gal_density'][i,j,:])
+                   print(sdss_zmr['rad_prof'][i,j,:])
+                   print(core_zmr['zmr_gal_density'][i,j,:])
+                   print( sdss_zmr['rad_prof_err'][i,j,:])
+                   print( diff[i,j,:])
+                   print( err[i,j,:])
+                   print( cost[i,j,:])
 
         exit()
     return np.sum(cost)
@@ -590,10 +590,10 @@ def save_processed_core_cat(loc,core_cat,intact_slct,colors):
     dtk.ensure_dir(loc)
     hfile = h5py.File(loc,mode='a')
     steps = core_cat.get_steps()
-    print "Making hdf5 file"
+    print("Making hdf5 file")
     i = 0
     for step in steps:
-        print "\tworking on step",step
+        print("\tworking on step",step)
         step_group = hfile.require_group('%d'%step)
         unique_colors = np.unique(colors)
         core_num = unique_colors.size
@@ -626,7 +626,7 @@ def save_processed_core_cat(loc,core_cat,intact_slct,colors):
         infall_step = core_cat[step]['infall_step'][intact_slct]
         for i in range(0,unique_colors.size):
             #if(i%100==0):
-            print i,"/",unique_colors.size
+            print( i,"/",unique_colors.size)
             c = unique_colors[i]
             slct= colors==c
             #gal_xyz
