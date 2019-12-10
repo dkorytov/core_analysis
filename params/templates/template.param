@@ -2,7 +2,7 @@
 
 sod_loc NULL
 sod_hdf5 false
-core_loc /media/luna1/dkorytov/data/OuterRim/cores_500L/03_31_2018.OR.${step}.coreproperties   
+core_loc NULL
 
 
 
