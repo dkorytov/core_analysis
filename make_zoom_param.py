@@ -49,7 +49,11 @@ def make_zoom_param(input_param_fname):
             if new_lower_limit < 0:
                 new_lower_limit = 0
             print("New limits: ", new_lower_limit, new_upper_limit)
-            base_param.set_var(mp+"_bins_info", "{} {} {}".format(new_lower_limit, new_upper_limit, old_values[2]))
+            if mp != 'rd':
+                base_param.set_var(mp+"_bins_info", "{} {} {}".format(new_lower_limit, new_upper_limit, old_values[2]))
+            else:
+                base_param.set_var(mp+"_bins_info", "{} {} {}".format(new_lower_limit/1000, new_upper_limit/1000, old_values[2]))
+
     with open(input_param_fname.replace(".param", "_zoom.param"), 'w') as f:
         f.write(str(base_param))
                    
