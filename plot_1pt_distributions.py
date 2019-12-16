@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 from __future__ import print_function, division 
 import numpy as np
@@ -121,8 +121,8 @@ def plot_1pt_distributions(param_file):
 
     core_hfile = h5py.File(cluster_hfname, 'r')
     zmr_hfile = h5py.File(zmr_hfname, 'r')
-    plot_cluster_mass(core_hfile, '/home/dkorytov/phys/Ngal_sdss/data/normal_wmap7/query_results/query_results.hdf5')
-    plot_cluster_redshift(0.24, '/home/dkorytov/phys/Ngal_sdss/data/normal_wmap7/query_results/query_results.hdf5')
+    plot_cluster_mass(core_hfile, '/data/a/cpac/dkorytov/data/Ngal_sdss/data/normal_wmap7/query_results/query_results.hdf5')
+    plot_cluster_redshift(0.24, '/data/a/cpac/dkorytov/data/Ngal_sdss/data/normal_wmap7/query_results/query_results.hdf5')
     plot_cluster_cores2(core_hfile,[10, 10.5, 11, 11.5, 12, 12.5, 13.0, 13.5, ])
     dtk.save_figs("figs/"+param_file+"/"+__file__+"/")
     plt.show()

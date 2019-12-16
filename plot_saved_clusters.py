@@ -65,8 +65,8 @@ def plot_saved_clusters(param_filename):
 
     print(n2lib_loc)
     cluster_data.load_file(cluster_loc)
-    for i in range(0,cluster_data.num):
-        if cluster_data.mass[i] > 1e15:
+    for i in range(int(cluster_data.num)):
+        if cluster_data.mass[i] > 1e14:
         # cluster_data.plot_fit_cluster(i, 12.2, 0.02)
             # cluster_data.plot_cluster(i)
             cluster_data.plot_fit_cluster(i, fit_mi, fit_rd)
