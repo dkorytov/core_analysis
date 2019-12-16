@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 import matplotlib
 import os
@@ -23,11 +23,11 @@ zmr_sdss = ZMR(file_loc="output/"+param_file+"/zmr_sdss.param")
 if dtk.file_exists("output/"+param_file+"/zmr_lkhd_cores.param"):
     fname = "output/"+param_file+"/zmr_lkhd_cores.param"
     zmr_cores = ZMR(file_loc=fname)
-    print "likelihood zmrs"
+    print("likelihood zmrs")
 else:
     fname = "output/"+param_file+"/zmr_cores.param"
     zmr_cores = ZMR(file_loc=fname)
-    print "fit zmrs"
+    print("fit zmrs")
 
 zmr_sdss.save_as_hdf5("tmp_zmrs/zmr_redmapper.hdf5")
 zmr_cores.save_as_hdf5("tmp_zmrs/zmr_cores.hdf5")
@@ -128,8 +128,8 @@ for mi in range(0,zmr_sdss.m_bins.size-1):
 for zi in range(0,zmr_sdss.z_bins.size-1):
     if(np.sum(zmr_sdss.zm_counts[zi,:])==0 or np.sum(zmr_cores.zm_counts[zi,:])==0):
         continue #Both don't have data here
-    print zmr_cores.zm_counts[zi,:]
-    print zmr_sdss.zm_counts[zi,:]
+    print(zmr_cores.zm_counts[zi,:])
+    print(zmr_sdss.zm_counts[zi,:])
     plt.figure()
     plt.title("Galaxy dn/dr \n%.2f$<$z$<$%.2f"%(zmr_sdss.z_bins[zi],zmr_sdss.z_bins[zi+1]))
     c_i=0
@@ -160,8 +160,8 @@ for zi in range(0,zmr_sdss.z_bins.size-1):
 for zi in range(0,zmr_sdss.z_bins.size-1):
     if(np.sum(zmr_sdss.zm_counts[zi,:])==0 or np.sum(zmr_cores.zm_counts[zi,:])==0):
         continue #Both don't have data here
-    print zmr_cores.zm_counts[zi,:]
-    print zmr_sdss.zm_counts[zi,:]
+    print(zmr_cores.zm_counts[zi,:])
+    print(zmr_sdss.zm_counts[zi,:])
     plt.figure()
     plt.title("Galaxy Accumulated Count \n%.2f$<$z$<$%.2f"%(zmr_sdss.z_bins[zi],zmr_sdss.z_bins[zi+1]))
     c_i=0
@@ -215,20 +215,20 @@ for zi in range(0,zmr_sdss.z_bins.size-1):
             plt.fill_between(r_avg, 0, res, alpha=0.3, color=c)
             if(c_i ==9):
                 for i in range(0,10):
-                    print "diff:"
-                    print zmr_gd_sdss[i],"-",zmr_gd_core[i],"=", zmr_gd_sdss[i]-zmr_gd_core[i]
-                    print "->",diff[i]
-                    print "err:"
-                    print zmr_err_sdss[i],"+",zmr_err_core[i],"=",err[i]
-                    print "res:"
-                    print res[i]
+                    print("diff:")
+                    print(zmr_gd_sdss[i],"-",zmr_gd_core[i],"=", zmr_gd_sdss[i]-zmr_gd_core[i])
+                    print("->",diff[i])
+                    print("err:")
+                    print(zmr_err_sdss[i],"+",zmr_err_core[i],"=",err[i])
+                    print("res:")
+                    print(res[i])
     ylim = plt.ylim()
     plt.ylim([0, ylim[1]])
     plt.title("Source of Error [%f] $\chi^{2}$=%f"%(total_sum,(total_sum/2.0)/(dof-2)))
     plt.grid()
     plt.legend(loc='best',framealpha=0.5)
     plt.xlabel(r'$R/R_{200}$')
-    plt.ylabel(r'\text{Error}')
+    plt.ylabel(r'Error')
     # plt.yscale('log')
 dtk.set_fig_path("figs/zmrs/")
 dtk.save_figs("figs/"+param_file+"/"+__file__+"/",extension=".png")
