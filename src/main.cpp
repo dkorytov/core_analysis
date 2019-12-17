@@ -1915,8 +1915,8 @@ void load_halo_cats(){
       dtk::read_hdf5(sod_file, "fof_halo_center_x", hc.x,          hc.size, true);
       dtk::read_hdf5(sod_file, "fof_halo_center_y", hc.y,          hc.size, true);
       dtk::read_hdf5(sod_file, "fof_halo_center_z", hc.z,          hc.size, true);
-      dtk::read_hdf5(sod_file, "sod_halo_mass_m200m",     hc.sod_mass,   hc.size, true);
-      dtk::read_hdf5(sod_file, "sod_halo_radius_r200m",   hc.sod_radius, hc.size, true);
+      dtk::read_hdf5(sod_file, "sod_halo_mass_m200",     hc.sod_mass,   hc.size, true);
+      dtk::read_hdf5(sod_file, "sod_halo_radius_r200",   hc.sod_radius, hc.size, true);
     }
     else{
       dtk::read_gio_quick(sod_file,"fof_halo_tag",      hc.htag,       hc.size);

@@ -56,6 +56,11 @@ def write_halo_cat(sod_output, cat, h_scaling):
     hfile['sod_halo_mass_m200c']   = cat['sod_halo_mass_m200c']*h_scaling
     hfile['sod_halo_radius_r200c'] = cat['sod_halo_radius_r200c']
     hfile['sod_halo_cdelta_200c']  = cat['sod_halo_cdelta']
+    # Default
+    hfile['sod_halo_mass_m200']   = cat['sod_halo_mass_m200m']*h_scaling
+    hfile['sod_halo_radius_r200'] = cat['sod_halo_radius_r200m']
+    hfile['sod_halo_cdelta_200']  = cat['sod_halo_cdelta_200m']
+    
     hfile.close()
 
 
