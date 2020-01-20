@@ -1,5 +1,9 @@
 #!/bin/bash
-
+echo $#
+if [ $# -l 1 ]; then
+    echo 'run mode: ./run_any_make.sh exe make_param_sh'
+    exit
+fi
 exe=$1
 make_script=$2
 if [ -z "$3"]; then
@@ -15,7 +19,7 @@ for result in ${results}; do
 	result="${result/.param/_zoom.param}"
     fi
     echo ${result}
-    ${exe} ${result}
+    nice ${exe} ${result}
 done
 # # param_pattern=`sed
 # for mass in "mean" "crit";do
