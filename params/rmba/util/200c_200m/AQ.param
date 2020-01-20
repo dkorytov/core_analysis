@@ -1,0 +1,6 @@
+sod_location /data/a/cpac/dkorytov/data/AlphaQ/M200/STEP${step}/m000-${step}.sodproperties
+sod_output   /data/a/cpac/dkorytov/data/AlphaQ/M200_mean/M_200m.${step}.hdf5
+steps 401
+input_h 0.7
+output_h 1.0
+write_catalog True

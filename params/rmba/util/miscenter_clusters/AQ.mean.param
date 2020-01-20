@@ -1,0 +1,10 @@
+sod_input   /data/a/cpac/dkorytov/data/AlphaQ/M200_mean/M_200m.${step}.hdf5
+sod_output  /data/a/cpac/dkorytov/data/AlphaQ/M200_mean/M_200m.miscentered.${step}.hdf5
+mass_type   mean
+step 401
+# The average miscentering distance in kpc physical
+miscenter_mean 60
+
+# The width of the miscentering in kpc physical
+miscenter_width 30
+
