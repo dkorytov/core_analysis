@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 from __future__ import print_function, division
 
@@ -204,14 +204,24 @@ def plot_mstar1_QC():
 
 def plot_mstar0_OR():
     pattern = "figs/params/cfn/simet/mstar0/{}{}/{}.param/calc_likelihood_bounds.py/grid_fit_param.txt"
-    models = ["a2_mi", "a2_rd", "a2_rm", "a2_rd_rm"]
+    # pattern = 'figs/params/rmba/simet/{}/mstar0/{}{}/calc_likelihood_bounds.py/grid_fit_param.txt'
+    models = ["AQ_mi.param", "AQ_rd.param", "AQ_rm.param", "AQ_rd_rm.param"]
     data_inputs = [['mean', '']]
     data_input_labels = ['M200m, profile']
     data_clr = ['b', ]
     data_mfc = ['b', ]
     load_all3(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
 
-
+def plot_mstar0_AQ_RMvSP():
+    pattern = "figs/params/rmba/simet/mstar0/{}{}/{}.param/calc_likelihood_bounds.py/grid_fit_param.txt"
+    pattern = 'figs/params/rmba/simet/mean/mstar0/AQ_{data_input1}_{model}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
+    models = ["mi", "rd", "rm", "rd_rm"]
+    data_inputs = [['RM', ''], ['SP', '']]
+    data_input_labels = ['redMaPPer', 'SPIDERS']
+    data_clr = ['b', 'b']
+    data_mfc = ['r', 'r']
+    load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
+    
 def load_all2(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None):
     plt.figure()
     if title is not None:
@@ -286,6 +296,8 @@ def load_all3(pattern, models, data_inputs, data_input_labels, data_clr, data_mf
         for data_i in range(0, len(data_inputs)):
             model_param_fit = load_fit_limits(pattern.format(data_inputs[data_i][0], data_inputs[data_i][1], model))
             print("\n\n", model, data_inputs[data_i])
+            print(model_param_fit)
+
             if len(data_inputs) == 1:
                 y = -model_i
             else:
@@ -298,7 +310,7 @@ def load_all3(pattern, models, data_inputs, data_input_labels, data_clr, data_mf
                     xerr = [[model_param_fit[model_param+"_lower_err"]], [model_param_fit[model_param+"_upper_err"]]]
                     ax.errorbar(x, y, xerr=xerr, fmt='o', color=data_clr[data_i], mfc=data_mfc[data_i], mec = data_clr[data_i])
             # model_params_ax['x2'].errobar(model_param_fit['x2'], y, fmt='o', color=data_clr[data_i], mfc=data_mfc[data_i], mec=data_clr[data_i])
-            model_params_ax['x2'].barh(y, model_param_fit['x2'], align='center', height=0.2, edgecolor='none' )
+            model_params_ax['x2'].barh(y, model_param_fit['x2'], align='center', height=0.2, edgecolor='none', color=data_clr[data_i])
     model_params_ax['mi'].set_ylim([ -3.2, 0.2,])
     model_params_ax['rd'].set_ylim(model_params_ax['mi'].set_ylim())
     model_params_ax['rm'].set_ylim(model_params_ax['mi'].set_ylim())
@@ -307,7 +319,77 @@ def load_all3(pattern, models, data_inputs, data_input_labels, data_clr, data_mf
     model_params_ax['rd'].set_xlabel('$R_{disrupt}$')
     model_params_ax['rm'].set_xlabel('$M_{merge}$')
     model_params_ax['x2'].set_xlabel(r'$\chi^{2}_{reduced}$')
-    for (key, ax) in model_params_ax.iteritems():
+    for (key, ax) in model_params_ax.items():
+        # if key != 'x2':
+        #     ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
+        # else:
+        ax.xaxis.set_major_locator(plt.MaxNLocator(4))
+        ax.yaxis.set_ticks([-0,-1,-2, -3])
+        ax.yaxis.set_ticklabels(["Mi", "Rd", "Rm", "RdRm"])
+        for tick in ax.xaxis.get_ticklabels():
+            tick.set_rotation(45)
+
+
+    model_params_ax['rd'].yaxis.set_ticklabels([])
+    model_params_ax['rm'].yaxis.set_ticklabels([])
+    model_params_ax['x2'].yaxis.set_ticklabels([])
+    # model_params_ax['rd'].xaxis.set_major_locator(ticker.MultipleLocator(5))
+    # ax = model_params_ax['rd']
+    # ax.plot([],[], linewidth=5, color='b', label='$M_{200m}$')
+    # ax.plot([],[], linewidth=5, color='r', label='$M_{200c}$')
+    # ax.errorbar([],[],xerr=[], fmt='o', color='k', mec='k', mfc='k',
+    #             label='profile only')
+    # ax.errorbar([],[],xerr=[], fmt='o', color='k', mec='k', mfc='none',
+    #             label='profile + abundance')
+    # ax.legend(bbox_to_anchor=(-1., 1.02, 4, .102), loc='lower center',
+    #        ncol=2, mode="expand", borderaxespad=0.)
+    # plt.tight_layout()
+    # gs.tight_layout(fig)
+
+    plt.gcf().subplots_adjust(bottom=0.3,left=0.15)
+
+
+    dtk.save_figs("figs/"+__file__+"/", extension='.pdf')
+
+def load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None):
+    fig = plt.figure(figsize=(5,3))
+    if title is not None:
+        plt.suptitle(title)
+    gs = gridspec.GridSpec(1,4, hspace=0.1)
+    model_params_ax = {'mi':plt.subplot(gs[:,0]),
+                       'rd':plt.subplot(gs[:,1]),
+                       'rm':plt.subplot(gs[:,2]),
+                       'x2':plt.subplot(gs[:,3])}
+    model_params = ['mi', 'rd', 'rm']
+    for model_i, model in enumerate(models):
+        for data_i in range(0, len(data_inputs)):
+            print(pattern)
+            model_param_fit = load_fit_limits(pattern.format(data_input1=data_inputs[data_i][0], data_input2=data_inputs[data_i][1], model=model))
+            print("\n\n", model, data_inputs[data_i])
+            print(model_param_fit)
+
+            if len(data_inputs) == 1:
+                y = -model_i
+            else:
+                y=-( model_i -0.15 + 0.3/(len(data_inputs)-1)*data_i)
+            for model_param in model_params:
+                if model_param in model_param_fit:
+                    print(model_param)
+                    ax = model_params_ax[model_param]
+                    x = model_param_fit[model_param]
+                    xerr = [[model_param_fit[model_param+"_lower_err"]], [model_param_fit[model_param+"_upper_err"]]]
+                    ax.errorbar(x, y, xerr=xerr, fmt='o', color=data_clr[data_i], mfc=data_mfc[data_i], mec = data_clr[data_i])
+            # model_params_ax['x2'].errobar(model_param_fit['x2'], y, fmt='o', color=data_clr[data_i], mfc=data_mfc[data_i], mec=data_clr[data_i])
+            model_params_ax['x2'].barh(y, model_param_fit['x2'], align='center', height=0.2, edgecolor='none', color=data_clr[data_i])
+    model_params_ax['mi'].set_ylim([ -3.2, 0.2,])
+    model_params_ax['rd'].set_ylim(model_params_ax['mi'].set_ylim())
+    model_params_ax['rm'].set_ylim(model_params_ax['mi'].set_ylim())
+    model_params_ax['x2'].set_ylim(model_params_ax['mi'].set_ylim())
+    model_params_ax['mi'].set_xlabel('$M_{infall}$')
+    model_params_ax['rd'].set_xlabel('$R_{disrupt}$')
+    model_params_ax['rm'].set_xlabel('$M_{merge}$')
+    model_params_ax['x2'].set_xlabel(r'$\chi^{2}_{reduced}$')
+    for (key, ax) in model_params_ax.items():
         # if key != 'x2':
         #     ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
         # else:
@@ -412,13 +494,14 @@ if __name__ == "__main__":
     # plot_mstar0()
     # plot_mstar05()
     # plot_mstar1()
-    plot_mstar0_pc()
+    # plot_mstar0_pc()
     # plot_mstar05_pc()
     # plot_mstar1_pc()
-    plot_mstar0_QC()
+    # plot_mstar0_QC()
     # plot_mstar05_QC()
     # plot_mstar1_QC()
-    plot_mstar0_OR()
+    # plot_mstar0_OR()
+    plot_mstar0_AQ_RMvSP()
     plt.show()
     exit()
     a = [("D", [12.2, 12.1, 12.3]),
