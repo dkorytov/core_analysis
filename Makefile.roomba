@@ -13,7 +13,7 @@ hdf5_inc=/home/dkorytov/.local/include
 hdf5_opts= /home/dkorytov/.local/lib/libhdf5_hl_cpp.a /home/dkorytov/.local/lib/libhdf5_cpp.a /home/dkorytov/.local/lib/libhdf5_hl.a /home/dkorytov/.local/lib/libhdf5.a -Bsymbolic-functions -z relro -lpthread -lz -ldl -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc
 #/usr/lib/gcc/x86_64-linux-gnu/4.8/../../../x86_64-linux-gnu/crtn.o
 # ^ removed as a test
-CFLAGS   =  -O3 -Isrc -I${GIOINCDIR} -Idtk -I${hdf5_inc} -fPIC -fopenmp -g
+CFLAGS   =  -O3 -Isrc -I${GIOINCDIR} -Idtk -I${hdf5_inc} -fPIC -fopenmp -g -std=c++11
 #-L/usr/lib/openmpi/lib -lmpi_cxx -lmpi
 
 #LDFLAGS  = -Lgenericio/genericio.build/libs -Ldtk/lib -lGenericIO -ldtk -lgsl -lgslcblas ${hdf5_opts} -ldtk -pthread

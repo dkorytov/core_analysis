@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <numeric>
 
+#include <assert.h>
 #include <mpi.h>
 #include <omp.h>
 #include <H5Cpp.h>
@@ -497,6 +498,7 @@ struct Cluster{
   void move_cores_together();
   void set_central_core_on_center();
   void set_central_as_compact();
+  void displace_center(float distance);
   int find_central();
 };
 
@@ -570,6 +572,7 @@ std::string cluster_loc;
 bool use_central_infall;
 bool force_central_as_galaxy;
 bool force_center_on_central;
+float displace_cluster_center_distance;
 bool no_core_particles = true;
 
 bool read_clusters_from_file;
@@ -1543,7 +1546,8 @@ void bcast_clusters(std::vector<Cluster>& clusters, int root, MPI_Comm comm){
 }
 void write_core_params(CoreParam cp, std::string file_loc);
 void adjust_clusters(bool force_centrals_as_galaxy, 
-		     bool force_center_on_central, 
+		     bool force_center_on_central,
+		     float displace_cluster_center,
 		     std::vector<Cluster>& clusters);
 float get_locked_r_disrupt(float m_infall,Cores cores);
 int core_fit(char* param_fname);
@@ -1595,7 +1599,7 @@ int core_fit(char* param_fname){
     }
   }
   if(rank==0) // Adjust clusters to be centered on centrals and/or compact centrals
-    adjust_clusters(force_central_as_galaxy, force_center_on_central, all_clusters);
+    adjust_clusters(force_central_as_galaxy, force_center_on_central, displace_cluster_center_distance, all_clusters);
   bcast_clusters(all_clusters,0,MPI_COMM_WORLD);
   CoreParam fit_cp;
   fit_cp.m_infall = m_infall;
@@ -1770,6 +1774,12 @@ void load_param(char* file_name){
   else{
     radial_bin_start = 0;
   }
+  if(param.has("displace_cluster_center_distance")){
+    displace_cluster_center_distance = param.get<float>("displace_cluster_center_distance");
+  }
+  else{
+    displace_cluster_center_distance = 0;
+  }
 
   fit_var_num = 2;
   if(lock_r_disrupt)
@@ -1792,6 +1802,7 @@ void load_cores_gio(std::string fname, Cores& cores){
   dtk::read_gio_quick(fname, "y",                   cores.y,           cores.size);
   dtk::read_gio_quick(fname, "z",                   cores.z,           cores.size);
   dtk::read_gio_quick(fname, "infall_mass",         cores.infall_mass, cores.size);
+  // dtk::read_gio_quick(fname, "infall_tree_node_mass",         cores.infall_mass, cores.size);
   dtk::read_gio_quick(fname, "infall_step",         cores.infall_step, cores.size);
   dtk::read_gio_quick(fname, "infall_fof_halo_tag", cores.infall_htag, cores.size);
 }
@@ -2021,8 +2032,16 @@ void make_clusters(){
   t.stop();
   std::cout<<"done making clusters. Time: "<<t<<std::endl;
 }
-void adjust_clusters(bool force_centrals_as_galaxy, bool force_center_on_central, std::vector<Cluster>& clusters){
+void adjust_clusters(bool force_centrals_as_galaxy, bool force_center_on_central, float displace_cluster_center_distance, std::vector<Cluster>& clusters){
+  if(displace_cluster_center_distance != 0 & !force_center_on_central){
+    std::cout<<"If the cluster center is displaced, you must set the central core to the cluster center"<<std::endl;
+    std::cout<<"displace_cluster_center_distance: "<<displace_cluster_center_distance<<std::endl;
+    std::cout<<"core_center_on_central: "<<force_center_on_central<<std::endl;
+    throw;
+  }
   for(int i=0;i<clusters.size();++i){
+    if(displace_cluster_center_distance != 0)
+      clusters[i].displace_center(displace_cluster_center_distance);
     if(force_centrals_as_galaxy)
       clusters[i].set_central_as_compact();
     if(force_center_on_central)
@@ -3079,7 +3098,13 @@ void Cluster::set_central_as_compact(){
   // int central_index = find_central();
   // core_r[central_index] = 0
 }
-
+void Cluster::displace_center(float distance){
+  float dx, dy, dz;
+  dtk::random_vector3d(dx, dy, dz, distance);
+  x+=dx;
+  y+=dy;
+  z+=dz;
+}
 void ZMR::write_txt(std::string file_loc){
   std::ofstream file(file_loc.c_str());
   write_array(file,"z_bins",z_bins);
