@@ -17,6 +17,7 @@ cluster_load_num @cluster_load_num@
 use_central_infall	false
 force_central_as_galaxy false
 force_center_on_central false
+displace_cluster_center_distance 0.0
 
 read_clusters_from_file true
 write_clusters_to_file	false
