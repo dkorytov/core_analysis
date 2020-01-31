@@ -534,6 +534,22 @@ struct DescreteVariables{
       return radius_disrupt.at(val);
   }
 };
+
+struct SampledDistribution{
+  std::vector<float> values;
+  size_t i=0;
+
+  void load_distribution(const char* fname, const char* var){
+    dtk::read_hdf5<float>(fname, var, values);
+  }
+  float get_value(){
+    float val = values.at(i);
+    ++i;
+    return val;
+  }
+};
+SampledDistribution miscentering_distribution;
+bool use_miscentering_distribution;
 ZMR zmr_cores;
 ZMR zmr_sdss;
 
@@ -1548,6 +1564,7 @@ void write_core_params(CoreParam cp, std::string file_loc);
 void adjust_clusters(bool force_centrals_as_galaxy, 
 		     bool force_center_on_central,
 		     float displace_cluster_center,
+		     bool use_miscentering_distribution,
 		     std::vector<Cluster>& clusters);
 float get_locked_r_disrupt(float m_infall,Cores cores);
 int core_fit(char* param_fname);
@@ -1599,7 +1616,7 @@ int core_fit(char* param_fname){
     }
   }
   if(rank==0) // Adjust clusters to be centered on centrals and/or compact centrals
-    adjust_clusters(force_central_as_galaxy, force_center_on_central, displace_cluster_center_distance, all_clusters);
+    adjust_clusters(force_central_as_galaxy, force_center_on_central, displace_cluster_center_distance, use_miscentering_distribution, all_clusters);
   bcast_clusters(all_clusters,0,MPI_COMM_WORLD);
   CoreParam fit_cp;
   fit_cp.m_infall = m_infall;
@@ -1779,6 +1796,14 @@ void load_param(char* file_name){
   }
   else{
     displace_cluster_center_distance = 0;
+  }
+  if(param.has("miscentering_distribution")){
+    use_miscentering_distribution = true;
+    std::string miscentering_distribution_fname = param.get<std::string>("miscentering_distribution");
+    miscentering_distribution.load_distribution(miscentering_distribution_fname.c_str(), "radii");
+  }
+  else{
+    use_miscentering_distribution = false;
   }
 
   fit_var_num = 2;
@@ -2032,16 +2057,28 @@ void make_clusters(){
   t.stop();
   std::cout<<"done making clusters. Time: "<<t<<std::endl;
 }
-void adjust_clusters(bool force_centrals_as_galaxy, bool force_center_on_central, float displace_cluster_center_distance, std::vector<Cluster>& clusters){
-  if(displace_cluster_center_distance != 0 & !force_center_on_central){
+void adjust_clusters(bool force_centrals_as_galaxy, bool force_center_on_central,
+		     float displace_cluster_center_distance, bool use_micentering_distribution,
+		     std::vector<Cluster>& clusters){
+  if((displace_cluster_center_distance != 0 | use_miscentering_distribution) & !force_center_on_central){
     std::cout<<"If the cluster center is displaced, you must set the central core to the cluster center"<<std::endl;
     std::cout<<"displace_cluster_center_distance: "<<displace_cluster_center_distance<<std::endl;
+    std::cout<<"use_miscentering_distribution: "<<use_miscentering_distribution<<std::endl;
     std::cout<<"core_center_on_central: "<<force_center_on_central<<std::endl;
     throw;
   }
+  if(displace_cluster_center_distance != 0 & use_miscentering_distribution){
+    std::cout<<"Can't use both miscentering distance and distribution"<<std::endl;
+    std::cout<<"displace_cluster_center_distance: "<<displace_cluster_center_distance<<std::endl;
+    std::cout<<"use_miscentering_distribution: "<<use_miscentering_distribution<<std::endl;
+    throw;
+  }
+  
   for(int i=0;i<clusters.size();++i){
     if(displace_cluster_center_distance != 0)
       clusters[i].displace_center(displace_cluster_center_distance);
+    if(use_miscentering_distribution)
+      clusters[i].displace_center(miscentering_distribution.get_value());
     if(force_centrals_as_galaxy)
       clusters[i].set_central_as_compact();
     if(force_center_on_central)
