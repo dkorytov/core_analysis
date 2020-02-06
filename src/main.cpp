@@ -427,7 +427,6 @@ struct Cluster{
   int*    cp_color;
   ChainingMesh<float> cp_cm;
   
-  std::vector<float> bcg_x,bcg_y,bcg_z,bcg_n;
   //tmp debug arrays
   std::vector<float> dis_cp_x,dis_cp_y,dis_cp_z;
   Cluster(){}
