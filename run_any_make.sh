@@ -18,6 +18,9 @@ for result in ${results}; do
     if [ $zoom == "zoom" ]; then
 	result="${result/.param/_zoom.param}"
     fi
+    echo ""
+    echo ""
+    echo ""
     echo ${result}
     nice ${exe} ${result}
 done
