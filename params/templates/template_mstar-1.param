@@ -58,7 +58,7 @@ expected_comov_abundance @expected_comov_abundance@
 #For the likelihood grid 
 calc_likelihood true
 mi_bins_info 12.5    14.0    @mi_binds_info_num@
-rd_bins_info 0.001   0.3     @rd_binds_info_num@
+rd_bins_info 0.001   0.1     @rd_binds_info_num@
 rm_bins_info 0.001   0.4     @rm_binds_info_num@
 rf_bins_info 0.001   0.3     1
 

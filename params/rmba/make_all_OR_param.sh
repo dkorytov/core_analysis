@@ -30,12 +30,19 @@ rm_bins_infos=("1"         "1"    "32"    "16")
 
 model_types=("mi" "rd" "rm" "rd_rm")
 
+fit_r_mergers=("false"  "true"  "true")
+mi_bins_infos=("128"   "128"    "32")
+rd_bins_infos=("128"     "1"    "32")
+rm_bins_infos=("1"    "32"    "16")
+
+model_types=("rd" "rm" "rd_rm")
+
 # fit to what
 cost_abundances=("false" "true")
 cost_types=("" "abund/")
 
-mstars=("-1" "0" "0.5" "1")
-#mstars=("0.5" "1")
+mstars=("-1" "-0.5" "0" "0.5" "1")
+mstars=("-0.5")
 for mstar in "${mstars[@]}"; do
     for cluster_i in 1; do
 	for model_i in 0 1 2 3; do 
@@ -68,6 +75,7 @@ for mstar in "${mstars[@]}"; do
 		    sed -i "s/@expected_comov_abundance@/${expected_comov_abundance}/g" $param_fname
 		    ## global conversions not related to the for loop
 		    sed -i "s/@radial_bin_start@/0/g" $param_fname
+		    sed -i "s/Ngal_sdss_old/Ngal_sdss/g" $param_fname
 		fi
 	    done
 	done

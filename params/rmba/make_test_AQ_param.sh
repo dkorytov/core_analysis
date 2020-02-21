@@ -34,14 +34,14 @@ model_types=("mi" "rd" "rm" "rd_rm")
 cost_abundances=("false" "true")
 cost_types=("" "abund/")
 
-mstars=("-1" "-0.5" "0" "0.5" "1")
+# mstars=("-1" "-0.5" "0" "0.5" "1")
 mstars=("-0.5")
 for mstar in "${mstars[@]}"; do
     for cluster_i in 1; do
-	for model_i in 0 1 2 3; do 
+	for model_i in  1 ; do 
 	    for cost_i in 0; do
 		prefix='AQ'
-		param_fname="params/rmba/simet/${cluster_types[$cluster_i]}/mstar${mstar}/${cost_types[$cost_i]}${prefix}_${model_types[$model_i]}.param"
+		param_fname="params/rmba/simet/${cluster_types[$cluster_i]}/mstar${mstar}/${cost_types[$cost_i]}${prefix}_${model_types[$model_i]}.testing.param"
 		dir=${param_fname%/*}
 		# echo ${cluster_i} ${model_i} ${cost_i}
 		echo $param_fname
@@ -50,7 +50,7 @@ for mstar in "${mstars[@]}"; do
 		    # if we are mstar -1 params or it's mstar0 and mi
 		    # model use template_mstar-1.param template file
 		    # for the expanded M_infall range
-		    if [ $mstar == -1 ] || { [ $model_i == 0 ] && [ $mstar == 0 ]; } then
+		    if [ $mstar == -1 ] || [ $mstar == -0.5 ] || { [ $model_i == 0 ] && [ $mstar == 0 ]; } then
 			cp params/templates/template_mstar-1.param $param_fname
 		    else 
 			cp params/templates/template.param $param_fname
@@ -69,6 +69,7 @@ for mstar in "${mstars[@]}"; do
 		    ## global conversions not related to the for loop
 		    sed -i "s/@radial_bin_start@/0/g" $param_fname
 		    sed -i "s/Ngal_sdss_old/Ngal_sdss/g" $param_fname
+		    echo "cluster_bin_count_limit 10" >>  $param_fname
 		fi
 	    done
 	done
