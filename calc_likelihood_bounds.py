@@ -232,8 +232,8 @@ def corner_plot(labels, grid_dic = None, mcmc_dic = None,
             exists = os.path.isfile(hfile_fname)
             if exists:
                 hfile = h5py.File(hfile_fname, 'r')
-                abund_infall_mass = hfile['abund_infall_mass'].value
-                abund_radius = hfile['abund_radius'].value
+                abund_infall_mass = hfile['abund_infall_mass'][()]
+                abund_radius = hfile['abund_radius'][()]
                 ax= axs[infall_index][disrupt_index]
                 ax= axs[disrupt_index][infall_index]
                 xlim = ax.get_xlim()
@@ -429,13 +429,13 @@ def calc_likelihood_bounds(param_file_name):
     lkhd_mi_rm = np.sum(lkhd, axis=1)
     #print(np.shape(lkhd_mi))
     max_lkhd = np.unravel_index(np.argmax(lkhd, axis=None), lkhd.shape)
-    fit_mi = hfile_fit['m_infall'].value[0]
+    fit_mi = hfile_fit['m_infall'][()][0]
     fit_mi_bds_lwr, fit_mi_bds_upr, fit_lkhd_mi, fit_mi_bins = get_bounds_limits(lkhd_mi, np.log10(mi_bins), np.log10(fit_mi),fine_grain=5000, fit_index = max_lkhd[0])
     if has_rd:
-        fit_rd = hfile_fit['r_disrupt'].value[0]
+        fit_rd = hfile_fit['r_disrupt'][()][0]
         fit_rd_bds_lwr, fit_rd_bds_upr, _, fit_rd_bins = get_bounds_limits(lkhd_rd, rd_bins, fit_rd,fine_grain=5000, fit_index=max_lkhd[1])
     if has_rm:
-        fit_rm = hfile_fit['r_merger'].value[0]
+        fit_rm = hfile_fit['r_merger'][()][0]
         fit_rm_bds_lwr, fit_rm_bds_upr, _, fit_rm_bins = get_bounds_limits(lkhd_rm, rm_bins, fit_rm,fine_grain=5000, fit_index=max_lkhd[2])
     if has_rd and not has_rm:
         corner_plot([r'log$_{10}$M$_{\mathrm{infall}}$/h$^{-1}$M$_\odot$',
@@ -498,7 +498,7 @@ def write_fit_param(param_file):
     dtk.ensure_dir(fname)
     txt_file = file(fname, 'w')
     for key in grad_descent_hfile.keys():
-        txt_file.write(key+"\t"+str(grad_descent_hfile[key].value[0])+"\n")
+        txt_file.write(key+"\t"+str(grad_descent_hfile[key][()][0])+"\n")
     grad_descent_hfile.close()
     txt_file.close()
 
