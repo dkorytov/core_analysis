@@ -103,7 +103,7 @@ void n2_merger(T* x,T* y, int* w, int* size,T merg_len,int64_t* colors_out){
 }
 
 template<typename T>
-void n2_merger3d(T* x,T* y, T* z, int* w, int* size,T merger_len,int64_t* colors_out){
+void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colors_out){
   //std::cout<<"We are c n2_merger3d"<<std::endl;
   //std::cout<<"size: "<<size[0]<<" merg_len: "<<merg_len<<std::endl;
   //  for(int i = 0;i<10;++i){
@@ -114,7 +114,7 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size,T merger_len,int64_t* colors
   for(int i =0;i<size[0];++i){
     colors[i] =i;
   }
-  if(size[0]<=400000){
+  if(size[0]<=400){
     //std::cout<<"n2 method"<<std::endl;
     for(int i =1;i<size[0];++i){
       for(int j =0;j<i;++j){
@@ -238,7 +238,8 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size,T merger_len,int64_t* colors
     w[i]=avg_weight[i];
   } 
   //std::cout<<"fill with zeros"<<std::endl;
-  for(int i=avg_x.size();i<size[0];++i){//for debug
+  for(int i=avg_x.size();i<size[0];++i){
+    //for debug
     //std::cout<<"\ti:"<<i<<std::endl;
     x[i]=0.0;
     y[i]=0.0;
