@@ -329,6 +329,34 @@ struct ZMR{
 
 };
 
+struct ZMCounter{
+  std::vector<std::vector<size_t> > counts;
+  size_t z_size, m_size, limit;
+  ZMCounter(size_t z_size, size_t m_size, size_t limit):
+    z_size(z_size), m_size(m_size), limit(limit){
+    counts.resize(z_size);
+    for(int i =0; i<z_size; ++i){
+      counts.at(i).resize(m_size, 0);
+    }
+  }
+  void zero_out(){
+    for(int i=0; i<z_size; ++i){
+      for(int j=0; j<m_size; ++j){
+	counts.at(i).at(j) = 0;
+      }
+    }
+  }
+  bool add_and_check_limit(size_t z_i, size_t m_i){
+    // std::cout<<"limit: "<<limit<<std::endl;
+    if(limit < 0)
+      return true;
+    counts.at(z_i).at(m_i) += 1;
+    bool result = counts.at(z_i).at(m_i) <= limit;
+    // std::cout<<"count: "<<counts[z_i][m_i]<<std::endl;
+    // std::cout<<"result: "<<result<<std::endl;
+    return result;
+  }
+};
 
 struct CoreParam{ 
   //all variables are NOT log
@@ -426,7 +454,7 @@ struct Cluster{
   bool*   cp_usage;
   int*    cp_color;
   ChainingMesh<float> cp_cm;
-  
+  bool keep;
   //tmp debug arrays
   std::vector<float> dis_cp_x,dis_cp_y,dis_cp_z;
   Cluster(){}
@@ -594,6 +622,7 @@ bool read_clusters_from_file;
 bool write_clusters_to_file;
 bool write_core_clusters_to_file;
 int  cluster_load_num;
+int  cluster_bin_count_limit;
 float rL;
 size_t chaining_mesh_grid_size;
 float cluster_radial_volume;
@@ -1421,7 +1450,6 @@ void read_clusters_fast(std::string loc, std::vector<Cluster>& clusters){
     clusters.resize(cluster_num);
   else
     clusters.resize(cluster_load_num);
-
   std::cout<<"Cluster number: "<<clusters.size()<<std::endl;
   for(int i =0;(i<cluster_num) && ((i<cluster_load_num) || (cluster_load_num == -1)) ;++i){
     Cluster& clstr = clusters[i];
@@ -1728,6 +1756,11 @@ void load_param(char* file_name){
     cluster_load_num = param.get<int>("cluster_load_num");
   else
     cluster_load_num = -1;
+  if(param.has("cluster_bin_count_limit")){
+    cluster_bin_count_limit = param.get<int>("cluster_bin_count_limit");
+  }
+  else
+    cluster_bin_count_limit = -1;
 
   rL = param.get<float>("rL");
   chaining_mesh_grid_size = param.get<int>("chaining_mesh_grid_size");
@@ -2115,6 +2148,7 @@ void make_zmr(const std::vector<Cluster>& clstrs, float m_infall,float r_disrupt
   if(verbose)
     std::cout<<"Makign zmr"<<std::endl;
   //#pragma omp parallel for
+  ZMCounter zm_counter(zmr.z_size, zmr.m_size, cluster_bin_count_limit);
   for(int i =0;i<clstrs.size();++i){
     //zero out the values;
     Ngal = 0;
@@ -2122,6 +2156,15 @@ void make_zmr(const std::vector<Cluster>& clstrs, float m_infall,float r_disrupt
       r_cnt[j]=0.0;
     int z_i = dtk::find_bin(zmr.z_bins,clstrs[i].redshift);
     int m_i = dtk::find_bin(zmr.m_bins,clstrs[i].sod_mass);
+    // if we already have enough counts in this zm bin,
+    // skip counting it. 
+    if(!zm_counter.add_and_check_limit(z_i, m_i)){
+      // std::cout<<"SKIP!!!"<<std::endl;
+
+
+      continue;
+
+    }
     // std::cout<<"z_i: "<<z_i<<"  m_i: "<<m_i<<std::endl;
     float Ngal_r2_lim =1.0; //galaxies within sqrt(1.0)*r200 are counted for Ngal;
     Galaxies gal;
