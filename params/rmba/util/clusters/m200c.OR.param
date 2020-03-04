@@ -26,7 +26,7 @@ step 401
 steps  401
 old_steps 453 401 
 
-rL 256
+rL 3000
 chaining_mesh_grid_size 32
 cluster_radial_volume 10.0
 scaled_cluster_radial_volume false
