@@ -8,6 +8,7 @@
 **/output
 **/old
 core_fit
+test_merging
 **/processed_catalog
 params/cfn/*
 params/cfn/simet/simet*.param
