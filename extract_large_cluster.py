@@ -8,6 +8,8 @@ import h5py
 
 
 def extract_large_cluster(input_fname='tmp_hdf5/clusters_OR_M200c.hdf5', output_fname='tmp_hdf5/single_cluster.hdf5'):
+    if input_fname == output_fname:
+        raise
     hfile = h5py.File(input_fname,'r')
     cluster_masses = hfile['cluster/sod_mass'][()]
 
@@ -29,7 +31,11 @@ def extract_large_cluster(input_fname='tmp_hdf5/clusters_OR_M200c.hdf5', output_
     plt.figure()
     plt.plot(core_x, core_z, '.')
     
-    plt.show()
+    hfile_out = h5py.File(output_fname,'w')
+    hfile_out['x'] = core_x
+    hfile_out['y'] = core_y
+    hfile_out['z'] = core_z
+    hfile_out.close()
 
 if __name__ == "__main__":
     extract_large_cluster()
