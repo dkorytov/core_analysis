@@ -24,7 +24,7 @@ OBJECTS  = $(SOURCES:src/%.cpp=obj/%.o)
 EXE      = core_fit
 N2LIB    = lib/libn2merg.so
 
-all: ${EXE} ${N2LIB}
+all: ${EXE} ${N2LIB} test_merging
 
 ${EXE}: ${OBJECTS} 
 	${CC} ${CFLAGS} -o $@ $^ ${LDFLAGS}
@@ -35,7 +35,11 @@ ${OBJECTS}: obj/%.o : src/%.cpp
 ${N2LIB}: obj/n2_merger.o 
 	${CC} -shared -o $@ $<
 
+test_merging: obj/chainingmesh.o obj/n2_merger.o obj/test_merging.o
+	${CC} ${CFLAGS} -o $@ $^ ${LDFLAGS}
 
+obj/test_merging.o: src/test_merging.c++
+	${CC} ${CFLAGS} -c -o $@ $<
 
 .PHONY:
 clean:
