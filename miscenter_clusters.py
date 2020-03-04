@@ -57,8 +57,7 @@ def apply_miscentering_to_cluster(cat, miscenter_mean, miscenter_width):
     # print(cat['fof_halo_center_x']-xx)
     cat['fof_halo_center_y'] = cat['fof_halo_center_y']+xyz[1,:]
     cat['fof_halo_center_z'] = cat['fof_halo_center_z']+xyz[2,:]
-    
-    
+     
 def miscenter_clusters(param_fname):
     param = dtk.Param(param_fname)
     sod_input = param.get_string('sod_input')
