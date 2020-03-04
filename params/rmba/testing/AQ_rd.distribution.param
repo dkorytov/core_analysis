@@ -1,0 +1,95 @@
+
+
+sod_loc NULL
+sod_hdf5 false
+core_loc NULL
+
+
+
+core_central_loc  NULL
+zmr_loc     NULL
+zmrh5_loc   /data/a/cpac/dkorytov/data/Ngal_sdss_old/data/rad_profile_mstar0_wmap7_simet_crit3/result/type1_weight1_mag1_clr1_result.hdf5
+core_prtcl_loc NULL
+accum_prtcl_loc NULL
+cluster_loc     tmp_hdf5/clusters_OR_M200c.hdf5
+cluster_load_num 10000
+
+use_central_infall	false
+force_central_as_galaxy true
+force_center_on_central true
+miscentering_distribution /home/dkorytov/proj/Ngal_sdss/data/Pr_center/distribution.hdf5
+
+read_clusters_from_file true
+write_clusters_to_file	false
+write_core_clusters_to_file false
+
+step 401
+steps  401
+old_steps 453 401 
+
+rL 500
+chaining_mesh_grid_size 32
+cluster_radial_volume 5.0
+scaled_cluster_radial_volume false
+scaled_cluster_radial_factor 2.0
+
+m_infall 12.0
+r_disrupt 0.03
+r_fof  0.01
+r_merger 0.1
+
+fit_r_fof    false
+fit_r_merger false
+lock_r_disrupt false
+min_disrupt_fof 20
+
+diff_projection_num 10
+
+cost_gal_density true
+cost_dgal_dr     false
+cost_accum_gal   false
+cost_abundance   false
+cost_min_cluster_num  0
+cost_missed_centrals  0
+radial_bin_start 0
+
+expected_comov_abundance 0.00241674353851
+
+
+#For the likelihood grid 
+calc_likelihood true
+mi_bins_info 11.0    12.5    128
+rd_bins_info 0.001   0.1     128
+rm_bins_info 0.001   0.3     1
+rf_bins_info 0.001   0.3     1
+
+
+
+run_mcmc false
+chain_length 50000
+omp_num_threads -1
+
+#the mcmc gaussian width for each param
+#boost is an extra factor scatter the initial parameters
+sigma_init_boost 5
+sigma_m_infall   0.02
+sigma_r_disrupt  0.04
+sigma_r_fof      0.1
+sigma_r_merger   0.05
+
+m_infall_constraints 10.8 13
+r_disrupt_constraints 0.001  .5
+r_merger_constraints  0  1
+r_fof_constraints     0  1
+
+
+#for the simplex walker 
+simplex_step_size  .1
+simplex_cnvrg_size 0.001
+max_iterations 0
+
+
+z_in 200
+z_out 0
+num_steps 500
+
