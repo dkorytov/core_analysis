@@ -37,6 +37,7 @@ def plot_miscentering_effects(fname_pattern, distances_str, distances_val):
 
     # Convert Mpc to kpc
     distances_val *= 1000
+    distances_val += 1
     # plt.figure()
     # plt.plot(distances_val+0.01, mis, '-o')
     # plt.fill_between(distances_val+0.01, mis_le, mis_ue, alpha=0.3)
@@ -77,8 +78,9 @@ def plot_miscentering_effects(fname_pattern, distances_str, distances_val):
     ax3.set_xscale('log')
     ax3.set_yscale('log')
     # ax3.fill_between(distances_val+0.01, rds_le, rds_ue, alpha=0.3)
-    ax3.set_xlabel('Center Displacement [h$^{-1}$ kpc]')
+    ax3.set_xlabel('Center Displacement + 1 [h$^{-1}$ kpc]')
     gs.tight_layout(fig)
+
 
     
 if __name__ == "__main__":
