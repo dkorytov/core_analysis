@@ -6,12 +6,23 @@ void merg_colors(int i, int j,std::vector<int64_t>& colors){
   int c2 = colors[j];
   if(c1 == c2) //no need to merg two of the same colors
     return;
-  for(int k=0;k<colors.size();++k){ //take any c2 color and make it c1
+  for(int k=0;k<i;++k){ //take any c2 color and make it c1
     if(colors[k]==c2)
       colors[k]=c1;
   }
 }
-
+void merg_colors_fast(int i, int j, std::vector<int64_t>& colors){
+  if(colors[i]==i){
+    colors[i] = j;
+  }
+  throw; //not implemented
+}
+void merg_colors_fast_post_processing(std::vector<int64_t>& colors){
+  for(int i =1;i<colors.size();++i){
+    colors[i]=colors[colors[i]];
+  }
+  throw; // not implemented
+}
 void n2_merger_float(float* x, float* y, int* w, int* size,float merg_len,int64_t* colors_out){
   n2_merger<float>(x,y,w,size,merg_len,colors_out);
 }

@@ -11,7 +11,8 @@ extern "C" void n2_merger_double3d(double* x, double* y, double* z,int* w, int* 
 
 
 void merg_colors(int i , int j, std::vector<int64_t>& colors);
-
+void merg_colors_fast(int i , int j, std::vector<int64_t>& colors);
+void merg_colors_fast_post_processing(std::vector<int64_t>& colors);
 template<class T>
 T average(std::vector<T> data){
   size_t size = data.size();
@@ -103,19 +104,22 @@ void n2_merger(T* x,T* y, int* w, int* size,T merg_len,int64_t* colors_out){
 }
 
 template<typename T>
-void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colors_out){
+void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colors_out, int n2_limit=400){
   //std::cout<<"We are c n2_merger3d"<<std::endl;
   //std::cout<<"size: "<<size[0]<<" merg_len: "<<merg_len<<std::endl;
   //  for(int i = 0;i<10;++i){
   //  std::cout<<x[i]<<" "<<y[i]<<std::endl;
   // }
+  dtk::AutoTimer t1;
   float merger_len_sq= merger_len*merger_len;
   std::vector<int64_t> colors(size[0]);
   for(int i =0;i<size[0];++i){
     colors[i] =i;
   }
-  if(size[0]<=400){
-    //std::cout<<"n2 method"<<std::endl;
+  std::cout<<"\tpre work: "<<t1<<std::endl;
+  t1.start();
+  if(size[0]<=n2_limit){
+    std::cout<<"n2 method"<<std::endl;
     for(int i =1;i<size[0];++i){
       for(int j =0;j<i;++j){
 	float dist_x = x[i]-x[j];
@@ -128,39 +132,32 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
     }
   }
   else if(true){
-    // dtk::Timer t1;t1.start();
+    std::cout<<"n2 sorted method"<<std::endl;
+    dtk::Timer t1;t1.start();
     int* srt = dtk::arg_sort(x, size[0]);
     dtk::reorder(x,size[0],srt);
     dtk::reorder(y,size[0],srt);
     dtk::reorder(z,size[0],srt);
     dtk::reorder(w,size[0],srt);
     delete [] srt;
+    std::cout<<"\t\t resort: "<<t1.stop()<<std::endl;
+	  
     for(int i =1;i<size[0];++i){
       for(int j =0;j<i;++j){
 	float dist_x = x[i]-x[j];
-	if(dist_x>merger_len)
-	  break;
 	float dist_y = y[i]-y[j];
 	float dist_z = z[i]-z[j];
 	float dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
-	if(dist <= merger_len)
+	if(dist_x>merger_len)
+	  continue;
+	// if(dist_x>merger_len){
+	//   if(dist <= merger_len_sq)
+	//     std::cout<<"wtf?"<<std::endl;
+	// }
+	if(dist <= merger_len_sq)
 	  merg_colors(i,j,colors);
       }
     }
-    // t1.stop();
-    // dtk::Timer t2;t2.start();
-    // for(int i =1;i<size[0];++i){
-    //   for(int j =0;j<i;++j){
-    // 	float dist_x = x[i]-x[j];
-    // 	float dist_y = y[i]-y[j];
-    // 	float dist_z = z[i]-z[j];
-    // 	float dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
-    // 	if(dist <= merger_len)
-    // 	  merg_colors(i,j,colors);
-    //   }
-    // }
-    // t2.stop();
-    // std::cout<<"merging timing: n2: "<<t1<<"   n2 smart: "<<t2<<std::endl;
   }
   else{
     //if we have too many points a naive n2 would take too long. 
@@ -189,12 +186,15 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
       
     }
   }
-  //if an output is specified, write out fof color groups. 
+  //if an output is specified, write out fof color groups.
+
   if(colors_out != NULL){
     for(int64_t i =0;i<colors.size();++i){
       colors_out[i]=colors[i];
     }
   }
+  std::cout<<"\tpost merger: "<<t1<<std::endl;
+  t1.start();
   std::vector<float> avg_x;
   std::vector<float> avg_y;
   std::vector<float> avg_z;
@@ -217,7 +217,6 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
 	clr_x.push_back(x[i]);
 	clr_y.push_back(y[i]);
 	clr_z.push_back(z[i]);
-
       }
     }
     //std::cout<<"\ti:"<<avg_x.size()<<"/"<<size[0]<<std::endl;
@@ -226,6 +225,8 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
     avg_z.push_back(average(clr_z));
     avg_weight.push_back(clr_x.size());
   }
+  std::cout<<"\tpost work1: "<<t1<<std::endl;
+  t1.start();
   //overwrite the result to x,y,z,w& size
   //  std::cout<<"getting pos"<<std::endl;
 
@@ -247,6 +248,7 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
     w[i]=0.0;
   }
   size[0] = avg_x.size();
+  std::cout<<"\tpost work2: "<<t1<<std::endl;
   return;
 }
 
