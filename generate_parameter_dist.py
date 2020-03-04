@@ -222,6 +222,15 @@ def plot_mstar0_AQ_RMvSP():
     data_mfc = ['r', 'r']
     load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
     
+def plot_mstar0_AQ_miscentering():
+    pattern = 'figs/params/rmba/testing/AQ_{model}.{data_input1}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
+    models = ['rd']
+    data_inputs = [['default', ''], ['distribution', '']]
+    data_input_labels = ['Unmodified', 'Miscentered']
+    data_clr = ['tab:blue', 'tab:blue']
+    data_mfc = ['tab:blue', 'white']
+    load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
+    
 def load_all2(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None):
     plt.figure()
     if title is not None:
@@ -352,7 +361,7 @@ def load_all3(pattern, models, data_inputs, data_input_labels, data_clr, data_mf
     dtk.save_figs("figs/"+__file__+"/", extension='.pdf')
 
 def load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None):
-    fig = plt.figure(figsize=(5,3))
+    fig = plt.figure(figsize=(7,4))
     if title is not None:
         plt.suptitle(title)
     gs = gridspec.GridSpec(1,4, hspace=0.1)
@@ -380,15 +389,15 @@ def load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mf
                     xerr = [[model_param_fit[model_param+"_lower_err"]], [model_param_fit[model_param+"_upper_err"]]]
                     ax.errorbar(x, y, xerr=xerr, fmt='o', color=data_clr[data_i], mfc=data_mfc[data_i], mec = data_clr[data_i])
             # model_params_ax['x2'].errobar(model_param_fit['x2'], y, fmt='o', color=data_clr[data_i], mfc=data_mfc[data_i], mec=data_clr[data_i])
-            model_params_ax['x2'].barh(y, model_param_fit['x2'], align='center', height=0.2, edgecolor='none', color=data_clr[data_i])
-    model_params_ax['mi'].set_ylim([ -3.2, 0.2,])
+            model_params_ax['x2'].barh(y, model_param_fit['x2'], align='center', height=0.2, edgecolor=data_clr[data_i], color=data_mfc[data_i])
+    model_params_ax['mi'].set_ylim([ -3.4, 0.4,])
     model_params_ax['rd'].set_ylim(model_params_ax['mi'].set_ylim())
     model_params_ax['rm'].set_ylim(model_params_ax['mi'].set_ylim())
     model_params_ax['x2'].set_ylim(model_params_ax['mi'].set_ylim())
-    model_params_ax['mi'].set_xlabel('$M_{infall}$')
-    model_params_ax['rd'].set_xlabel('$R_{disrupt}$')
-    model_params_ax['rm'].set_xlabel('$M_{merge}$')
-    model_params_ax['x2'].set_xlabel(r'$\chi^{2}_{reduced}$')
+    model_params_ax['mi'].set_xlabel('$M_{infall}$\n[h$^{-1}$ $M_{\odot}$]')
+    model_params_ax['rd'].set_xlabel('$R_{disrupt}$\n[h$^{-1}$ kpc]')
+    model_params_ax['rm'].set_xlabel('$M_{merge}$\n[h$^{-1}$ Mpc]')
+    model_params_ax['x2'].set_xlabel(r'$\tilde\chi^{2}$')
     for (key, ax) in model_params_ax.items():
         # if key != 'x2':
         #     ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
@@ -398,8 +407,11 @@ def load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mf
         ax.yaxis.set_ticklabels(["Mi", "Rd", "Rm", "RdRm"])
         for tick in ax.xaxis.get_ticklabels():
             tick.set_rotation(45)
-
-
+            tick.set_horizontalalignment('right')
+            tick.set_verticalalignment('top')
+        # help(ax.xaxis.set_label_text)
+        ax.xaxis.set_label_coords(0.5,-.3)
+        
     model_params_ax['rd'].yaxis.set_ticklabels([])
     model_params_ax['rm'].yaxis.set_ticklabels([])
     model_params_ax['x2'].yaxis.set_ticklabels([])
@@ -419,7 +431,6 @@ def load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mf
     plt.gcf().subplots_adjust(bottom=0.3,left=0.15)
 
 
-    dtk.save_figs("figs/"+__file__+"/", extension='.pdf')
 
 def load_pc(pattern, mass_defs, model_defs, cent_defs, peak_defs, title=None):
     plt.figure()
@@ -489,6 +500,7 @@ def load_pc(pattern, mass_defs, model_defs, cent_defs, peak_defs, title=None):
 
     
 if __name__ == "__main__":
+    plot_name = sys.argv[1]
     # load_all()
     # plot_mstar_minus1()
     # plot_mstar0()
@@ -501,7 +513,13 @@ if __name__ == "__main__":
     # plot_mstar05_QC()
     # plot_mstar1_QC()
     # plot_mstar0_OR()
-    plot_mstar0_AQ_RMvSP()
+    if plot_name == 'RMvSP':
+        plot_mstar0_AQ_RMvSP()
+    elif plot_name == 'miscentering':
+        plot_mstar0_AQ_miscentering()
+    else:
+        raise KeyError("{} not a list plot".format(plot))
+    dtk.save_figs('figs/'+__file__+'/'+plot_name+'/', '.pdf')
     plt.show()
     exit()
     a = [("D", [12.2, 12.1, 12.3]),
