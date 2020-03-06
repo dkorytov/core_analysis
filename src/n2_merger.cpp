@@ -44,7 +44,7 @@ void n2_merger3d_write_out(int size,
 			   float merg_len,
 			   const char* file_loc){
   
-  std::cout<<"starting with size:"<<size<<std::endl;
+  // std::cout<<"starting with size:"<<size<<std::endl;
   float merger_len;
   if(merg_len > 0)
     merger_len = merg_len*merg_len;
@@ -55,7 +55,7 @@ void n2_merger3d_write_out(int size,
     colors[i] =i;
   }
   if(size<=400000){
-    std::cout<<"n2 method"<<std::endl;
+    // std::cout<<"n2 method"<<std::endl;
     for(int i =1;i<size;++i){
       for(int j =0;j<i;++j){
 	float dist_x = x[i]-x[j];
@@ -70,7 +70,7 @@ void n2_merger3d_write_out(int size,
   else{
     //if we have too many points a naive n2 would take too long. 
     //so we use a chaining mesh. 
-    std::cout<<"cm method"<<std::endl;
+    // std::cout<<"cm method"<<std::endl;
     ChainingMesh<float> cmesh(256.0,256.0,256.0,16,16,16);
     cmesh.set_data(x,y,z,size);
     size_t cell_num = cmesh.get_num_cells();

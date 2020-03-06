@@ -116,10 +116,10 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
   for(int i =0;i<size[0];++i){
     colors[i] =i;
   }
-  std::cout<<"\tpre work: "<<t1<<std::endl;
+  // std::cout<<"\tpre work: "<<t1<<std::endl;
   t1.start();
   if(size[0]<=n2_limit){
-    std::cout<<"n2 method"<<std::endl;
+    // std::cout<<"n2 method"<<std::endl;
     for(int i =1;i<size[0];++i){
       for(int j =0;j<i;++j){
 	float dist_x = x[i]-x[j];
@@ -132,7 +132,7 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
     }
   }
   else if(true){
-    std::cout<<"n2 sorted method"<<std::endl;
+    // std::cout<<"n2 sorted method"<<std::endl;
     dtk::Timer t1;t1.start();
     int* srt = dtk::arg_sort(x, size[0]);
     dtk::reorder(x,size[0],srt);
@@ -140,7 +140,7 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
     dtk::reorder(z,size[0],srt);
     dtk::reorder(w,size[0],srt);
     delete [] srt;
-    std::cout<<"\t\t resort: "<<t1.stop()<<std::endl;
+    // std::cout<<"\t\t resort: "<<t1.stop()<<std::endl;
 	  
     for(int i =1;i<size[0];++i){
       for(int j =0;j<i;++j){
@@ -162,7 +162,7 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
   else{
     //if we have too many points a naive n2 would take too long. 
     //so we use a chaining mesh. 
-    std::cout<<"cm method"<<std::endl;
+    // std::cout<<"cm method"<<std::endl;
     ChainingMesh<T> cmesh(256.0,256.0,256.0,16,16,16);
     cmesh.set_data(x,y,z,size[0]);
     size_t cell_num = cmesh.get_num_cells();
@@ -193,7 +193,7 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
       colors_out[i]=colors[i];
     }
   }
-  std::cout<<"\tpost merger: "<<t1<<std::endl;
+  // std::cout<<"\tpost merger: "<<t1<<std::endl;
   t1.start();
   std::vector<float> avg_x;
   std::vector<float> avg_y;
@@ -225,7 +225,7 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
     avg_z.push_back(average(clr_z));
     avg_weight.push_back(clr_x.size());
   }
-  std::cout<<"\tpost work1: "<<t1<<std::endl;
+  // std::cout<<"\tpost work1: "<<t1<<std::endl;
   t1.start();
   //overwrite the result to x,y,z,w& size
   //  std::cout<<"getting pos"<<std::endl;
@@ -248,7 +248,7 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
     w[i]=0.0;
   }
   size[0] = avg_x.size();
-  std::cout<<"\tpost work2: "<<t1<<std::endl;
+  // std::cout<<"\tpost work2: "<<t1<<std::endl;
   return;
 }
 
