@@ -568,9 +568,12 @@ struct SampledDistribution{
 
   void load_distribution(const char* fname, const char* var){
     dtk::read_hdf5<float>(fname, var, values);
+    // Shuffle the order in a repeatable method.
+    std::shuffle(values.begin(), values.end(), std::default_random_engine(0));
   }
   float get_value(){
-    float val = values.at(i);
+    size_t index = i%values.size();
+    float val = values.at(index);
     ++i;
     return val;
   }
