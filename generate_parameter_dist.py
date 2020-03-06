@@ -518,7 +518,7 @@ if __name__ == "__main__":
     elif plot_name == 'miscentering':
         plot_mstar0_AQ_miscentering()
     else:
-        raise KeyError("{} not a list plot".format(plot))
+        raise KeyError("{} not a list plot".format(plot_function))
     dtk.save_figs('figs/'+__file__+'/'+plot_name+'/', '.pdf')
     plt.show()
     exit()
