@@ -206,6 +206,7 @@ class ClusterData:
         core_m = self.core_m[start:stop]
         slct = core_m > m_infall
         slct_compact = core_r < r_disrupt
+        slct_central = self.core_step[start:stop] == 401
         
         dx = core_x - self.x[i]
         dy = core_y - self.y[i]
@@ -226,12 +227,14 @@ class ClusterData:
         f, (ax1, ax2) = plt.subplots(1,2,figsize=(25,10))
         ax1.plot(core_x[slct & ~slct_compact], core_y[slct & ~slct_compact], 'go',mfc='none',mec='g')
         ax1.plot(core_x[slct &  slct_compact], core_y[slct &  slct_compact], 'go',mfc='g',mec='g')
+        ax1.plot(core_x[slct &  slct_central], core_y[slct &  slct_central], 'go',mfc='r',mec='none', ms=2)
         circle = Circle((self.x[i],self.y[i]), self.rad[i], fc='none', ec='k')
         ax1.add_artist(circle)
         ax1.grid()
         
         ax2.plot(core_z[slct & ~slct_compact], core_y[slct & ~slct_compact], 'go',mfc='none',mec='g')
         ax2.plot(core_z[slct &  slct_compact], core_y[slct &  slct_compact], 'go',mfc='g',mec='g')
+        ax2.plot(core_z[slct &  slct_central], core_y[slct &  slct_central], 'go',mfc='r',mec='none', ms=2)
         circle = Circle((self.z[i],self.y[i]), self.rad[i], fc='none', ec='k')
         ax2.add_artist(circle)
         ax2.grid()
