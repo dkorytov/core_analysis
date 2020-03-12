@@ -1840,7 +1840,10 @@ void load_param(char* file_name){
   else{
     use_miscentering_distribution = false;
   }
-
+  if(step != 401){
+    std::cout<<"Step isn't set to 401, which is hard coded into some areas"<<std::endl;
+    throw;
+  }
   fit_var_num = 2;
   if(lock_r_disrupt)
     --fit_var_num;
@@ -3133,19 +3136,28 @@ void Cluster::move_cores_together(){
   move_together(z,rL,core_z,core_size);
 }
 int Cluster::find_central(){
+  // returns the index of the central core
+  // -1 if none is found
   int central = -1;
-  float central_distance = 1e9;
+  float central_distance = 1e4; //start out with really high number (Mpc/h)
+  // std::cout<<central_distance<<std::endl;
   for(int i =0; i<core_size; ++i){
-    if(core_step[i] == step){
+    // std::cout<<"--"<<i<<"++"<<central<<std::endl;
+    // std::cout<<"step:    "<<core_step[i]<<" "<<step<<" "<<(core_step[i]==step)<<std::endl;
+    // std::cout<<"central: "<<core_is_central[i]<<std::endl;
+    if(core_step[i] == 401){ //should be step from param file, but
+			     //overshadowed by cluster.step. So 401 is hard coded at the moment
       float dx = x - core_x[i];
       float dy = y - core_y[i];
       float dz = z - core_z[i];
       float dr = dx*dx + dy*dy + dz*dz;
+      // std::cout<<dr<<" vs "<<central_distance<<std::endl;
       if(dr< central_distance){
 	central = i;
 	central_distance = dr;
       }
     }
+    // std::cout<<"--"<<std::endl;
   }
   return central;
 }
@@ -3161,6 +3173,11 @@ void Cluster::set_central_core_on_center(){
   //   }
   // }
   int central_index = find_central();
+  if(central_index == -1){
+    std::cout<<"No central found"<<std::endl;
+    std::cout<<"htag: "<<htag<<std::endl;
+    throw;
+  }
   core_x[central_index] = x;
   core_y[central_index] = y;
   core_z[central_index] = z;
