@@ -104,17 +104,21 @@ void n2_merger(T* x,T* y, int* w, int* size,T merg_len,int64_t* colors_out){
 }
 
 template<typename T>
-void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colors_out, int n2_limit=400){
+void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colors_out, int n2_limit=20){
   //std::cout<<"We are c n2_merger3d"<<std::endl;
   //std::cout<<"size: "<<size[0]<<" merg_len: "<<merg_len<<std::endl;
   //  for(int i = 0;i<10;++i){
   //  std::cout<<x[i]<<" "<<y[i]<<std::endl;
   // }
+  // std::cout<<"Size: "<<size[0]<<std::endl;
+  // for(int i=0;i<size[0];++i){
+  //   std::cout<<"\t"<<x[i]<<"  "<<y[i]<<"  "<<z[i]<<"  "<<w[i]<<"  "<<std::endl;
+  // }
   dtk::AutoTimer t1;
   float merger_len_sq= merger_len*merger_len;
   std::vector<int64_t> colors(size[0]);
   for(int i =0;i<size[0];++i){
-    colors[i] =i;
+    colors.at(i) = i;
   }
   // std::cout<<"\tpre work: "<<t1<<std::endl;
   t1.start();
@@ -147,14 +151,14 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
 	float dist_x = x[i]-x[j];
 	float dist_y = y[i]-y[j];
 	float dist_z = z[i]-z[j];
-	float dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
+	float dist_sq = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
 	if(dist_x>merger_len)
 	  continue;
 	// if(dist_x>merger_len){
 	//   if(dist <= merger_len_sq)
 	//     std::cout<<"wtf?"<<std::endl;
 	// }
-	if(dist <= merger_len_sq)
+	if(dist_sq <= merger_len_sq)
 	  merg_colors(i,j,colors);
       }
     }
@@ -189,8 +193,9 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
   //if an output is specified, write out fof color groups.
 
   if(colors_out != NULL){
+    // std::cout<<"Not NULL"<<std::endl;
     for(int64_t i =0;i<colors.size();++i){
-      colors_out[i]=colors[i];
+      colors_out[i]=colors.at(i);
     }
   }
   // std::cout<<"\tpost merger: "<<t1<<std::endl;
@@ -199,15 +204,14 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
   std::vector<float> avg_y;
   std::vector<float> avg_z;
   std::vector<int> avg_weight;
-
-  std::set<int> set(colors.begin(),colors.end());
+  std::set<int> set(colors.begin(), colors.end());
   std::vector<float> clr_x;
   std::vector<float> clr_y;
   std::vector<float> clr_z;
   //std::cout<<"calculating color mergers"<<std::endl;
   //average all position of each color group
 
-  for(std::set<int>::iterator it = set.begin();it!=set.end();++it){
+  for(std::set<int>::iterator it = set.begin(); it!=set.end(); ++it){
     int c1 = *it;
     clr_x.clear();
     clr_y.clear();
