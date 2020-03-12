@@ -205,21 +205,23 @@ def plot_mstar1_QC():
 def plot_mstar0_OR():
     pattern = "figs/params/cfn/simet/mstar0/{}{}/{}.param/calc_likelihood_bounds.py/grid_fit_param.txt"
     # pattern = 'figs/params/rmba/simet/{}/mstar0/{}{}/calc_likelihood_bounds.py/grid_fit_param.txt'
-    models = ["AQ_mi.param", "AQ_rd.param", "AQ_rm.param", "AQ_rd_rm.param"]
-    data_inputs = [['mean', '']]
-    data_input_labels = ['M200m, profile']
-    data_clr = ['b', ]
-    data_mfc = ['b', ]
-    load_all3(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
+    pattern = "figs/params/rmba/auto/OR_default_link/crit/mstar0/OR_{model}.lowrez_zoom.param/calc_likelihood_bounds.py/grid_fit_param.txt"
+    models = ["mi", "rd", "rm", "rd_rm"]
+    data_inputs = [['', '']]
+    data_input_labels = ['']
+    data_clr = ['tab:red', ]
+    data_mfc = ['tab:red', ]
+    load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
 
 def plot_mstar0_AQ_RMvSP():
-    pattern = "figs/params/rmba/simet/mstar0/{}{}/{}.param/calc_likelihood_bounds.py/grid_fit_param.txt"
-    pattern = 'figs/params/rmba/simet/mean/mstar0/AQ_{data_input1}_{model}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
+    # pattern = "figs/params/rmba/simet/mstar0/{}{}/{}.param/calc_likelihood_bounds.py/grid_fit_param.txt"
+    # pattern = 'figs/params/rmba/simet/mean/mstar0/_{data_input1}_{model}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
+    pattern = 'figs/params/rmba/auto/{data_input1}/crit/mstar0/OR_{model}{data_input2}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
     models = ["mi", "rd", "rm", "rd_rm"]
-    data_inputs = [['RM', ''], ['SP', '']]
+    data_inputs = [['OR_default_link', '.lowrez'], ['make_all_SPDR.sh', '']]
     data_input_labels = ['redMaPPer', 'SPIDERS']
-    data_clr = ['b', 'b']
-    data_mfc = ['r', 'r']
+    data_clr = ['tab:red', 'tab:blue']
+    data_mfc = ['tab:red', 'tab:blue']
     load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
     
 def plot_mstar0_AQ_miscentering():
@@ -229,6 +231,16 @@ def plot_mstar0_AQ_miscentering():
     data_input_labels = ['Unmodified', 'Miscentered']
     data_clr = ['tab:blue', 'tab:blue']
     data_mfc = ['tab:blue', 'white']
+    load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
+    
+def plot_mstar0_OR_miscentering():
+    # pattern = 'figs/params/rmba/testing/AQ_{model}.{data_input1}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
+    pattern = 'figs/params/rmba/auto/{data_input1}/crit/mstar0/OR_{model}{data_input2}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
+    models = ['mi', 'rd', 'rm', 'rd_rm']
+    data_inputs=[['OR_default_link', '.lowrez'], ['make_all_OR_miscentered.sh', '']]
+    data_input_labels=['Unmodified', 'Miscentered']
+    data_clr = ['tab:red', 'tab:red']
+    data_mfc = ['tab:red', 'white']
     load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
     
 def load_all2(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None):
@@ -517,6 +529,9 @@ if __name__ == "__main__":
         plot_mstar0_AQ_RMvSP()
     elif plot_name == 'miscentering':
         plot_mstar0_AQ_miscentering()
+        plot_mstar0_OR_miscentering()
+    elif plot_name == "OR":
+        plot_mstar0_OR();
     else:
         raise KeyError("{} not a list plot".format(plot_function))
     dtk.save_figs('figs/'+__file__+'/'+plot_name+'/', '.pdf')
