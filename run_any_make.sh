@@ -22,7 +22,7 @@ for result in ${results}; do
     echo ""
     echo ""
     echo ${result}
-    nice ${exe} ${result}
+    nice -n 13 ${exe} ${result}
 done
 # # param_pattern=`sed
 # for mass in "mean" "crit";do
