@@ -24,17 +24,20 @@ def extract_large_cluster(input_fname='tmp_hdf5/clusters_OR_M200c.hdf5', output_
     core_x = hfile['cores/core_x'][offset:offset+size]
     core_y = hfile['cores/core_y'][offset:offset+size]
     core_z = hfile['cores/core_z'][offset:offset+size]
-    
+    core_m = hfile['cores/core_m'][offset:offset+size]
     plt.figure()
     plt.plot(core_x, core_y, '.')
     
     plt.figure()
     plt.plot(core_x, core_z, '.')
+    # sort it by infall mass
+    srt = np.argsort(-core_m)
     
     hfile_out = h5py.File(output_fname,'w')
-    hfile_out['x'] = core_x
-    hfile_out['y'] = core_y
-    hfile_out['z'] = core_z
+    hfile_out['x'] = core_x[srt]
+    hfile_out['y'] = core_y[srt]
+    hfile_out['z'] = core_z[srt]
+
     hfile_out.close()
 
 if __name__ == "__main__":
