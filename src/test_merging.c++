@@ -26,6 +26,7 @@ std::vector<float> x, y, z;
 std::vector<int> w;
 std::vector<int64_t> colors;
 int size;
+
 void load_cluster(char* fname){
   dtk::AutoTimer t;
   dtk::read_hdf5(fname, "x", x);
@@ -45,7 +46,6 @@ void load_cluster(char* fname){
   // dtk::reorder(w,size,srt);
   // std::cout<<"Load time: "<<t<<std::endl;
 }
-
 void merge(){
   std::cout<<"\n\n"<<std::endl;
   load_cluster("tmp_hdf5/single_cluster.hdf5");
@@ -63,11 +63,28 @@ void merge(){
   std::cout<<"size: "<<size<<std::endl;
 
 }
-
+void merge_scaling(){
+  load_cluster("tmp_hdf5/single_cluster.hdf5");
+  for(int i =0;i<size;++i){
+    std::cout<<i<<" ";
+    dtk::Timer t;t.start();
+    int current_size = i;
+    float r = 0.02;
+    n2_merger3d<float>(x.data(), y.data(), z.data(), w.data(), &current_size, r, colors.data(), i+1);
+    t.stop();
+    double time = t.get_useconds();
+    std::cout<<time<<" ";
+    t.start();
+    n2_merger3d<float>(x.data(), y.data(), z.data(), w.data(), &current_size, r, colors.data(), 0);
+    t.stop();
+    time = t.get_useconds();
+    std::cout<<time<<std::endl;
+  }
+}
 int main(int argc, char** argv){
-  std::cout<<"Yo"<<std::endl;
+  // std::cout<<"Yo"<<std::endl;
 
 
-  merge();
-
+  // merge();
+  merge_scaling();
 }
