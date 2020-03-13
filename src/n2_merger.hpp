@@ -105,8 +105,8 @@ void n2_merger(T* x,T* y, int* w, int* size,T merg_len,int64_t* colors_out){
 
 template<typename T>
 void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colors_out, int n2_limit=20){
-  //std::cout<<"We are c n2_merger3d"<<std::endl;
-  //std::cout<<"size: "<<size[0]<<" merg_len: "<<merg_len<<std::endl;
+  // std::cout<<"We are c n2_merger3d"<<std::endl;
+  // std::cout<<"size: "<<size[0]<<" merg_len: "<<merger_len<<std::endl;
   //  for(int i = 0;i<10;++i){
   //  std::cout<<x[i]<<" "<<y[i]<<std::endl;
   // }
@@ -114,14 +114,14 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
   // for(int i=0;i<size[0];++i){
   //   std::cout<<"\t"<<x[i]<<"  "<<y[i]<<"  "<<z[i]<<"  "<<w[i]<<"  "<<std::endl;
   // }
-  dtk::AutoTimer t1;
+  // dtk::AutoTimer t1;
   float merger_len_sq= merger_len*merger_len;
   std::vector<int64_t> colors(size[0]);
   for(int i =0;i<size[0];++i){
     colors.at(i) = i;
   }
   // std::cout<<"\tpre work: "<<t1<<std::endl;
-  t1.start();
+  // t1.start();
   if(size[0]<=n2_limit){
     // std::cout<<"n2 method"<<std::endl;
     for(int i =1;i<size[0];++i){
@@ -130,14 +130,18 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
 	float dist_y = y[i]-y[j];
 	float dist_z = z[i]-z[j];
 	float dist_sq = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
-	if(dist_sq <= merger_len_sq)
+	if(dist_sq <= merger_len_sq){
+	  // std::cout<<".";
 	  merg_colors(i,j,colors);
+
+	}
       }
     }
+    // std::cout<<std::endl;
   }
   else if(true){
     // std::cout<<"n2 sorted method"<<std::endl;
-    dtk::Timer t1;t1.start();
+    // dtk::Timer t1;t1.start();
     int* srt = dtk::arg_sort(x, size[0]);
     dtk::reorder(x,size[0],srt);
     dtk::reorder(y,size[0],srt);
@@ -185,9 +189,8 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
 	  float dist = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
 	  if(dist <= merger_len)
 	    merg_colors(i2,j2,colors);
-      }
-    }
-      
+	}
+      }      
     }
   }
   //if an output is specified, write out fof color groups.
@@ -199,12 +202,13 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
     }
   }
   // std::cout<<"\tpost merger: "<<t1<<std::endl;
-  t1.start();
+  // t1.start();
   std::vector<float> avg_x;
   std::vector<float> avg_y;
   std::vector<float> avg_z;
   std::vector<int> avg_weight;
   std::set<int> set(colors.begin(), colors.end());
+  // std::cout<<"color set size: "<<set.size()<<std::endl;
   std::vector<float> clr_x;
   std::vector<float> clr_y;
   std::vector<float> clr_z;
@@ -230,7 +234,7 @@ void n2_merger3d(T* x,T* y, T* z, int* w, int* size, T merger_len, int64_t* colo
     avg_weight.push_back(clr_x.size());
   }
   // std::cout<<"\tpost work1: "<<t1<<std::endl;
-  t1.start();
+  // t1.start();
   //overwrite the result to x,y,z,w& size
   //  std::cout<<"getting pos"<<std::endl;
 

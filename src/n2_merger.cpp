@@ -6,9 +6,9 @@ void merg_colors(int i, int j,std::vector<int64_t>& colors){
   int c2 = colors.at(j);
   if(c1 == c2) //no need to merg two of the same colors
     return;
-  for(int k=0;k<j;++k){ //take any c2 color and make it c1
-    if(colors.at(k)==c2)
-      colors.at(k)=c1;
+  for(int k=0;k<i;++k){ //take any c2 color and make it c1
+    if(colors[k]==c2)
+      colors[k]=c1;
   }
 }
 void merg_colors_fast(int i, int j, std::vector<int64_t>& colors){
