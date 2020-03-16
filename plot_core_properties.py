@@ -33,7 +33,7 @@ def load_cores(fname, step=None, quick=False):
         load_prop(fname, 'vy', cat)
         load_prop(fname, 'vz', cat)
         load_prop(fname, 'radius', cat)
-        load_prop(fname, 'infall_fof_halo_mass', cat)
+        # load_prop(fname, 'infall_fof_halo_mass', cat)
 
     if step is not None:
         size = cat['x'].size
@@ -42,7 +42,10 @@ def load_cores(fname, step=None, quick=False):
     return cat
 
 def get_axis_bins(data, log=False, num=100):
-    upper, lower = np.max(data), np.min(data)
+    slct_finite = np.isfinite(data)
+    slct_above_zero = data>0
+    upper, lower = np.max(data[slct_finite]), np.min(data[slct_finite & slct_above_zero])
+
     if log:
         upper, lower = int(np.log10(upper))+1, int(np.log10(lower))-1
         return np.logspace(lower, upper, num)
@@ -90,13 +93,13 @@ def plot_core_properties(core_fname):
     plot_2d_dist(cat, 'infall_tree_node_mass', 'radius', log_all=True, central=True)
     plot_2d_dist(cat, 'infall_tree_node_mass', 'infall_step', log1=True, central=False)
     plot_2d_dist(cat, 'infall_tree_node_mass', 'radius', log_all=True, central=False)
-    plot_2d_dist(cat, 'x', 'y')
-    plot_2d_dist(cat, 'x', 'z')
-    plot_2d_dist(cat, 'vx', 'vy')
-    plot_2d_dist(cat, 'vx', 'vz')
-    plot_2d_dist(cat, 'x', 'vx')
-    plot_2d_dist(cat, 'x', 'vy')
-    plot_2d_dist(cat, 'x', 'vz')
+    # plot_2d_dist(cat, 'x', 'y')
+    # plot_2d_dist(cat, 'x', 'z')
+    # plot_2d_dist(cat, 'vx', 'vy')
+    # plot_2d_dist(cat, 'vx', 'vz')
+    # plot_2d_dist(cat, 'x', 'vx')
+    # plot_2d_dist(cat, 'x', 'vy')
+    # plot_2d_dist(cat, 'x', 'vz')
 
 def get_full_core_catalog(core_fname_pattern, steps):
     cats = {}
@@ -212,13 +215,23 @@ def plot_core_trajectory(core_fname_pattern, steps):
 
 
 if __name__ == "__main__":
-    steps=[499, 487, 475, 464, 453, 442, 432, 421, 411, 401, 392, 382, 373, 365, 355, 347, 338, 331, 323, 315, 307, 300, 293, 286, 279, 272, 266, 259, 253, 247, 241, 235, 230, 224, 219, 213, 208, 203, 198, 194, 189, 184, 180, 176, 171, 163, 159, 155, 151, 148, 144, 141, 137, 134, 131, 127, 124, 121, 119, 116, 113, 110, 107, 105, 102, 100, 97, 95, 92, 90, 88, 84, 81, 79, 77, 76, 74, 72, 70, 68, 67, 65, 63, 62, 60, 59, 57, 56, 54, 53, 52, 50, 49, 48, 46, 45, 44, 43]
-    # steps=[307, 300, 293, 286, 279, 272, 266, 259, 253, 247, 241, 235, 230, 224, 219, 213, 208, 203, 198, 194, 189, 184, 180, 176, 171, 163, 159, 155, 151, 148, 144, 141, 137, 134, 131, 127, 124, 121, 119, 116, 113, 110, 107, 105, 102, 100]
-    # steps=[307, 300, 293, 286, 279, 272, 266, 259, 253, 247, 241, 235, 230, 224, 219, 213, 208]
-    # steps=[307, 300, 293, 286, 279, 272, 266, 259]
-    core_fname_pattern = '/data/a/cpac/dkorytov/data/AlphaQ/core_catalog10_rev4070/$step$.coreproperties'
-    # plot_core_properties(core_fname_pattern.replace('$step$', str(487)))
-    # dtk.save_figs('figs/'+__file__+'/')
-    plt.show()
-    plot_core_trajectory(core_fname_pattern, steps)
+    
+    if sys.argv[1] == 'histories' or sys.argv[1] == 'history':
+        steps=[499, 487, 475, 464, 453, 442, 432, 421, 411, 401, 392, 382, 373, 365, 355, 347, 338, 331, 323, 315, 307, 300, 293, 286, 279, 272, 266, 259, 253, 247, 241, 235, 230, 224, 219, 213, 208, 203, 198, 194, 189, 184, 180, 176, 171, 163, 159, 155, 151, 148, 144, 141, 137, 134, 131, 127, 124, 121, 119, 116, 113, 110, 107, 105, 102, 100, 97, 95, 92, 90, 88, 84, 81, 79, 77, 76, 74, 72, 70, 68, 67, 65, 63, 62, 60, 59, 57, 56, 54, 53, 52, 50, 49, 48, 46, 45, 44, 43]
+        # steps=[307, 300, 293, 286, 279, 272, 266, 259, 253, 247, 241, 235, 230, 224, 219, 213, 208, 203, 198, 194, 189, 184, 180, 176, 171, 163, 159, 155, 151, 148, 144, 141, 137, 134, 131, 127, 124, 121, 119, 116, 113, 110, 107, 105, 102, 100]
+        # steps=[307, 300, 293, 286, 279, 272, 266, 259, 253, 247, 241, 235, 230, 224, 219, 213, 208]
+        # steps=[307, 300, 293, 286, 279, 272, 266, 259]
+        core_fname_pattern = '/data/a/cpac/dkorytov/data/AlphaQ/core_catalog10_rev4070/$step$.coreproperties'
+        plot_core_trajectory(core_fname_pattern, steps)
+    elif sys.argv[1] == 'aggregate' or sys.argv[1] == 'agg':
+        
+        core_fname_pattern = '/data/a/cpac/dkorytov/data/OuterRim/core_catalog/03_31_2018.OR.$step$.coreproperties'
+        core_fname_pattern = '/data/a/cpac/dkorytov/data/AlphaQ/core_catalog10_rev4070/$step$.coreproperties'
+        plot_core_properties(core_fname_pattern.replace('$step$', str(499)))
+        dtk.save_figs('figs/'+__file__+'/AQ/', extension='.png')
+        dtk.save_figs('figs/'+__file__+'/AQ/', extension='.pdf')
+        plt.show()
+    else:
+        raise KeyError("{} not a plotting option".format(sys.argv[1]))
+
 
