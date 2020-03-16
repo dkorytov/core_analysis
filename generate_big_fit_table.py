@@ -7,8 +7,12 @@ automatically attempts to read in the most "zoomed" parameter.
 """
 import sys
 import subprocess
+from os import path
 # import numpy as np
-
+def get_zoomed_param(param_fname):
+    while(path.exists(param_fname.replace(".param", "_zoom.param"))):
+        param_fname = param_fname.replace(".param", "_zoom.param")
+    return param_fname
 def get_mstar(param_fname):
     sections = param_fname.split("/")
     mstar_substring = sections[4]
@@ -16,10 +20,10 @@ def get_mstar(param_fname):
         return -1.0
     elif "mstar-0.5" in mstar_substring:
         return -0.5
-    elif "mstar0" in mstar_substring:
-        return 0.0
     elif "mstar0.5" in mstar_substring:
         return 0.5
+    elif "mstar0" in mstar_substring:
+        return 0.0
     elif "mstar1" in mstar_substring:
         return 1.0
     else:
@@ -72,8 +76,10 @@ def get_all_fits(make_param_script):
     params = result.stdout.decode("utf-8").splitlines()
     for param in params:
         print(param)
+        param = get_zoomed_param(param)
         mstar = get_mstar(param)
         model_flavor = get_model_flavor(param)
+        print(mstar, model_flavor)
         fit = extract_fits_from_file(get_fit_file(param))
         if mstar not in mstar_dict:
             mstar_dict[mstar] = {}
@@ -81,7 +87,7 @@ def get_all_fits(make_param_script):
         if model_flavor not in model_dict:
             model_dict[model_flavor] = {}
         model_dict[model_flavor][mstar] = fit
-        print(fit)
+        # print(fit)
         print('')
     return mstar_dict, model_dict
 
@@ -125,10 +131,11 @@ def get_model_table_string(model_dict, model):
 
 def generate_big_fit_table(make_param_script):
     mstar_fits, model_fits = get_all_fits(make_param_script)
-    print(mstar_fits)
-    print(model_fits)
+    print(mstar_fits.keys())
+    print(model_fits.keys())
     mstars = mstar_fits.keys()
     mstar_string = make_mstar_string(mstars)
+
     result = ""
 
     result += "\\begin{{tabular}}{{cc{}}}\n".format("c"*len(mstars))
@@ -142,4 +149,5 @@ def generate_big_fit_table(make_param_script):
 
     
 if __name__ == "__main__":
-    generate_big_fit_table(sys.argv[1])
+    make_param_script = sys.argv[1]
+    generate_big_fit_table(make_param_script)
