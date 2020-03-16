@@ -61,7 +61,7 @@ for mstar in "${mstars[@]}"; do
 		    else 
 			cp params/templates/template.param $param_fname
 		    fi
-		    if { [ $mstar == 1 ] && [ $model_i == 0 ]
+		    if [ $mstar == 1 ] && [ $model_i == 0 ]
 		    then
 		    	cp params/templates/template_mstar-1.param $param_fname
 		    fi
