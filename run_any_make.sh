@@ -1,12 +1,12 @@
 #!/bin/bash
 echo $#
-if [ $# -l 1 ]; then
+if [ $# -lt 1 ]; then
     echo 'run mode: ./run_any_make.sh exe make_param_sh'
     exit
 fi
 exe=$1
 make_script=$2
-if [ -z "$3"]; then
+if [ -z "$3" ]; then
     zoom="false"
 else
     zoom=$3
