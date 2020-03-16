@@ -17,7 +17,7 @@ def get_spacing(bin_info):
     num = bin_info[2]
     if num < 2:
         return 0
-    bins = np.linspace(start, end, num)
+    bins = np.linspace(start, end, int(num))
     return np.diff(bins)[0]
 
 def make_zoom_param(input_param_fname):
