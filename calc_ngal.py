@@ -50,7 +50,7 @@ class ClusterData:
     def load_file(self, filename, treat_centrals=False, step=None, core_host_mass=False):
         self.filename = filename
         hfile = h5py.File(filename, 'r')
-        self.num = hfile['cluster_num'].value
+        self.num = int(hfile['cluster_num'].value)
         self.x =    hfile['cluster/x'].value
         self.y =    hfile['cluster/y'].value
         self.z =    hfile['cluster/z'].value
@@ -395,7 +395,6 @@ class ClusterData:
         else:
             return mass_index-1
 
-    
     def create_compute_r_merger(self, m_infall, r_disrupt, r_merger, clusters_number = -1):
         clusters = ClusterData()
         clusters.filename = self.filename
