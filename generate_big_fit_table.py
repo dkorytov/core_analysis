@@ -8,6 +8,7 @@ automatically attempts to read in the most "zoomed" parameter.
 import sys
 import subprocess
 from os import path
+
 # import numpy as np
 def get_zoomed_param(param_fname):
     while(path.exists(param_fname.replace(".param", "_zoom.param"))):
@@ -116,7 +117,7 @@ def get_model_table_string(model_dict, model):
         else:
             result += " & "
         result += parameter_names[param] 
-        for mstar in model_dict[model]:
+        for mstar in sorted(model_dict[model])[::-1]:
             vals = model_dict[model][mstar][param]
             best_fit = vals[0]
             upper_err = vals[2]-vals[0]
@@ -140,13 +141,15 @@ def generate_big_fit_table(make_param_script):
 
     result += "\\begin{{tabular}}{{cc{}}}\n".format("c"*len(mstars))
     result += " & & \multicolumn{{{}}}{{c}}{{Galaxy Luminosity}} \\\\\n".format(len(mstars))
-    result += "\cline{3-6} \n"
+    result += "\cline{3-7} \n"
     result += "model & parameter & {}\\\\\n\\hline\n".format(mstar_string)
     for model in model_fits: 
         result += get_model_table_string(model_fits, model)
     result += "\\end{tabular}\n"
     print(result)
 
+def plot_fits(make_param_script):
+    mastar_fits, model_fits = get_all_fits(make_param_script)
     
 if __name__ == "__main__":
     make_param_script = sys.argv[1]
