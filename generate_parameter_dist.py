@@ -218,7 +218,7 @@ def plot_mstar0_AQ_RMvSP():
     # pattern = 'figs/params/rmba/simet/mean/mstar0/_{data_input1}_{model}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
     pattern = 'figs/params/rmba/auto/{data_input1}/crit/mstar0/OR_{model}{data_input2}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
     models = ["mi", "rd", "rm", "rd_rm"]
-    data_inputs = [['OR_default_link', '.lowrez'], ['make_all_SPDR.sh', '']]
+    data_inputs = [['OR_default_link', '.lowrez'], ['make_all_OR_SPDR.sh', '']]
     data_input_labels = ['redMaPPer', 'SPIDERS']
     data_clr = ['tab:red', 'tab:blue']
     data_mfc = ['tab:red', 'tab:blue']
