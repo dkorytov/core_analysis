@@ -347,6 +347,10 @@ struct ZMCounter{
     }
   }
   bool add_and_check_limit(size_t z_i, size_t m_i){
+    if( z_i < 0 || m_i < 0 || z_i >= counts.size() || m_i >= counts.at(z_i).size()){
+      // if out of bounds, return false to skip this cluster
+      return false;
+    }
     // std::cout<<"limit: "<<limit<<std::endl;
     if(limit < 0)
       return true;
