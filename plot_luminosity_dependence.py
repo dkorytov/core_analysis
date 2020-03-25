@@ -213,8 +213,17 @@ def plot_luminosity_dependence_parameters_all():
     plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/spider/mstar@val@/crit/spider_rm.param", 'g', ['mi', 'rm', 'x2'])
     plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/spider/mstar@val@/crit/spider_rd_rm.param", 'c', ['mi', 'rd', 'rm', 'x2'])
     gs.tight_layout(fig)
+    
+def plot_luminosity_dependence_parameters_OR():
+    fig, ax_dict, gs = init_luminosity_dependence_plot("Outer Rim, M$_{200m}$")
+    mstars = [-1, -0.5, 0, 0.5, 1]
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/OR_default_link/crit/mstar@val@/OR_mi.lowrez.param", 'r', ['mi', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/OR_default_link/crit/mstar@val@/OR_rd.lowrez.param", 'b', ['mi', 'rd', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/OR_default_link/crit/mstar@val@/OR_rm.lowrez.param", 'g', ['mi', 'rm', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/OR_default_link/crit/mstar@val@/OR_rd_rm.lowrez.param", 'c', ['mi', 'rd', 'rm', 'x2'])
 
-
+    gs.tight_layout(fig)
+    
 def plot_luminosity_dependent_ngal_all(param_file, title=None):
     param = dtk.Param(param_file)
     sdss_zmr_loc = param.get_string('zmrh5_loc')
@@ -350,17 +359,24 @@ def plot_luminosity_dependence_survival():
                         [centers_qc, survival_qc, survival_err_qc])
    
 if __name__ == "__main__": 
-    mstars = [-1, 0, 0.5, 1]
+    # mstars = [-1, 0, 0.5, 1]
     # plot_luminosity_dependence("params/cfn/simet/mstar@val@/mean/a2_mi.param", mstars, ['mi', 'rd', 'rm', 'x2'])
     # plot_luminosity_dependence("params/cfn/simet/mstar@val@/mean/a_rd.param", mstars, ['mi', 'rd', 'x2'])
     # plot_luminosity_dependence("params/cfn/simet/mstar@val@/mean/a_rm.param", mstars, ['mi', 'rm', 'x2'])
     # plot_luminosity_dependence("params/cfn/simet/mstar@val@/mean/a_rd_rm.param", mstars, ['mi', 'rd', 'rm', 'x2'])
-    plot_luminosity_dependence_parameters_all()
-    plot_luminosity_dependence_survival()
+    # plot_luminosity_dependence_parameters_all()
+    # plot_luminosity_dependence_survival()
     # Useless function calls
     # plot_luminosity_dependent_ngal_all("params/cfn/simet/mstar0/mean/a3_rd.param")
     # plot_luminosity_dependent_ngal_all("params/cfn/simet/mstar0/mean/qc_rd.param")
-
-    dtk.save_figs("figs/"+__file__+"/", extension=".pdf")
-    dtk.save_figs("figs/"+__file__+"/", extension=".png")
-    # plt.show()
+    if len(sys.argv)<2:
+        raise KeyError('No argument given')
+        exit()
+    plot_name = sys.argv[1]
+    if plot_name == 'OR':
+        plot_luminosity_dependence_parameters_OR()
+    else:
+        raise KeyError("\"{}\" is not a plotting option".format(plot_name))
+    dtk.save_figs("figs/"+__file__+"/"+plot_name+'/', extension=".pdf")
+    dtk.save_figs("figs/"+__file__+"/"+plot_name+'/', extension=".png")
+    plt.show()
