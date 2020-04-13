@@ -55,22 +55,25 @@ def plot_saved_clusters(param_filename):
     param = dtk.Param(param_filename)
     cluster_loc = param.get_string("cluster_loc")
     cluster_data = ClusterData();
-    n2lib_loc = "lib/libn2merg.so"
-    n2merger = N2Merger(n2lib_loc)
-    core_loc = param.get_string('core_loc').replace("${step}", str(401)).replace("_500L", "")
+    # n2lib_loc = "lib/libn2merg.so"
+    # n2merger = N2Merger(n2lib_loc)
+    # core_loc = param.get_string('core_loc').replace("${step}", str(401)).replace("_500L", "")
     fit_mi, fit_rd = get_fit_param(param_filename)
+    # fit_mi, fit_rd = 1e12, 1e3
     print("Infall mass: {:.2e}\nR disrupt: {:.4f}".format(fit_mi, fit_rd))
     # test_core_catalog(core_loc, 1)
     
 
-    print(n2lib_loc)
+
     cluster_data.load_file(cluster_loc)
     for i in range(int(cluster_data.num)):
         if cluster_data.mass[i] > 1e14:
         # cluster_data.plot_fit_cluster(i, 12.2, 0.02)
             # cluster_data.plot_cluster(i)
             cluster_data.plot_fit_cluster(i, fit_mi, fit_rd)
-            plt.show()
+            dtk.save_figs("figs/"+__file__+"/"+param_filename+"/", extension=".png")
+            plt.show()            
+            plt.close('all')
 
 def plot_hist(data, bins, style='-', label=None, ):
     h, xbins = np.histogram(data, bins=bins)
