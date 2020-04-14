@@ -508,4 +508,5 @@ if __name__ == "__main__":
     # write_fit_param(param_file_name)
     calc_likelihood_bounds(sys.argv[1])
     dtk.save_figs('figs/'+param_file_name+'/'+__file__+'/')
+    dtk.save_figs('figs/'+param_file_name+'/'+__file__+'/', extension='.pdf')
     plt.show()    
