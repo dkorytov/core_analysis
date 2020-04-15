@@ -205,8 +205,9 @@ def corner_plot(labels, grid_dic = None, mcmc_dic = None,
                 axs[i][j].set_visible(False)
             if i == j and grid_dic:
                 if grid_dic['cost'] is not None:
-                    ylim = axs[i][j].get_ylim()
-                    axs[i][j].set_ylim([50,1e4])
+                    pass
+                    # ylim = axs[i][j].get_ylim()
+                    # axs[i][j].set_ylim([50,1e4])
                 # ylim=[0.8*ylim[0], ylim[1]]
                 # axs[i][j].set_ylim(ylim)
                 # yticks = axs[i][j].get_yticklabels()
@@ -243,7 +244,7 @@ def corner_plot(labels, grid_dic = None, mcmc_dic = None,
                 ax.set_ylim(ylim)
         
 
-def corner_plot_mcmc(labels, mcmc_loc, fig, axs, colors =['b', 'k', 'r'], plot_hist = True, alpha = 0.3):
+def corner_plot_mcmc(labels, mcmc_loc, fig, axs, colors =['tab:blue', 'k', 'tab:red'], plot_hist = True, alpha = 0.3):
     mcmc_m_i  = dtk.gio_read(mcmc_loc,"mcmc_mass_infall")
     mcmc_r_d  = dtk.gio_read(mcmc_loc,"mcmc_r_disrupt")
     mcmc_id   = dtk.gio_read(mcmc_loc,"mcmc_walker_id")
@@ -291,7 +292,7 @@ def corner_plot_mcmc(labels, mcmc_loc, fig, axs, colors =['b', 'k', 'r'], plot_h
             plt.xticks(rotation=45)
 
     
-def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 'r'], plot_hist = True, alpha = 0.3):
+def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['tab:blue', 'k', 'tab:red'], plot_hist = True, alpha = 0.3):
     assert len(labels) == len(bins), "label count [{}] doesn't match bin count[{}]".format(len(labels), len(bins))
     assert len(labels) == len(np.shape(lkhd)), "Likelihood dims [{}] don't match label count [{}]".format(len(np.shape(lkhd)), len(labels))
     for i in range(0, len(labels)):
@@ -328,34 +329,33 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
     
         if cost is None:
             ax.plot(bins[i], lkhd_1d, c=colors[0])
-            ylim = ax.get_ylim()
+            # ylim = ax.get_ylim()
             ax.fill_between(bbins[b1:b2], 0, vals[b1:b2], lw=0.0, alpha=alpha, color=colors[0])
         else:
             t1 = np.amin(cost, axis=tuple(np.delete(axs_list, i)))
             ax.plot(bins[i], t1.flatten())
         ax.axvline(max_lkhd[i], c=colors[2],ls='--')
         ax.set_xlim(limits[i])
-        if cost is None:
-            ax.set_ylim(ylim)
-
+        # if cost is None:
+        #     ax.set_ylim(ylim)
         plt.sca(ax)
         plt.xticks(rotation=45)
         lim_plus = bbins[b2] - max_lkhd[i]
         lim_minus = max_lkhd[i] -bbins[b1]
         if "disrupt" not in labels[i]:
             if cost is None:
-                test = "{} = $\mathrm{{ {:.3f}^{{ +{:.3f} }}_{{ -{:.3f} }} }}$".format(labels[i], max_lkhd[i], lim_plus, lim_minus)
+                test = "$\mathrm{{ {:.3f}^{{ +{:.3f} }}_{{ -{:.3f} }} }}$".format( max_lkhd[i], lim_plus, lim_minus)
             else:
-                test = "{} $\sim$ $\mathrm{{ {:.2f} }}$".format(labels[i], max_lkhd[i])
+                test = "$\sim$ $\mathrm{{ {:.2f} }}$".format( max_lkhd[i])
         else: #R_disrupt variable
             if cost is None:
-                test = "{} = $\mathrm{{ {:.2f}^{{ +{:.2f} }}_{{ -{:.2f} }} }}$ [h$^{{-1}}$kpc]".format("R$_{\rm{disrupt}}$", max_lkhd[i], lim_plus, lim_minus)
+                test = "$\mathrm{{ {:.2f}^{{ +{:.2f} }}_{{ -{:.2f} }} }}$ [h$^{{-1}}$kpc]".format(max_lkhd[i], lim_plus, lim_minus)
             else:
-                test = "{} $\sim$ $\mathrm{{ {:.0f} }}$ [h$^{{-1}}$kpc]".format("R$_{\rm{disrupt}}$", max_lkhd[i])
+                test = "$\sim$ $\mathrm{{ {:.0f} }}$ [h$^{{-1}}$kpc]".format(max_lkhd[i])
 
 
         ax.set_title(test)
-        ax.set_yticks([])
+
         if i == 0:
             if cost is None:
                 ax.set_ylabel('Likelihood')
@@ -364,12 +364,19 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
         if cost is not None:
             ax.set_yscale('log')
         ax.yaxis.tick_right()
+        ax.set_yticks([])
+        ax.minorticks_off()
+    # plt.show()
     for i in range(size):
         for j in range(size):
             if i == j:
                 continue
             if i < j:
                 continue
+            # Only the right most subplots get y axis ticks & numbers
+            if j != 0:
+                axs[i][j].set_yticks([])
+
             lkhd_2d = np.sum(lkhd, axis=tuple(np.delete(axs_list, (i,j))))
             if cost is not None:
                 cost_2d = np.amin(cost, axis=tuple(np.delete(axs_list, (i,j))))
@@ -377,10 +384,20 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['b', 'k', 
             dx = bins[j][1]-bins[j][0]
             dy = bins[i][1]-bins[i][0]
             if plot_hist:
+                # add an extra column/row for xbins & ybins for pcolormesh
+                # if we don't do it, it will drop the last data column from the plot
+                # and the plot will have white stripes
+                xbins = np.zeros(len(bins[j])+1)
+                xbins[0:-1] = bins[j]
+                xbins[-1] = bins[j][-1]+dx
+                
+                ybins = np.zeros(len(bins[i])+1)
+                ybins[0:-1] = bins[i]
+                ybins[-1] = bins[i][-1]+dy
                 if cost is not None:
-                    ax.pcolor(bins[j]-dx/2.0, bins[i]-dy/2.0, cost_2d.T, cmap='nipy_spectral_r', norm=clr.LogNorm())
+                    ax.pcolormesh(xbins, ybins, cost_2d.T, cmap='nipy_spectral_r', norm=clr.LogNorm())
                 else:
-                    ax.pcolor(bins[j]-dx/2.0, bins[i]-dy/2.0, lkhd_2d.T, cmap='Greys')
+                    ax.pcolormesh(bins[j]-dx/2, bins[i]-dy/2, lkhd_2d.T, cmap='Greys')
             dtk.quick_contour(bins[j], bins[i], lkhd_2d,
                               ax =ax,
                               levels=(0.68, 0.87),
@@ -462,7 +479,7 @@ def calc_likelihood_bounds(param_file_name):
                                                            'cost': np.sum(result2,
                                                                           axis=1)},expected_comov_abundance=expected_comov_abundance, core_loc=core_loc)
     if has_rm and has_rd:
-        
+
         corner_plot([r'log$_{10}$M$_{\mathrm{infall}}$/h$^{-1}$M$_\odot$', 'R$_{\mathrm{disrupt}}$ [h$^{-1}$kpc]', 'R$_{\mathrm{merge}}$ [h$^{-1}$Mpc]', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':None}, expected_comov_abundance=expected_comov_abundance)
         corner_plot([r'log$_{10}$M$_{\mathrm{infall}}$/h$^{-1}$M$_\odot$', 'R$_{\mathrm{disrupt}}$ [h$^{-1}$kpc]', 'R$_{\mathrm{merge}}$ [h$^{-1}$Mpc]', ], grid_dic  = {'bins':[np.log10(mi_bins), rd_bins, rm_bins], 'lkhd': lkhd, 'cost':result2}, expected_comov_abundance=expected_comov_abundance)
         #corner_plot([r'M$_{\mathrm{infall}}$', 'R$_{\mathrm{disrupt}}$', 'R$_{\mathrm{merge}}$', ], [np.log10(mi_bins), rd_bins, rm_bins], lkhd, cost = result2)
