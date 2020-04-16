@@ -390,14 +390,19 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['tab:blue'
                 xbins = np.zeros(len(bins[j])+1)
                 xbins[0:-1] = bins[j]
                 xbins[-1] = bins[j][-1]+dx
+                xbins -= dx/2.0
                 
                 ybins = np.zeros(len(bins[i])+1)
                 ybins[0:-1] = bins[i]
                 ybins[-1] = bins[i][-1]+dy
+                ybins -= dy/2.0
                 if cost is not None:
+                    # ax.pcolormesh(bins[j]-dx/2, bins[i]-dy/2, cost_2d.T, cmap='nipy_spectral_r', norm=clr.LogNorm())
                     ax.pcolormesh(xbins, ybins, cost_2d.T, cmap='nipy_spectral_r', norm=clr.LogNorm())
                 else:
-                    ax.pcolormesh(bins[j]-dx/2, bins[i]-dy/2, lkhd_2d.T, cmap='Greys')
+                    # ax.pcolormesh(bins[j]-dx/2, bins[i]-dy/2, lkhd_2d.T, cmap='Greys')
+                    ax.pcolormesh(xbins, ybins, lkhd_2d.T, cmap='Greys')
+
             dtk.quick_contour(bins[j], bins[i], lkhd_2d,
                               ax =ax,
                               levels=(0.68, 0.87),
