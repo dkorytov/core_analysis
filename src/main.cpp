@@ -635,6 +635,7 @@ size_t chaining_mesh_grid_size;
 float cluster_radial_volume;
 bool scaled_cluster_radial_volume;
 float scaled_cluster_radial_factor;
+bool check_cluster_radial_volume;
 
 int min_disrupt_fof;
 float m_infall;
@@ -1844,6 +1845,12 @@ void load_param(char* file_name){
   else{
     use_miscentering_distribution = false;
   }
+  if(param.has("check_cluster_radial_volume")){
+    check_cluster_radial_volume = param.get<bool>("check_cluster_radial_volume");
+  }
+  else{
+    check_cluster_radial_volume = false;
+  }
   if(step != 401){
     std::cout<<"Step isn't set to 401, which is hard coded into some areas"<<std::endl;
     throw;
@@ -1868,8 +1875,8 @@ void load_cores_gio(std::string fname, Cores& cores){
   dtk::read_gio_quick(fname, "x",                   cores.x,           cores.size);
   dtk::read_gio_quick(fname, "y",                   cores.y,           cores.size);
   dtk::read_gio_quick(fname, "z",                   cores.z,           cores.size);
-  dtk::read_gio_quick(fname, "infall_mass",         cores.infall_mass, cores.size);
-  // dtk::read_gio_quick(fname, "infall_tree_node_mass",         cores.infall_mass, cores.size);
+  // dtk::read_gio_quick(fname, "infall_mass",         cores.infall_mass, cores.size);
+  dtk::read_gio_quick(fname, "infall_tree_node_mass",         cores.infall_mass, cores.size);
   dtk::read_gio_quick(fname, "infall_step",         cores.infall_step, cores.size);
   dtk::read_gio_quick(fname, "infall_fof_halo_tag", cores.infall_htag, cores.size);
 }
@@ -3016,7 +3023,13 @@ void Cluster::get_radial_bins(Galaxies& gal, std::vector<float>& r_bins,
     float dy = gal.y[i]-y;
     float dz = gal.z[i]-z;
     //TODO: Remove temp factor of 1.2
-    float dr = sqrt(dx*dx + dy*dy + dz*dz)/(sod_radius); 
+    float dr_mpc = sqrt(dx*dx + dy*dy + dz*dz);
+    float dr = dr_mpc/(sod_radius);
+    // If turned on, we exclude any cores beyond the limit.
+    // Mainly used for convergence tests.
+    if(check_cluster_radial_volume)
+      if(dr_mpc > cluster_radial_volume)
+	continue;
     
     if(false){//only one projection along z-axis
       float dr2 = dx*dx+dy*dy;
