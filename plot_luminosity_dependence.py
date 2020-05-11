@@ -112,15 +112,15 @@ def init_luminosity_dependence_plot(title=None):
     ax_dict = {}
 
     for i, model_param in enumerate(['mi', 'rd', 'rm', 'x2']):
-        ax = plt.subplot(gs[i,0], sharex=shared_x)
+        ax = plt.subplot(gs[i,0])#, sharex=shared_x)
         ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=3))
         ax.set_ylabel(parameter_labels[model_param])
         ax.set_xscale('log')
         ax.set_xlim([0.4, 2.5])
+        ax.xaxis.set_minor_formatter(ticker.NullFormatter())
         if i == 3:
             ax.set_xlabel("Galaxy Luminosity [L$_*$]")
             ax.xaxis.set_ticks([0.4, 1, 2.5])
-
             ax.xaxis.set_ticklabels(['0.4', '1.0', '2.5'])
         else:
             ax.xaxis.set_ticklabels([])
@@ -128,15 +128,15 @@ def init_luminosity_dependence_plot(title=None):
             ax.set_yscale('log')
 
         if i == 0:
-            ax.plot([], [], 'r', lw=3, label='Mi')
+            ax.plot([], [], 'tab:blue', lw=3, label='Mi')
             if title is not None:
                 ax.set_title(title)
         elif i == 1:
-            ax.plot([], [], 'b', lw=3, label='Rd')
+            ax.plot([], [], 'tab:orange', lw=3, label='Rd')
         elif i == 2:
-            ax.plot([], [], 'g', lw=3, label='Rm')
+            ax.plot([], [], 'tab:green', lw=3, label='Rm')
         elif i == 3:
-            ax.plot([], [], 'c', lw=3, label='RdRm')
+            ax.plot([], [], 'tab:purple', lw=3, label='RdRm')
         ax.legend(loc='best', framealpha=0)
         ax_dict[model_param] = ax
         
@@ -161,7 +161,7 @@ def plot_luminosity_dependence_single(fig, ax_dict, mstars, param_base, color, p
             else:
                 ax_dict[model_param].fill_between(luminosities, values+values_upper_err, values-values_lower_err, color=color, alpha=0.3)
 
-        print(model_param, values)
+
 
 def plot_luminosity_dependence_parameters_all():
     fig, ax_dict, gs = init_luminosity_dependence_plot("Outer Rim, M$_{200m}$")
@@ -214,14 +214,33 @@ def plot_luminosity_dependence_parameters_all():
     plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/cfn/spider/mstar@val@/crit/spider_rd_rm.param", 'c', ['mi', 'rd', 'rm', 'x2'])
     gs.tight_layout(fig)
     
-def plot_luminosity_dependence_parameters_OR():
+
+def plot_luminosity_dependence_parameters_OR_Simet():
+    fig, ax_dict, gs = init_luminosity_dependence_plot("Outer Rim, M$_{200m}$")
+    # mstars = [-1, -0.5, 0, 0.5, 1]
+    mstars = [-1, -0.5, 0, 1]
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/make_all_OR.high_richness.low_rez.min20.sh/crit/mstar@val@/OR_mi_zoom.param", 'tab:blue', ['mi', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/make_all_OR.high_richness.low_rez.min20.sh/crit/mstar@val@/OR_rd_zoom.param", 'tab:orange', ['mi', 'rd', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/make_all_OR.high_richness.low_rez.min20.sh/crit/mstar@val@/OR_rm_zoom.param", 'tab:green', ['mi', 'rm', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/make_all_OR.high_richness.low_rez.min20.sh/crit/mstar@val@/OR_rd_rm_zoom.param", 'tab:purple', ['mi', 'rd', 'rm', 'x2'])
+    gs.tight_layout(fig)
+
+def plot_luminosity_dependence_parameters_OR_McClintock():
     fig, ax_dict, gs = init_luminosity_dependence_plot("Outer Rim, M$_{200m}$")
     mstars = [-1, -0.5, 0, 0.5, 1]
-    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/OR_default_link/crit/mstar@val@/OR_mi.lowrez.param", 'r', ['mi', 'x2'])
-    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/OR_default_link/crit/mstar@val@/OR_rd.lowrez.param", 'b', ['mi', 'rd', 'x2'])
-    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/OR_default_link/crit/mstar@val@/OR_rm.lowrez.param", 'g', ['mi', 'rm', 'x2'])
-    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/OR_default_link/crit/mstar@val@/OR_rd_rm.lowrez.param", 'c', ['mi', 'rd', 'rm', 'x2'])
-
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/make_all_OR.McClintock.high_richness.low_rez.min20.sh/crit/mstar@val@/OR_mi_zoom.param", 'tab:blue', ['mi', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/make_all_OR.McClintock.high_richness.low_rez.min20.sh/crit/mstar@val@/OR_rd_zoom.param", 'tab:orange', ['mi', 'rd', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/make_all_OR.McClintock.high_richness.low_rez.min20.sh/crit/mstar@val@/OR_rm_zoom.param", 'tab:green', ['mi', 'rm', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/make_all_OR.McClintock.high_richness.low_rez.min20.sh/crit/mstar@val@/OR_rd_rm_zoom.param", 'tab:purple', ['mi', 'rd', 'rm', 'x2'])
+    gs.tight_layout(fig)
+    
+def plot_luminosity_dependence_parameters_LJ_McClintock():
+    fig, ax_dict, gs = init_luminosity_dependence_plot("Outer Rim, M$_{200m}$")
+    mstars = [-1, -0.5, 0, 0.5, 1]
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/make_all_LJ.McClintock.high_richness.low_rez.min20.sh/crit/mstar@val@/OR_mi_zoom.param", 'tab:blue', ['mi', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/make_all_LJ.McClintock.high_richness.low_rez.min20.sh/crit/mstar@val@/OR_rd_zoom.param", 'tab:orange', ['mi', 'rd', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/make_all_LJ.McClintock.high_richness.low_rez.min20.sh/crit/mstar@val@/OR_rm_zoom.param", 'tab:green', ['mi', 'rm', 'x2'])
+    plot_luminosity_dependence_single(fig, ax_dict, mstars, "params/rmba/auto/make_all_LJ.McClintock.high_richness.low_rez.min20.sh/crit/mstar@val@/OR_rd_rm_zoom.param", 'tab:purple', ['mi', 'rd', 'rm', 'x2'])
     gs.tight_layout(fig)
     
 def plot_luminosity_dependent_ngal_all(param_file, title=None):
@@ -373,8 +392,12 @@ if __name__ == "__main__":
         raise KeyError('No argument given')
         exit()
     plot_name = sys.argv[1]
-    if plot_name == 'OR':
-        plot_luminosity_dependence_parameters_OR()
+    if plot_name == 'OR_Simet':
+        plot_luminosity_dependence_parameters_OR_Simet()
+    elif plot_name == 'OR_McClintock':
+        plot_luminosity_dependence_parameters_OR_McClintock()
+    elif plot_name == "LJ_McClintock":
+        plot_luminosity_dependence_parameters_LJ_McClintock()
     else:
         raise KeyError("\"{}\" is not a plotting option".format(plot_name))
     dtk.save_figs("figs/"+__file__+"/"+plot_name+'/', extension=".pdf")
