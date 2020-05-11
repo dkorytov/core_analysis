@@ -206,12 +206,33 @@ def plot_mstar0_OR():
     pattern = "figs/params/cfn/simet/mstar0/{}{}/{}.param/calc_likelihood_bounds.py/grid_fit_param.txt"
     # pattern = 'figs/params/rmba/simet/{}/mstar0/{}{}/calc_likelihood_bounds.py/grid_fit_param.txt'
     pattern = "figs/params/rmba/auto/OR_default_link/crit/mstar0/OR_{model}.lowrez_zoom.param/calc_likelihood_bounds.py/grid_fit_param.txt"
+    pattern = "figs/params/rmba/auto/make_all_OR.McClintock.high_richness.low_rez.min20.sh/crit/mstar0/OR_{model}_zoom.param/calc_likelihood_bounds.py/grid_fit_param.txt"
     models = ["mi", "rd", "rm", "rd_rm"]
     data_inputs = [['', '']]
     data_input_labels = ['']
-    data_clr = ['tab:red', ]
-    data_mfc = ['tab:red', ]
+    data_clr = ['tab:blue', ]
+    data_mfc = ['tab:blue', ]
     load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
+
+def plot_mstar0_AQ_miscentering():
+    pattern = 'figs/params/rmba/testing/AQ_{model}.{data_input1}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
+    models = ['rd']
+    data_inputs = [['default', ''], ['distribution', '']]
+    data_input_labels = ['Unmodified', 'Miscentered']
+    data_clr = ['tab:blue', 'tab:blue']
+    data_mfc = ['tab:blue', 'white']
+    load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
+    
+def plot_mstar0_OR_miscentering():
+    # pattern = 'figs/params/rmba/testing/AQ_{model}.{data_input1}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
+    pattern = 'figs/params/rmba/auto/make_all_OR.McClintock.high_richness.low_rez.min20{data_input1}.sh/crit/mstar0/OR_{model}_zoom.param/calc_likelihood_bounds.py/grid_fit_param.txt'
+    models = ['mi', 'rd', 'rm', 'rd_rm']
+    data_inputs=[['', ''], ['.RM_miscenter', '']]
+    data_input_labels=['Unmodified', 'Miscentered']
+    data_clr = ['tab:blue', 'tab:blue']
+    data_mfc = ['tab:blue', 'white']
+    load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
+    
 
 def plot_mstar0_AQ_RMvSP():
     # pattern = "figs/params/rmba/simet/mstar0/{}{}/{}.param/calc_likelihood_bounds.py/grid_fit_param.txt"
@@ -224,23 +245,43 @@ def plot_mstar0_AQ_RMvSP():
     data_mfc = ['tab:red', 'tab:blue']
     load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
     
-def plot_mstar0_AQ_miscentering():
-    pattern = 'figs/params/rmba/testing/AQ_{model}.{data_input1}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
-    models = ['rd']
-    data_inputs = [['default', ''], ['distribution', '']]
-    data_input_labels = ['Unmodified', 'Miscentered']
-    data_clr = ['tab:blue', 'tab:blue']
-    data_mfc = ['tab:blue', 'white']
+def plot_OR_LJ(mstar='0'):
+    pattern = 'figs/params/rmba/auto/{{data_input1}}/crit/mstar{mstar}/OR_{{model}}.param/calc_likelihood_bounds.py/grid_fit_param.txt'.format(mstar=mstar)
+    print(pattern)
+    models = ["mi", "rd", "rm", "rd_rm"]
+    data_inputs = [  ['make_all_OR.McClintock.high_richness.low_rez.min20.sh', ''],
+                     ['make_all_LJ.McClintock.high_richness.low_rez.min20.sh', '']]
+                   
+    data_input_labels = ['Outer Rim', 'Last Journey']
+    data_clr = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
+    data_mfc = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
+    load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
+
+def plot_mass_def(mstar='0'):
+    pattern = 'figs/params/rmba/auto/{{data_input1}}/crit/mstar{mstar}/OR_{{model}}_zoom.param/calc_likelihood_bounds.py/grid_fit_param.txt'.format(mstar=mstar)
+    print(pattern)
+    models = ["mi", "rd", "rm", "rd_rm"]
+    data_inputs = [['make_all_OR.Baxter.high_richness.low_rez.min20.sh', ''],
+                   ['make_all_OR.high_richness.low_rez.min20.sh', ''],
+                   ['make_all_OR.Farahi.high_richness.low_rez.min20.sh', ''],
+                   ['make_all_OR.McClintock.high_richness.low_rez.min20.sh', '']][::-1]
+                   
+    data_input_labels = ['Baxter+2016', 'Farahi+2016', 'Simet+2017', 'McClintock+2019'][::-1]
+    data_clr = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
+    data_mfc = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
     load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
     
-def plot_mstar0_OR_miscentering():
-    # pattern = 'figs/params/rmba/testing/AQ_{model}.{data_input1}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
-    pattern = 'figs/params/rmba/auto/{data_input1}/crit/mstar0/OR_{model}{data_input2}.param/calc_likelihood_bounds.py/grid_fit_param.txt'
-    models = ['mi', 'rd', 'rm', 'rd_rm']
-    data_inputs=[['OR_default_link', '.lowrez'], ['make_all_OR_miscentered.sh', '']]
-    data_input_labels=['Unmodified', 'Miscentered']
-    data_clr = ['tab:red', 'tab:red']
-    data_mfc = ['tab:red', 'white']
+def plot_high_richness(mstar='0'):
+    pattern = 'figs/params/rmba/auto/{{data_input1}}/crit/mstar{mstar}/OR_{{model}}_zoom.param/calc_likelihood_bounds.py/grid_fit_param.txt'.format(mstar=mstar)
+    pattern = 'figs/params/rmba/auto/{{data_input1}}/crit/mstar{mstar}/OR_{{model}}_zoom.param/calc_likelihood_bounds.py/grid_fit_param.txt'.format(mstar=mstar)
+    print(pattern)
+    models = ["mi", "rd", "rm", "rd_rm"]
+    data_inputs = [['make_all_OR.McClintock.low_richness.low_rez.min20.sh', ''],
+                   ['make_all_OR.McClintock.high_richness.low_rez.min20.sh', '']]
+                   
+    data_input_labels = ['default', 'high richness', 'high richness + min20']
+    data_clr = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
+    data_mfc = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
     load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None)
     
 def load_all2(pattern, models, data_inputs, data_input_labels, data_clr, data_mfc, title=None):
@@ -376,11 +417,11 @@ def load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mf
     fig = plt.figure(figsize=(7,4))
     if title is not None:
         plt.suptitle(title)
-    gs = gridspec.GridSpec(1,4, hspace=0.1)
-    model_params_ax = {'mi':plt.subplot(gs[:,0]),
-                       'rd':plt.subplot(gs[:,1]),
-                       'rm':plt.subplot(gs[:,2]),
-                       'x2':plt.subplot(gs[:,3])}
+    gs = gridspec.GridSpec(6,4, hspace=0.1)
+    model_params_ax = {'mi':plt.subplot(gs[1:,0]),
+                       'rd':plt.subplot(gs[1:,1]),
+                       'rm':plt.subplot(gs[1:,2]),
+                       'x2':plt.subplot(gs[1:,3])}
     model_params = ['mi', 'rd', 'rm']
     for model_i, model in enumerate(models):
         for data_i in range(0, len(data_inputs)):
@@ -423,25 +464,24 @@ def load_all4(pattern, models, data_inputs, data_input_labels, data_clr, data_mf
             tick.set_verticalalignment('top')
         # help(ax.xaxis.set_label_text)
         ax.xaxis.set_label_coords(0.5,-.3)
+
         
     model_params_ax['rd'].yaxis.set_ticklabels([])
     model_params_ax['rm'].yaxis.set_ticklabels([])
     model_params_ax['x2'].yaxis.set_ticklabels([])
+    model_params_ax['x2'].set_xscale('log')
     # model_params_ax['rd'].xaxis.set_major_locator(ticker.MultipleLocator(5))
-    # ax = model_params_ax['rd']
-    # ax.plot([],[], linewidth=5, color='b', label='$M_{200m}$')
-    # ax.plot([],[], linewidth=5, color='r', label='$M_{200c}$')
-    # ax.errorbar([],[],xerr=[], fmt='o', color='k', mec='k', mfc='k',
-    #             label='profile only')
-    # ax.errorbar([],[],xerr=[], fmt='o', color='k', mec='k', mfc='none',
-    #             label='profile + abundance')
-    # ax.legend(bbox_to_anchor=(-1., 1.02, 4, .102), loc='lower center',
-    #        ncol=2, mode="expand", borderaxespad=0.)
+    ax = model_params_ax['mi']
+    for data_i in range(0, len(data_input_labels)):
+        ax.errorbar([], [], yerr=[], fmt='o',
+                    label=data_input_labels[data_i], color=data_clr[data_i],
+                    mfc=data_mfc[data_i], mec = data_clr[data_i])
+    ax.legend(bbox_to_anchor=(.2, 1.01, 5, .102), loc='lower left',
+              ncol=2, mode="expand", borderaxespad=0., framealpha=0.0)
     # plt.tight_layout()
-    # gs.tight_layout(fig)
+    gs.tight_layout(fig)
 
-    plt.gcf().subplots_adjust(bottom=0.3,left=0.15)
-
+    # plt.gcf().subplots_adjust(bottom=0.3,left=0.15, top=0.8)
 
 
 def load_pc(pattern, mass_defs, model_defs, cent_defs, peak_defs, title=None):
@@ -532,8 +572,14 @@ if __name__ == "__main__":
         plot_mstar0_OR_miscentering()
     elif plot_name == "OR":
         plot_mstar0_OR();
+    elif plot_name == 'mass_def':
+        plot_mass_def('0')
+    elif plot_name == 'ORvLJ':
+        plot_OR_LJ('0')
+    elif plot_name == 'high_richness':
+        plot_high_richness('0')
     else:
-        raise KeyError("{} not a list plot".format(plot_function))
+        raise KeyError("\"{}\" not a list plot".format(plot_name))
     dtk.save_figs('figs/'+__file__+'/'+plot_name+'/', '.pdf')
     plt.show()
     exit()

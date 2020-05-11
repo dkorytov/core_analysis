@@ -342,18 +342,15 @@ def corner_plot_grid(labels, bins, lkhd, fig, axs, cost=None, colors=['tab:blue'
         plt.xticks(rotation=45)
         lim_plus = bbins[b2] - max_lkhd[i]
         lim_minus = max_lkhd[i] -bbins[b1]
-        if "disrupt" not in labels[i]:
-            if cost is None:
-                test = "$\mathrm{{ {:.3f}^{{ +{:.3f} }}_{{ -{:.3f} }} }}$".format( max_lkhd[i], lim_plus, lim_minus)
-            else:
-                test = "$\sim$ $\mathrm{{ {:.2f} }}$".format( max_lkhd[i])
-        else: #R_disrupt variable
-            if cost is None:
-                test = "$\mathrm{{ {:.2f}^{{ +{:.2f} }}_{{ -{:.2f} }} }}$ [h$^{{-1}}$kpc]".format(max_lkhd[i], lim_plus, lim_minus)
-            else:
-                test = "$\sim$ $\mathrm{{ {:.0f} }}$ [h$^{{-1}}$kpc]".format(max_lkhd[i])
 
-
+        if cost is None:
+            test = "$\mathrm{{ {:.3f}^{{ +{:.3f} }}_{{ -{:.3f} }} }}$".format( max_lkhd[i], lim_plus, lim_minus)
+        else:
+            test = "$\sim$ $\mathrm{{ {:.2f} }}$".format( max_lkhd[i])
+        if "disrupt" in labels[i]:
+            test += ' [h$^{{-1}}$kpc]'
+        elif "merge" in labels[i]:
+            test += ' [h$^{{-1}}$Mpc]'
         ax.set_title(test)
 
         if i == 0:
