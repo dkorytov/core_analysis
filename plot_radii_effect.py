@@ -41,6 +41,7 @@ def plot_radii_effects(param_files, radii, params, xlabel=None, plot_reference=N
     gs = gridspec.GridSpec(size, 1)
     sharex_ax = None
     fig = plt.figure()
+
     for i, param in enumerate(params):
         if sharex_ax is None:
             ax = plt.subplot(gs[i, 0])
@@ -64,12 +65,14 @@ def plot_radii_effects(param_files, radii, params, xlabel=None, plot_reference=N
     gs.tight_layout(fig)
     
 def plot_cluster_radial_volume():
-    radii = [3,4,5,7,10]
+    # radii = [3,4,5,7,10]
+    radii = ['2.0', '3.0', '4.0', '5.0', '6.0', '7.0', '8.0', '9.0', '10.0']
     param_file_base = "figs/params/cfn/simet/mstar0/mean/rscan_r#rad#.#model#.param/calc_likelihood_bounds.py/grid_fit_param.txt"
-    param_files_mi = [param_file_base.replace("#model#", "mi").replace("#rad#", str(radi)) for radi in radii]
+    param_file_base = "figs/params/rmba/auto/make_all_OR.McClintock.high_richness.low_rez.min20.radial_inclusion.sh/crit/mstar0/OR_rd.radial_inclusion_#rad#_zoom.param/calc_likelihood_bounds.py/grid_fit_param.txt"
     param_files_rd = [param_file_base.replace("#model#", "rd").replace("#rad#", str(radi)) for radi in radii]
-    print(param_files_mi)
-    plot_radii_effects(param_files_mi, radii, ['mi', 'x2'], xlabel=r'Radius [h$^{-1}$ Mpc]')
+    
+    radii = [float(rad) for rad in radii] # convert into floats
+    # plot_radii_effects(param_files_mi, radii, ['mi', 'x2'], xlabel=r'Radius [h$^{-1}$ Mpc]')
     plot_radii_effects(param_files_rd, radii, ['mi', 'rd', 'x2'], xlabel=r'Radius [h$^{-1}$ Mpc]')
 
 def plot_exclude_central_region():
@@ -87,7 +90,18 @@ def plot_exclude_central_region():
 
 
 if __name__ == "__main__":
-    plot_cluster_radial_volume();
-    plot_exclude_central_region()
-    dtk.save_figs("figs/"+__file__+"/", extension='.pdf')
+    # default plot
+    if len(sys.argv) != 2:
+        plot_name = "radial_volume"
+    else:
+        plot_name = sys.argv[1]
+
+    #  different plots
+    if plot_name == "radial_volume":
+        plot_cluster_radial_volume();
+    elif plot_name == "exclude_volume":
+        plot_exclude_central_region()
+    else:
+        raise KeyError("\"{}\" not a predefined plot".format(plot_name))
+    dtk.save_figs("figs/"+__file__+"/"+plot_name+"/", extension='.pdf')
     plt.show()
