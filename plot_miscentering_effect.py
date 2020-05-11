@@ -86,8 +86,14 @@ def plot_miscentering_effects(fname_pattern, distances_str, distances_val):
 if __name__ == "__main__":
     AQ_pattern = "figs/params/rmba/simet/crit/mstar0/center_displace/AQ_${displacement}_rd.param/calc_likelihood_bounds.py/grid_fit_param.txt"
     OR_pattern = "figs/params/rmba/simet/crit/mstar0/center_displace/OR_${displacement}_rd_zoom.param/calc_likelihood_bounds.py/grid_fit_param.txt"
-    distances_str = ['0.00', '0.01', '0.02', '0.022', '0.025', '0.027', '0.03','0.04', '0.05', '0.10', '0.20', '0.50', '1.00']
-    distances_val = np.array([0.00, 0.01, 0.02, 0.022, 0.025, 0.027, 0.03, 0.04, 0.05, 0.10, 0.20, 0.50, 1.00])
+    OR_pattern = "figs/params/rmba/auto/make_all_OR.McClintock.high_richness.low_rez.min20.miscentering.sh/crit/mstar0/OR_rd.miscenter_${displacement}_zoom.param/calc_likelihood_bounds.py/grid_fit_param.txt"
+    # Original OR values
+    # distances_str = ['0.00', '0.01', '0.02', '0.022', '0.025', '0.027', '0.03','0.04', '0.05', '0.10', '0.20', '0.50', '1.00']
+    # distances_val = np.array([0.00, 0.01, 0.02, 0.022, 0.025, 0.027, 0.03, 0.04, 0.05, 0.10, 0.20, 0.50, 1.00])
+    # Reran OR Values
+    distances_str = ['0.00', '0.01', '0.02', '0.03','0.04', '0.05', '0.075', '0.10', '0.20', '0.50', '1.00']
+    distances_val = np.array([0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.10, 0.20, 0.50, 1.00])
+
     plot_miscentering_effects(OR_pattern, distances_str, distances_val)
     dtk.save_figs('figs/'+__file__+'/', '.pdf')
     plt.show()
