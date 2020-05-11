@@ -15,9 +15,19 @@ echo ""
 echo "Phase 1 Done:"
 date
 echo ""
+
 ./run_any_make.sh ./core_fit $make_scirpt zoom
 ./run_any_make.sh ./calc_likelihood_bounds.py $make_scirpt zoom
 ./run_any_make.sh ./make_zoom_param.py $make_scirpt zoom
+echo ""
+echo "Phase 2 Done:"
+date
+echo ""
+
+./run_any_make.sh ./core_fit $make_scirpt zoom zoom
+./run_any_make.sh ./calc_likelihood_bounds.py $make_scirpt zoom zoom 
+./run_any_make.sh ./make_zoom_param.py $make_scirpt zoom zoom
+
 echo ""
 echo "All done"
 date

@@ -33,22 +33,34 @@ def make_zoom_param(input_param_fname):
     model_params = ['mi', 'rd', 'rm']
     for mp in model_params:
         if mp in model_fit_param:
+            rd_factor = 1.0
+            if mp == "rd":
+                rd_factor = 1000.0
+
+            old_values = base_param.get_float_list(mp+"_bins_info")
             center = model_fit_param.get_float(mp)
             lower, upper = model_fit_param.get_float_list(mp+"_limits")
-            print("center: ", center)
-            print("limits: ", lower, upper)
-            old_values = base_param.get_float_list(mp+"_bins_info")
+            print("\n\nparam:", mp)
+            old_range = (old_values[1]-old_values[0])*rd_factor
+            print(" old range: {:.3f}->{:.3f}".format(old_values[0]*rd_factor, old_values[1]*rd_factor))
+            print("\trange: {:.3f}".format((old_values[1]-old_values[0])*rd_factor))
+            print(" fit: {:.3f} +{:.3f} -{:.3f}".format(center, upper-center, center-lower))
+            print("\trange: {:3f}".format(upper-lower))
+
             err = np.max([center-lower, upper-center, spacing[mp]])
-            print(mp)
-            print(center-lower, upper-center)
-            print(err)
+
+            # print(center-lower, upper-center)
+            print(" target err: {:.3f}".format(err))
             # if err< 0.002:
             #     err = 0.002
             new_lower_limit = lower - err*3
             new_upper_limit = upper + err*3
             if new_lower_limit < 0:
                 new_lower_limit = 0
-            print("New limits: ", new_lower_limit, new_upper_limit)
+            print(" New limits: {:.3f} -> {:.3f}".format(new_lower_limit, new_upper_limit))
+            new_range = new_upper_limit - new_lower_limit
+            print("\trange: {:.3f}".format(new_range))
+            print("\tchange: {:.3f}".format(new_range/old_range))
             if mp != 'rd':
                 base_param.set_var(mp+"_bins_info", "{} {} {}".format(new_lower_limit, new_upper_limit, old_values[2]))
             else:
@@ -58,7 +70,7 @@ def make_zoom_param(input_param_fname):
         f.write(str(base_param))
                    
     
-    print(base_param.__str__())
+
 
 if __name__ == "__main__":
     make_zoom_param(sys.argv[1])
