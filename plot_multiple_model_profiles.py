@@ -1,6 +1,11 @@
 #!/usr/bin/env python2.7
 
 from __future__ import print_function, division
+import matplotlib
+import os
+#checks if there is a display to use.
+if os.environ.get('DISPLAY') is None:
+    matplotlib.use('Agg')
 
 from matplotlib import rc
 # rc('font',**{'family': 'serif',
@@ -31,7 +36,7 @@ def load_zmr(param_fname, sdss=False):
 def plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, mass_i, spider_zmr=None):
     plt.figure()
     model_size = len(model_zmrs)
-    colors = ['r', 'b', 'g', 'c']
+    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:purple']
     for i in range(0, model_size):
         gal_density = model_zmrs[i].zmr_gal_density[0, mass_i, :]
         gal_density_err = model_zmrs[i].zmr_gal_density_err[0, mass_i, :]
@@ -43,7 +48,12 @@ def plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, mas
     sdss_gal_err = sdss_zmr.zmr_gal_density_err[0, mass_i, :]
     # plt.plot(r_bins_cen, sdss_zmr.zmr_gal_density[0, mass_i, :], 'k', label='SDSS', lw=2)
     # plt.fill_between(r_bins_cen, sdss_gal-sdss_gal_err, sdss_gal+sdss_gal_err, color='k', alpha=0.2)
-    offset = .005
+
+    #offset for sdss vs spiders
+    if spider_zmr is None: 
+        offset = 0
+    else:
+        offset = .005
     plt.errorbar(r_bins_cen-offset, sdss_gal, yerr=+sdss_gal_err, fmt='o',
                  label='redMaPPer clusters', lw=2, color='k', capsize=0,
                  )
@@ -60,28 +70,45 @@ def plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, mas
     plt.text(0.05, 0.05, title, transform=plt.gca().transAxes)
     plt.xlabel(r'r/R$_{200}$')
     plt.ylabel(r"Galaxy Surface Density")
+    plt.tight_layout()
 
-def plot_mstar0():
-    param_base = "params/cfn/simet/mstar0/mean/a3_@model@.param"
+def plot_profiles_mstar(param_base, mstar):
+    # param_base = "params/cfn/simet/mstar0/mean/a3_@model@.param"
+    # param_base = "params/rmba/auto/make_all_OR.McClintock.high_richness.low_rez.min20.sh/crit/mstar0/OR_@model@.param"
+    param_base = param_base.replace("@mstar@", mstar)
     models = ["mi", "rd", "rm", "rd_rm",]
     model_names = ["Mi", "Rd", "Rm", "RdRm",]
     param_fnames = [param_base.replace("@model@", model) for model in models]
     model_zmrs = [load_zmr(param_fname) for param_fname in param_fnames]
     sdss_zmr = load_zmr(param_fnames[0], sdss=True) 
-    spider_zmr = load_zmr("params/cfn/spider/mstar0/mean/bcg.xray_mass.rd.param", sdss=True)
-    plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 0, spider_zmr=spider_zmr)
-    plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 1, spider_zmr=spider_zmr)
-    plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 2, spider_zmr=spider_zmr)
-    plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 3, spider_zmr=spider_zmr)
-    plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 4, spider_zmr=spider_zmr)
-    plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 5, spider_zmr=spider_zmr)
+    # spider_zmr = load_zmr("params/cfn/spider/mstar0/mean/bcg.xray_mass.rd.param", sdss=True)
+    plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 0,)
+    plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 1,)
+    plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 2,)
+    plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 3,)
+    # plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 4,)
+    # plot_multiple_model_profiles_one_mass(sdss_zmr, model_zmrs, model_names, 5,)
 
-def plot_multiple_model_profiles():
-    plot_mstar0()
-
+def plot_multiple_model_profiles(param_base, fig_dir):
+    mstars = ['-1', '-0.5', '0', '0.5', '1']
+    for mstar in mstars:
+        plot_profiles_mstar(param_base, mstar)
+        dtk.save_figs(fig_dir+"/mstar"+mstar+"/", extension=".pdf", reset_count=True)
+        dtk.save_figs(fig_dir+"/mstar"+mstar+"/", extension=".png")
+        plt.show()
+        plt.close('all')
 
 if __name__ == "__main__":
-    plot_multiple_model_profiles()    
-    dtk.save_figs("figs/"+__file__+"/", extension=".pdf")
-    dtk.save_figs("figs/"+__file__+"/", extension=".png")
-    # plt.show()
+    param_bases = {"OR_McClintock":"params/rmba/auto/make_all_OR.McClintock.high_richness.low_rez.min20.sh/crit/mstar@mstar@/OR_@model@.param",
+                    "OR_Simet":     "params/rmba/auto/make_all_OR.high_richness.low_rez.min20.sh/crit/mstar@mstar@/OR_@model@.param",
+                    "OR_Baxter":    "params/rmba/auto/make_all_OR.Baxter.high_richness.low_rez.min20.sh/crit/mstar@mstar@/OR_@model@.param",
+                    "OR_Farahi":    "params/rmba/auto/make_all_OR.Farahi.high_richness.low_rez.min20.sh/crit/mstar@mstar@/OR_@model@.param"}
+
+    if len(sys.argv) >= 2:
+        plot_names = syst.argv[1:]
+    else:
+        plot_names = list(param_bases.keys())
+        
+    for plot_name in plot_names:        
+        plot_multiple_model_profiles(param_bases[plot_name], "figs/"+__file__+"/"+plot_name+"/")    
+    plt.show()
