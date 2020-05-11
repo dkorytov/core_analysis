@@ -112,16 +112,18 @@ def get_ngal_fit(param_fname, cluster_num, color, plot_fit=True, spider=False, m
     # plt.legend(loc='best')
 def format_plot():
 
-    p4 = plt.plot([],[], 'c', lw=5, label=r'{:1.2f}~L$_*$'.format(0.4))
-    p3 = plt.plot([],[], 'g', lw=5, label=r'{:1.2f}~L$_*$'.format(0.63))
-    p2 = plt.plot([],[], 'b', lw=5, label=r'{:1.2f}~L$_*$'.format(1.0))
-    p1 = plt.plot([],[], 'r', lw=5, label=r'{:1.2f}~L$_*$'.format(2.5))
-    plt.errorbar([], [], yerr=[], fmt='o', lw=2, color='k', label="redMaPPer clusters", capsize=0)
-    plt.errorbar([], [], yerr=[], fmt='o', lw=1, color='k', markerfacecolor='none', label='SPIDERS clusters', capsize=0)
+    p4 = plt.plot([],[], 'tab:purple',  lw=5, label=r'{:1.2f}~L$_*$'.format(0.4))
+    p3 = plt.plot([],[], 'tab:red', lw=5, label=r'{:1.2f}~L$_*$'.format(0.63))
+    p2 = plt.plot([],[], 'tab:green', lw=5, label=r'{:1.2f}~L$_*$'.format(1.0))
+    p12 = plt.plot([],[], 'tab:orange',lw=5, label=r'{:1.2f}~L$_*$'.format(1.58))
+    p1 = plt.plot([],[],  'tab:blue',lw=5, label=r'{:1.2f}~L$_*$'.format(2.5))
+    plt.errorbar([], [], yerr=[], fmt='o', lw=2, color='k', label="redMaPPer", capsize=0)
+    plt.plot([], [], color='k', label="Core Model")
+    # plt.errorbar([], [], yerr=[], fmt='o', lw=1, color='k', markerfacecolor='none', label='SPIDERS clusters', capsize=0)
     plt.legend(ncol=2, loc='best', framealpha=0.0)
 
-    plt.xlabel(r'M$_{200m}$ [h$^{-1}$ M$_\odot$]')
-    plt.ylabel(r'Projected N$_{\rm{galaxy}}$ within R$_{200m}$')
+    plt.xlabel(r'M$_{200c}$ [h$^{-1}$ M$_\odot$]')
+    plt.ylabel(r'Projected N$_{\rm{gal}}$')
     plt.ylim([1e-1, 3e3])
     plt.xlim([1e14, 5e15])
     plt.tight_layout()
@@ -141,8 +143,24 @@ def plot_ngal_fits():
     # get_ngal_fit("params/cfn/spider/mstar0/mean/spider_rd.param", None, 'm', plot_fit=False, spider=True)
     # get_ngal_fit("params/cfn/spider/mstar0/mean/bcg_rd.param", None, 'c', plot_fit=False, spider=True)
     format_plot()
+def plot_ngal_fits2(pattern, mstars):
+    color_cycle = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
+    for mstar, color in zip(mstars, color_cycle):
+        get_ngal_fit(pattern.replace("${mstarval}", mstar), None, color)
+    format_plot()
 
 if __name__ == "__main__":
-    plot_ngal_fits()
-    dtk.save_figs("figs/"+__file__+"/", extension='.pdf')
+    if len(sys.argv) > 2:
+        plot_name = sys.argv[1]
+    else:
+        plot_name = "OR_McClintock2019"
+    mstars = ['-1', '-0.5', '0', '0.5', '1']
+    if plot_name == "OR_Simet2017":
+        pattern = 'params/rmba/auto/make_all_OR.high_richness.low_rez.min20.sh/crit/mstar${mstarval}/OR_rd_zoom.param'
+        plot_ngal_fits2(pattern, mstars)
+    elif plot_name == "OR_McClintock2019":
+        pattern = 'params/rmba/auto/make_all_OR.McClintock.high_richness.low_rez.min20.sh/crit/mstar${mstarval}/OR_rd_zoom.param'
+        plot_ngal_fits2(pattern, mstars)
+    # plot_ngal_fits()
+    dtk.save_figs("figs/"+__file__+"/"+plot_name+"/", extension='.pdf')
     plt.show()
